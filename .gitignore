@@ -1,0 +1,29 @@
+# Runtime secrets
+.env
+.env.*
+!.env.example
+
+# Deployment secret files
+deploy/env/*.env
+deploy/env/*.env.*
+!deploy/env/*.env.example
+!deploy/env/README.md
+
+# TLS/private keys
+*.key
+*.pem
+*.p12
+*.pfx
+deploy/nginx/ssl/
+
+# Local Python/tooling caches
+.venv/
+.venv-*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# OS/editor noise
+.DS_Store
+*~
+
