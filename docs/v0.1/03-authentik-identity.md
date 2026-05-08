@@ -102,7 +102,7 @@ return {
 
 | Application | Provider type | Client ID | Redirect |
 |---|---|---|---|
-| Plane | OAuth2/OIDC | `plane` | `/auth/oidc/callback/`, `/api/auth/oidc/callback/` |
+| Plane | OAuth2/OIDC | `plane` | `/auth/oidc/callback/` |
 | Gitea | OAuth2/OIDC | `gitea` | `/user/oauth2/authentik/callback` |
 | Nextcloud | OAuth2/OIDC | `nextcloud` | `/apps/user_oidc/code` |
 | MinIO Console | OAuth2/OIDC | `minio` | `/oauth_callback` |

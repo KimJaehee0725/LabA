@@ -5,7 +5,7 @@ metadata:
   description: Non-secret v0.3 logical catalog for Lab Platform smoke/demo data.
   owner: lab-platform
   secret_policy: Secrets remain only in /srv/lab-platform/env/*.env.
-  plane_auth_status: current local Plane login; Authentik OIDC is a v0.3 blocker.
+  plane_auth_status: Authentik OIDC primary login; local Plane login retained for break-glass/demo compatibility.
 
 lab_groups:
   - id: lab-member
@@ -77,9 +77,9 @@ code_repositories:
           1. Open the platform entry points through the staging host aliases.
           2. Show that Authentik has the lab groups and a demo member account.
           3. Open Gitea Explore and show public demo repositories.
-          4. Log in to Plane with the local demo account and open the seeded workspace.
+          4. Log in to Plane through Authentik and open the seeded workspace.
 
-          Known v0.3.0 follow-up: finish generic OIDC login for Plane.
+          Local Plane login remains available for break-glass checks.
       - path: deploy-notes/current-wave.md
         message: Seed current wave note
         content: |
@@ -91,9 +91,9 @@ code_repositories:
           - edge Nginx
           - Authentik
           - Gitea
-          - Plane local runtime/data paths
+          - Plane Authentik OIDC login and local runtime/data paths
 
-          The next integration task is to close the Plane/Auth SSO gap.
+          The next integration task is to extend SSO parity to remaining app waves.
 
   - id: vision-baseline-demo
     phase: seed
@@ -168,8 +168,8 @@ plane:
       slug: lab-demo
       name: Lab Demo Workspace
       owner_ref: demo-member
-      auth_mode: local-login
-      oidc_status: current local Plane login; Authentik OIDC is a v0.3 blocker
+      auth_mode: authentik-oidc-primary
+      oidc_status: Authentik OIDC primary login; local email/password retained for v0.3 break-glass.
       timezone: Asia/Seoul
       organization_size: 1-10
       states:
@@ -201,10 +201,10 @@ plane:
               priority: high
               state: Ready
               description: Validate the browser path and demo credentials before the walkthrough.
-            - name: Close Plane generic OIDC gap
+            - name: Validate Plane Authentik OIDC login
               priority: urgent
               state: In Progress
-              description: Track the v0.3.0 blocker for Authentik to Plane login.
+              description: Confirm Authentik login reaches the lab-demo Plane workspace.
             - name: Prepare app wave smoke checks
               priority: medium
               state: Backlog

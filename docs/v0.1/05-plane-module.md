@@ -58,7 +58,7 @@ deploy/runbooks/plane.md
 - `AWS_S3_ENDPOINT_URL`
 - `AWS_S3_BUCKET_NAME`
 - `WEB_URL`
-- OIDC 관련 env 또는 GodMode 설정
+- Authentik OIDC custom patch image 설정
 
 서비스 네트워크 기준:
 
@@ -84,24 +84,27 @@ PLANE_DB_PASSWORD=change-me
 PLANE_REDIS_DB=2
 PLANE_S3_BUCKET=plane-uploads
 PLANE_S3_ENDPOINT=http://minio:9000
+PLANE_OIDC_DISCOVERY_URL=https://auth.lab.snu.ac.kr/application/o/plane/.well-known/openid-configuration
 PLANE_OIDC_CLIENT_ID=plane
 PLANE_OIDC_CLIENT_SECRET=change-me-after-authentik-provider
+PLANE_OIDC_SCOPES="openid email profile groups"
+PLANE_OIDC_VERIFY_SSL=1
+PLANE_OIDC_PROVIDER_LABEL=Authentik
 ```
 
 ## OIDC 계획
 
 Authentik:
 
-- Provider: `plane-provider`
+- Provider/Application slug: `plane`
 - Client ID: `plane`
 - Redirect URIs:
   - `https://lab.snu.ac.kr/auth/oidc/callback/`
-  - `https://lab.snu.ac.kr/api/auth/oidc/callback/`
 
 Plane:
 
-- GodMode에서 OIDC 설정을 우선 사용
-- 환경변수 기반 설정은 버전별 지원 여부 확인
+- v0.25.0 custom backend/web image에서 `/auth/oidc/`와 로그인 버튼을 제공
+- local email/password login은 v0.3 break-glass로 유지
 
 검증:
 
@@ -161,4 +164,3 @@ Plane:
 | OIDC callback path 불일치 | 두 redirect URI 모두 등록하고 실제 로그 확인 |
 | MinIO credential root 공유 | Plane 전용 access key/policy 사용 |
 | worker가 queue 처리 실패 | Redis DB index와 URL 검증 |
-

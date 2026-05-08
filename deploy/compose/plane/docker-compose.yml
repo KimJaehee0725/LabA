@@ -3,6 +3,15 @@ name: lab_plane
 services:
   plane-web:
     image: ${PLANE_WEB_IMAGE}
+    build:
+      context: ./custom
+      dockerfile: Dockerfile.web
+      args:
+        PLANE_SOURCE_REF: ${PLANE_SOURCE_REF:-f70eae2f3be48b3cfb6ed579ef587c2a86a1c56b}
+        NEXT_PUBLIC_WEB_BASE_URL: ${PLANE_WEB_URL}
+        NEXT_PUBLIC_ADMIN_BASE_PATH: /god-mode
+        NEXT_PUBLIC_LIVE_BASE_PATH: /live
+        NEXT_PUBLIC_SPACE_BASE_PATH: /spaces
     container_name: plane-web
     restart: unless-stopped
     command: node /app/web/server.js
@@ -36,6 +45,11 @@ services:
 
   plane-api:
     image: ${PLANE_API_IMAGE}
+    build:
+      context: ./custom
+      dockerfile: Dockerfile.backend
+      args:
+        PLANE_SOURCE_REF: ${PLANE_SOURCE_REF:-f70eae2f3be48b3cfb6ed579ef587c2a86a1c56b}
     container_name: plane-api
     restart: unless-stopped
     command: /code/bin/docker-entrypoint-api.sh
@@ -54,8 +68,12 @@ services:
       AWS_S3_BUCKET_NAME: ${PLANE_S3_BUCKET}
       AWS_S3_ENDPOINT_URL: ${PLANE_S3_ENDPOINT}
       AWS_REGION: ${PLANE_S3_REGION}
+      OIDC_DISCOVERY_URL: ${PLANE_OIDC_DISCOVERY_URL}
       OIDC_CLIENT_ID: ${PLANE_OIDC_CLIENT_ID}
       OIDC_CLIENT_SECRET: ${PLANE_OIDC_CLIENT_SECRET}
+      OIDC_SCOPES: ${PLANE_OIDC_SCOPES:-openid email profile groups}
+      OIDC_VERIFY_SSL: ${PLANE_OIDC_VERIFY_SSL:-1}
+      OIDC_PROVIDER_LABEL: ${PLANE_OIDC_PROVIDER_LABEL:-Authentik}
       ENABLE_SIGNUP: ${PLANE_ENABLE_SIGNUP:-0}
       ENABLE_EMAIL_PASSWORD: ${PLANE_ENABLE_EMAIL_PASSWORD:-1}
       DISABLE_WORKSPACE_CREATION: ${PLANE_DISABLE_WORKSPACE_CREATION:-0}

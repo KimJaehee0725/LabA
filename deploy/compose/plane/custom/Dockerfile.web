@@ -1,0 +1,104 @@
+FROM alpine:3.20 AS source
+
+ARG PLANE_SOURCE_REF=f70eae2f3be48b3cfb6ed579ef587c2a86a1c56b
+WORKDIR /src
+RUN apk add --no-cache git
+RUN git init \
+    && git remote add origin https://github.com/makeplane/plane.git \
+    && git fetch --depth 1 origin "$PLANE_SOURCE_REF" \
+    && git checkout --detach FETCH_HEAD
+COPY patches/plane-authentik-oidc.patch /tmp/plane-authentik-oidc.patch
+RUN git apply --unidiff-zero /tmp/plane-authentik-oidc.patch \
+    && rm -rf .git
+
+FROM node:20-alpine AS base
+
+FROM base AS builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+RUN yarn global add turbo
+COPY --from=source /src .
+
+RUN turbo prune --scope=web --docker
+
+FROM base AS installer
+
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY --from=builder /app/.gitignore .gitignore
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/yarn.lock ./yarn.lock
+RUN yarn install --network-timeout 500000
+
+COPY --from=builder /app/out/full/ .
+COPY --from=builder /app/turbo.json turbo.json
+
+ARG NEXT_PUBLIC_API_BASE_URL=""
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
+ARG NEXT_PUBLIC_ADMIN_BASE_URL=""
+ENV NEXT_PUBLIC_ADMIN_BASE_URL=$NEXT_PUBLIC_ADMIN_BASE_URL
+
+ARG NEXT_PUBLIC_ADMIN_BASE_PATH="/god-mode"
+ENV NEXT_PUBLIC_ADMIN_BASE_PATH=$NEXT_PUBLIC_ADMIN_BASE_PATH
+
+ARG NEXT_PUBLIC_LIVE_BASE_URL=""
+ENV NEXT_PUBLIC_LIVE_BASE_URL=$NEXT_PUBLIC_LIVE_BASE_URL
+
+ARG NEXT_PUBLIC_LIVE_BASE_PATH="/live"
+ENV NEXT_PUBLIC_LIVE_BASE_PATH=$NEXT_PUBLIC_LIVE_BASE_PATH
+
+ARG NEXT_PUBLIC_SPACE_BASE_URL=""
+ENV NEXT_PUBLIC_SPACE_BASE_URL=$NEXT_PUBLIC_SPACE_BASE_URL
+
+ARG NEXT_PUBLIC_SPACE_BASE_PATH="/spaces"
+ENV NEXT_PUBLIC_SPACE_BASE_PATH=$NEXT_PUBLIC_SPACE_BASE_PATH
+
+ARG NEXT_PUBLIC_WEB_BASE_URL=""
+ENV NEXT_PUBLIC_WEB_BASE_URL=$NEXT_PUBLIC_WEB_BASE_URL
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV TURBO_TELEMETRY_DISABLED=1
+
+RUN yarn turbo run build --filter=web
+
+FROM base AS runner
+WORKDIR /app
+
+COPY --from=installer /app/web/next.config.js .
+COPY --from=installer /app/web/package.json .
+
+COPY --from=installer /app/web/.next/standalone ./
+COPY --from=installer /app/web/.next ./web/.next
+COPY --from=installer /app/web/public ./web/public
+
+ARG NEXT_PUBLIC_API_BASE_URL=""
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
+ARG NEXT_PUBLIC_ADMIN_BASE_URL=""
+ENV NEXT_PUBLIC_ADMIN_BASE_URL=$NEXT_PUBLIC_ADMIN_BASE_URL
+
+ARG NEXT_PUBLIC_ADMIN_BASE_PATH="/god-mode"
+ENV NEXT_PUBLIC_ADMIN_BASE_PATH=$NEXT_PUBLIC_ADMIN_BASE_PATH
+
+ARG NEXT_PUBLIC_LIVE_BASE_URL=""
+ENV NEXT_PUBLIC_LIVE_BASE_URL=$NEXT_PUBLIC_LIVE_BASE_URL
+
+ARG NEXT_PUBLIC_LIVE_BASE_PATH="/live"
+ENV NEXT_PUBLIC_LIVE_BASE_PATH=$NEXT_PUBLIC_LIVE_BASE_PATH
+
+ARG NEXT_PUBLIC_SPACE_BASE_URL=""
+ENV NEXT_PUBLIC_SPACE_BASE_URL=$NEXT_PUBLIC_SPACE_BASE_URL
+
+ARG NEXT_PUBLIC_SPACE_BASE_PATH="/spaces"
+ENV NEXT_PUBLIC_SPACE_BASE_PATH=$NEXT_PUBLIC_SPACE_BASE_PATH
+
+ARG NEXT_PUBLIC_WEB_BASE_URL=""
+ENV NEXT_PUBLIC_WEB_BASE_URL=$NEXT_PUBLIC_WEB_BASE_URL
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV TURBO_TELEMETRY_DISABLED=1
+
+EXPOSE 3000

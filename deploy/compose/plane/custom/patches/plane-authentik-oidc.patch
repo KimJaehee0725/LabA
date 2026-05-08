@@ -1,0 +1,600 @@
+diff --git a/apiserver/plane/authentication/adapter/base.py b/apiserver/plane/authentication/adapter/base.py
+index c7a8c43..e520297 100644
+--- a/apiserver/plane/authentication/adapter/base.py
++++ b/apiserver/plane/authentication/adapter/base.py
+@@ -24 +24 @@ class Adapter:
+-    def __init__(self, request, provider, callback=None):
++    def __init__(self, request, provider, callback=None, allow_auto_signup=False):
+@@ -27,0 +28 @@ class Adapter:
++        self.allow_auto_signup = allow_auto_signup
+@@ -136 +137,2 @@ class Adapter:
+-            self.__check_signup(email)
++            if not self.allow_auto_signup:
++                self.__check_signup(email)
+diff --git a/apiserver/plane/authentication/adapter/error.py b/apiserver/plane/authentication/adapter/error.py
+index 63fafff..fa013ee 100644
+--- a/apiserver/plane/authentication/adapter/error.py
++++ b/apiserver/plane/authentication/adapter/error.py
+@@ -39,0 +40 @@ AUTHENTICATION_ERROR_CODES = {
++    "OIDC_NOT_CONFIGURED": 5112,
+@@ -42,0 +44 @@ AUTHENTICATION_ERROR_CODES = {
++    "OIDC_OAUTH_PROVIDER_ERROR": 5122,
+diff --git a/apiserver/plane/authentication/adapter/oauth.py b/apiserver/plane/authentication/adapter/oauth.py
+index e893838..12e606b 100644
+--- a/apiserver/plane/authentication/adapter/oauth.py
++++ b/apiserver/plane/authentication/adapter/oauth.py
+@@ -32,0 +33 @@ class OauthAdapter(Adapter):
++        allow_auto_signup=False,
+@@ -34 +35,6 @@ class OauthAdapter(Adapter):
+-        super().__init__(request=request, provider=provider, callback=callback)
++        super().__init__(
++            request=request,
++            provider=provider,
++            callback=callback,
++            allow_auto_signup=allow_auto_signup,
++        )
+@@ -50,0 +57,2 @@ class OauthAdapter(Adapter):
++        elif self.provider == "oidc":
++            return "OIDC_OAUTH_PROVIDER_ERROR"
+diff --git a/apiserver/plane/authentication/provider/oauth/oidc.py b/apiserver/plane/authentication/provider/oauth/oidc.py
+new file mode 100644
+index 0000000..6032d32
+--- /dev/null
++++ b/apiserver/plane/authentication/provider/oauth/oidc.py
+@@ -0,0 +1,203 @@
++# Python imports
++import os
++from datetime import timedelta
++from urllib.parse import urlencode
++
++# Django imports
++from django.utils import timezone
++
++# Third party imports
++import requests
++
++# Module imports
++from plane.authentication.adapter.oauth import OauthAdapter
++from plane.authentication.adapter.error import (
++    AUTHENTICATION_ERROR_CODES,
++    AuthenticationException,
++)
++from plane.license.utils.instance_value import get_configuration_value
++
++
++class OIDCOAuthProvider(OauthAdapter):
++    provider = "oidc"
++
++    def __init__(self, request, code=None, state=None, callback=None):
++        (
++            OIDC_DISCOVERY_URL,
++            OIDC_CLIENT_ID,
++            OIDC_CLIENT_SECRET,
++            OIDC_SCOPES,
++            OIDC_VERIFY_SSL,
++        ) = get_configuration_value(
++            [
++                {
++                    "key": "OIDC_DISCOVERY_URL",
++                    "default": os.environ.get("OIDC_DISCOVERY_URL", ""),
++                },
++                {
++                    "key": "OIDC_CLIENT_ID",
++                    "default": os.environ.get("OIDC_CLIENT_ID", ""),
++                },
++                {
++                    "key": "OIDC_CLIENT_SECRET",
++                    "default": os.environ.get("OIDC_CLIENT_SECRET", ""),
++                },
++                {
++                    "key": "OIDC_SCOPES",
++                    "default": os.environ.get("OIDC_SCOPES", "openid email profile"),
++                },
++                {
++                    "key": "OIDC_VERIFY_SSL",
++                    "default": os.environ.get("OIDC_VERIFY_SSL", "1"),
++                },
++            ]
++        )
++        self.verify_ssl = str(OIDC_VERIFY_SSL).lower() not in ("0", "false", "no")
++
++        if not (OIDC_DISCOVERY_URL and OIDC_CLIENT_ID and OIDC_CLIENT_SECRET):
++            raise AuthenticationException(
++                error_code=AUTHENTICATION_ERROR_CODES["OIDC_NOT_CONFIGURED"],
++                error_message="OIDC_NOT_CONFIGURED",
++            )
++
++        try:
++            discovery_response = requests.get(
++                OIDC_DISCOVERY_URL, timeout=10, verify=self.verify_ssl
++            )
++            discovery_response.raise_for_status()
++            discovery = discovery_response.json()
++        except requests.RequestException:
++            raise AuthenticationException(
++                error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
++                error_message="OIDC_OAUTH_PROVIDER_ERROR",
++            )
++
++        authorization_endpoint = discovery.get("authorization_endpoint")
++        token_endpoint = discovery.get("token_endpoint")
++        userinfo_endpoint = discovery.get("userinfo_endpoint")
++        if not (authorization_endpoint and token_endpoint and userinfo_endpoint):
++            raise AuthenticationException(
++                error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
++                error_message="OIDC_OAUTH_PROVIDER_ERROR",
++            )
++
++        redirect_uri = f"""{"https" if request.is_secure() else "http"}://{request.get_host()}/auth/oidc/callback/"""
++        scope = OIDC_SCOPES or "openid email profile"
++        url_params = {
++            "client_id": OIDC_CLIENT_ID,
++            "scope": scope,
++            "redirect_uri": redirect_uri,
++            "response_type": "code",
++            "state": state,
++        }
++        auth_url = f"{authorization_endpoint}?{urlencode(url_params)}"
++
++        super().__init__(
++            request,
++            self.provider,
++            OIDC_CLIENT_ID,
++            scope,
++            redirect_uri,
++            auth_url,
++            token_endpoint,
++            userinfo_endpoint,
++            OIDC_CLIENT_SECRET,
++            code,
++            callback=callback,
++            allow_auto_signup=True,
++        )
++
++    def set_token_data(self):
++        data = {
++            "code": self.code,
++            "client_id": self.client_id,
++            "client_secret": self.client_secret,
++            "redirect_uri": self.redirect_uri,
++            "grant_type": "authorization_code",
++        }
++        token_response = self.get_user_token(
++            data=data, headers={"Accept": "application/json"}
++        )
++        expires_in = token_response.get("expires_in")
++        refresh_expires_in = token_response.get("refresh_expires_in")
++        super().set_token_data(
++            {
++                "access_token": token_response.get("access_token"),
++                "refresh_token": token_response.get("refresh_token", None),
++                "access_token_expired_at": (
++                    timezone.now() + timedelta(seconds=int(expires_in))
++                    if expires_in
++                    else None
++                ),
++                "refresh_token_expired_at": (
++                    timezone.now() + timedelta(seconds=int(refresh_expires_in))
++                    if refresh_expires_in
++                    else None
++                ),
++                "id_token": token_response.get("id_token", ""),
++            }
++        )
++
++    def get_user_token(self, data, headers=None):
++        try:
++            headers = headers or {}
++            response = requests.post(
++                self.get_token_url(),
++                data=data,
++                headers=headers,
++                verify=self.verify_ssl,
++            )
++            response.raise_for_status()
++            return response.json()
++        except requests.RequestException:
++            raise AuthenticationException(
++                error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
++                error_message="OIDC_OAUTH_PROVIDER_ERROR",
++            )
++
++    def get_user_response(self):
++        try:
++            headers = {"Authorization": f"Bearer {self.token_data.get('access_token')}"}
++            response = requests.get(
++                self.get_user_info_url(), headers=headers, verify=self.verify_ssl
++            )
++            response.raise_for_status()
++            return response.json()
++        except requests.RequestException:
++            raise AuthenticationException(
++                error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
++                error_message="OIDC_OAUTH_PROVIDER_ERROR",
++            )
++
++    def set_user_data(self):
++        user_info_response = self.get_user_response()
++        email = user_info_response.get("email")
++        display_name = (
++            user_info_response.get("name")
++            or user_info_response.get("preferred_username")
++            or email
++        )
++        provider_id = user_info_response.get("sub")
++
++        if not (email and provider_id):
++            raise AuthenticationException(
++                error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
++                error_message="OIDC_OAUTH_PROVIDER_ERROR",
++            )
++
++        super().set_user_data(
++            {
++                "email": email,
++                "user": {
++                    "provider_id": provider_id,
++                    "email": email,
++                    "avatar": user_info_response.get("picture")
++                    or user_info_response.get("avatar")
++                    or user_info_response.get("avatar_url"),
++                    "first_name": user_info_response.get("given_name")
++                    or display_name,
++                    "last_name": user_info_response.get("family_name") or "",
++                    "is_password_autoset": True,
++                },
++            }
++        )
+diff --git a/apiserver/plane/authentication/urls.py b/apiserver/plane/authentication/urls.py
+index d474fe4..03117d2 100644
+--- a/apiserver/plane/authentication/urls.py
++++ b/apiserver/plane/authentication/urls.py
+@@ -16,0 +17,2 @@ from .views import (
++    OIDCCallbackEndpoint,
++    OIDCOauthInitiateEndpoint,
+@@ -109,0 +112,3 @@ urlpatterns = [
++    ## OIDC Oauth
++    path("oidc/", OIDCOauthInitiateEndpoint.as_view(), name="oidc-initiate"),
++    path("oidc/callback/", OIDCCallbackEndpoint.as_view(), name="oidc-callback"),
+diff --git a/apiserver/plane/authentication/views/__init__.py b/apiserver/plane/authentication/views/__init__.py
+index 24ae1f6..4ccf8ab 100644
+--- a/apiserver/plane/authentication/views/__init__.py
++++ b/apiserver/plane/authentication/views/__init__.py
+@@ -8,0 +9 @@ from .app.google import GoogleCallbackEndpoint, GoogleOauthInitiateEndpoint
++from .app.oidc import OIDCCallbackEndpoint, OIDCOauthInitiateEndpoint
+diff --git a/apiserver/plane/authentication/views/app/oidc.py b/apiserver/plane/authentication/views/app/oidc.py
+new file mode 100644
+index 0000000..7b6aa2c
+--- /dev/null
++++ b/apiserver/plane/authentication/views/app/oidc.py
+@@ -0,0 +1,106 @@
++import uuid
++import os
++from urllib.parse import urlencode, urljoin
++
++# Django import
++from django.http import HttpResponseRedirect
++from django.views import View
++
++# Module imports
++from plane.authentication.provider.oauth.oidc import OIDCOAuthProvider
++from plane.authentication.utils.login import user_login
++from plane.authentication.utils.redirection_path import get_redirection_path
++from plane.authentication.utils.user_auth_workflow import post_user_auth_workflow
++from plane.license.models import Instance
++from plane.authentication.utils.host import base_host
++from plane.authentication.adapter.error import (
++    AuthenticationException,
++    AUTHENTICATION_ERROR_CODES,
++)
++
++
++def oidc_app_base_url(request):
++    return os.environ.get("WEB_URL") or base_host(request=request, is_app=True)
++
++
++class OIDCOauthInitiateEndpoint(View):
++    def get(self, request):
++        request.session["host"] = oidc_app_base_url(request)
++        next_path = request.GET.get("next_path")
++        if next_path:
++            request.session["next_path"] = str(next_path)
++
++        instance = Instance.objects.first()
++        if instance is None or not instance.is_setup_done:
++            exc = AuthenticationException(
++                error_code=AUTHENTICATION_ERROR_CODES["INSTANCE_NOT_CONFIGURED"],
++                error_message="INSTANCE_NOT_CONFIGURED",
++            )
++            params = exc.get_error_dict()
++            if next_path:
++                params["next_path"] = str(next_path)
++            url = urljoin(
++                oidc_app_base_url(request), "?" + urlencode(params)
++            )
++            return HttpResponseRedirect(url)
++
++        try:
++            state = uuid.uuid4().hex
++            provider = OIDCOAuthProvider(request=request, state=state)
++            request.session["state"] = state
++            auth_url = provider.get_auth_url()
++            return HttpResponseRedirect(auth_url)
++        except AuthenticationException as e:
++            params = e.get_error_dict()
++            if next_path:
++                params["next_path"] = str(next_path)
++            url = urljoin(
++                oidc_app_base_url(request), "?" + urlencode(params)
++            )
++            return HttpResponseRedirect(url)
++
++
++class OIDCCallbackEndpoint(View):
++    def get(self, request):
++        code = request.GET.get("code")
++        state = request.GET.get("state")
++        base_host_value = request.session.get("host")
++        next_path = request.session.get("next_path")
++
++        if state != request.session.get("state", ""):
++            exc = AuthenticationException(
++                error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
++                error_message="OIDC_OAUTH_PROVIDER_ERROR",
++            )
++            params = exc.get_error_dict()
++            if next_path:
++                params["next_path"] = str(next_path)
++            url = urljoin(base_host_value, "?" + urlencode(params))
++            return HttpResponseRedirect(url)
++
++        if not code:
++            exc = AuthenticationException(
++                error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
++                error_message="OIDC_OAUTH_PROVIDER_ERROR",
++            )
++            params = exc.get_error_dict()
++            if next_path:
++                params["next_path"] = str(next_path)
++            url = urljoin(base_host_value, "?" + urlencode(params))
++            return HttpResponseRedirect(url)
++
++        try:
++            provider = OIDCOAuthProvider(
++                request=request, code=code, callback=post_user_auth_workflow
++            )
++            user = provider.authenticate()
++            user_login(request=request, user=user, is_app=True)
++            path = str(next_path) if next_path else get_redirection_path(user=user)
++            url = urljoin(base_host_value, path)
++            return HttpResponseRedirect(url)
++        except AuthenticationException as e:
++            params = e.get_error_dict()
++            if next_path:
++                params["next_path"] = str(next_path)
++            url = urljoin(base_host_value, "?" + urlencode(params))
++            return HttpResponseRedirect(url)
+diff --git a/apiserver/plane/db/migrations/0092_alter_account_provider_oidc.py b/apiserver/plane/db/migrations/0092_alter_account_provider_oidc.py
+new file mode 100644
+index 0000000..ff8e518
+--- /dev/null
++++ b/apiserver/plane/db/migrations/0092_alter_account_provider_oidc.py
+@@ -0,0 +1,24 @@
++# Generated by the LabA Plane OIDC patch.
++
++from django.db import migrations, models
++
++
++class Migration(migrations.Migration):
++    dependencies = [
++        ("db", "0091_issuecomment_edited_at_and_more"),
++    ]
++
++    operations = [
++        migrations.AlterField(
++            model_name="account",
++            name="provider",
++            field=models.CharField(
++                choices=[
++                    ("google", "Google"),
++                    ("github", "Github"),
++                    ("gitlab", "GitLab"),
++                    ("oidc", "OIDC"),
++                ]
++            ),
++        ),
++    ]
+diff --git a/apiserver/plane/db/models/user.py b/apiserver/plane/db/models/user.py
+index a7ac525..1344928 100644
+--- a/apiserver/plane/db/models/user.py
++++ b/apiserver/plane/db/models/user.py
+@@ -209,0 +210 @@ class Account(TimeAuditModel):
++        ("oidc", "OIDC"),
+diff --git a/apiserver/plane/license/api/views/instance.py b/apiserver/plane/license/api/views/instance.py
+index 0e2b64f..99b4392 100644
+--- a/apiserver/plane/license/api/views/instance.py
++++ b/apiserver/plane/license/api/views/instance.py
+@@ -53,0 +54,4 @@ class InstanceEndpoint(BaseAPIView):
++            OIDC_DISCOVERY_URL,
++            OIDC_CLIENT_ID,
++            OIDC_CLIENT_SECRET,
++            OIDC_PROVIDER_LABEL,
+@@ -89,0 +94,16 @@ class InstanceEndpoint(BaseAPIView):
++                {
++                    "key": "OIDC_DISCOVERY_URL",
++                    "default": os.environ.get("OIDC_DISCOVERY_URL", ""),
++                },
++                {
++                    "key": "OIDC_CLIENT_ID",
++                    "default": os.environ.get("OIDC_CLIENT_ID", ""),
++                },
++                {
++                    "key": "OIDC_CLIENT_SECRET",
++                    "default": os.environ.get("OIDC_CLIENT_SECRET", ""),
++                },
++                {
++                    "key": "OIDC_PROVIDER_LABEL",
++                    "default": os.environ.get("OIDC_PROVIDER_LABEL", "OIDC"),
++                },
+@@ -136,0 +157,4 @@ class InstanceEndpoint(BaseAPIView):
++        data["is_oidc_enabled"] = bool(
++            OIDC_DISCOVERY_URL and OIDC_CLIENT_ID and OIDC_CLIENT_SECRET
++        )
++        data["oidc_provider_label"] = OIDC_PROVIDER_LABEL or "OIDC"
+diff --git a/apiserver/plane/license/management/commands/configure_instance.py b/apiserver/plane/license/management/commands/configure_instance.py
+index 8458df5..143d482 100644
+--- a/apiserver/plane/license/management/commands/configure_instance.py
++++ b/apiserver/plane/license/management/commands/configure_instance.py
+@@ -91,0 +92,36 @@ class Command(BaseCommand):
++            {
++                "key": "OIDC_DISCOVERY_URL",
++                "value": os.environ.get("OIDC_DISCOVERY_URL", ""),
++                "category": "OIDC",
++                "is_encrypted": False,
++            },
++            {
++                "key": "OIDC_CLIENT_ID",
++                "value": os.environ.get("OIDC_CLIENT_ID", ""),
++                "category": "OIDC",
++                "is_encrypted": False,
++            },
++            {
++                "key": "OIDC_CLIENT_SECRET",
++                "value": os.environ.get("OIDC_CLIENT_SECRET", ""),
++                "category": "OIDC",
++                "is_encrypted": True,
++            },
++            {
++                "key": "OIDC_SCOPES",
++                "value": os.environ.get("OIDC_SCOPES", "openid email profile"),
++                "category": "OIDC",
++                "is_encrypted": False,
++            },
++            {
++                "key": "OIDC_VERIFY_SSL",
++                "value": os.environ.get("OIDC_VERIFY_SSL", "1"),
++                "category": "OIDC",
++                "is_encrypted": False,
++            },
++            {
++                "key": "OIDC_PROVIDER_LABEL",
++                "value": os.environ.get("OIDC_PROVIDER_LABEL", "OIDC"),
++                "category": "OIDC",
++                "is_encrypted": False,
++            },
+diff --git a/packages/types/src/instance/base.d.ts b/packages/types/src/instance/base.d.ts
+index 33d0734..eb868e3 100644
+--- a/packages/types/src/instance/base.d.ts
++++ b/packages/types/src/instance/base.d.ts
+@@ -43,0 +44,2 @@ export interface IInstanceConfig {
++  is_oidc_enabled: boolean;
++  oidc_provider_label: string | undefined;
+diff --git a/packages/types/src/users.d.ts b/packages/types/src/users.d.ts
+index e5140fd..f98c87e 100644
+--- a/packages/types/src/users.d.ts
++++ b/packages/types/src/users.d.ts
+@@ -4 +4 @@ import { TUserPermissions } from "./enums";
+-type TLoginMediums = "email" | "magic-code" | "github" | "gitlab" | "google";
++type TLoginMediums = "email" | "magic-code" | "github" | "gitlab" | "google" | "oidc";
+diff --git a/web/core/components/account/oauth/index.ts b/web/core/components/account/oauth/index.ts
+index 535e21b..fd79c55 100644
+--- a/web/core/components/account/oauth/index.ts
++++ b/web/core/components/account/oauth/index.ts
+@@ -4,0 +5 @@ export * from "./gitlab-button";
++export * from "./oidc-button";
+diff --git a/web/core/components/account/oauth/oauth-options.tsx b/web/core/components/account/oauth/oauth-options.tsx
+index 10396f2..ac441d3 100644
+--- a/web/core/components/account/oauth/oauth-options.tsx
++++ b/web/core/components/account/oauth/oauth-options.tsx
+@@ -3 +3 @@ import { observer } from "mobx-react";
+-import { GithubOAuthButton, GitlabOAuthButton, GoogleOAuthButton } from "@/components/account";
++import { GithubOAuthButton, GitlabOAuthButton, GoogleOAuthButton, OIDCOAuthButton } from "@/components/account";
+@@ -15 +15,4 @@ export const OAuthOptions: React.FC<TOAuthOptionProps> = observer(() => {
+-  const isOAuthEnabled = (config && (config?.is_google_enabled || config?.is_github_enabled || config?.is_gitlab_enabled)) || false;
++  const isOAuthEnabled =
++    (config &&
++      (config?.is_google_enabled || config?.is_github_enabled || config?.is_gitlab_enabled || config?.is_oidc_enabled)) ||
++    false;
+@@ -33,0 +37 @@ export const OAuthOptions: React.FC<TOAuthOptionProps> = observer(() => {
++        {config?.is_oidc_enabled && <OIDCOAuthButton text={`Continue with ${config?.oidc_provider_label || "OIDC"}`} />}
+diff --git a/web/core/components/account/oauth/oidc-button.tsx b/web/core/components/account/oauth/oidc-button.tsx
+new file mode 100644
+index 0000000..2b7f708
+--- /dev/null
++++ b/web/core/components/account/oauth/oidc-button.tsx
+@@ -0,0 +1,36 @@
++import { FC } from "react";
++import Image from "next/image";
++import { useSearchParams } from "next/navigation";
++import { useTheme } from "next-themes";
++// helpers
++import { API_BASE_URL } from "@/helpers/common.helper";
++// images
++import OIDCLogo from "/public/logos/oidc-logo.svg";
++
++export type OIDCOAuthButtonProps = {
++  text: string;
++};
++
++export const OIDCOAuthButton: FC<OIDCOAuthButtonProps> = (props) => {
++  const searchParams = useSearchParams();
++  const nextPath = searchParams.get("next_path") || undefined;
++  const { text } = props;
++  // hooks
++  const { resolvedTheme } = useTheme();
++
++  const handleSignIn = () => {
++    window.location.assign(`${API_BASE_URL}/auth/oidc/${nextPath ? `?next_path=${nextPath}` : ``}`);
++  };
++
++  return (
++    <button
++      className={`flex h-[42px] w-full items-center justify-center gap-2 rounded border px-2 text-sm font-medium text-custom-text-100 duration-300 bg-onboarding-background-200 hover:bg-onboarding-background-300 ${
++        resolvedTheme === "dark" ? "border-[#43484F]" : "border-[#D9E4FF]"
++      }`}
++      onClick={handleSignIn}
++    >
++      <Image src={OIDCLogo} height={20} width={20} alt="OIDC Logo" />
++      {text}
++    </button>
++  );
++};
+diff --git a/web/helpers/authentication.helper.tsx b/web/helpers/authentication.helper.tsx
+index 0cb2c80..18a95d3 100644
+--- a/web/helpers/authentication.helper.tsx
++++ b/web/helpers/authentication.helper.tsx
+@@ -70,0 +71 @@ export enum EAuthenticationErrorCodes {
++  OIDC_NOT_CONFIGURED = "5112",
+@@ -73,0 +75 @@ export enum EAuthenticationErrorCodes {
++  OIDC_OAUTH_PROVIDER_ERROR = "5122",
+@@ -260,0 +263,4 @@ const errorCodeMessages: {
++  [EAuthenticationErrorCodes.OIDC_NOT_CONFIGURED]: {
++    title: `OIDC not configured`,
++    message: () => `OIDC not configured. Please contact your administrator.`,
++  },
+@@ -272,0 +279,4 @@ const errorCodeMessages: {
++  [EAuthenticationErrorCodes.OIDC_OAUTH_PROVIDER_ERROR]: {
++    title: `OIDC provider error`,
++    message: () => `OIDC provider error. Please try again.`,
++  },
+@@ -398,0 +409 @@ export const authErrorHandler = (
++    EAuthenticationErrorCodes.OIDC_NOT_CONFIGURED,
+@@ -401,0 +413 @@ export const authErrorHandler = (
++    EAuthenticationErrorCodes.OIDC_OAUTH_PROVIDER_ERROR,
+diff --git a/web/public/logos/oidc-logo.svg b/web/public/logos/oidc-logo.svg
+new file mode 100644
+index 0000000..68bc72d
+--- /dev/null
++++ b/web/public/logos/oidc-logo.svg
+@@ -0,0 +1,11 @@
++<svg width="92" height="84" viewBox="0 0 92 84" fill="none" xmlns="http://www.w3.org/2000/svg">
++<g clip-path="url(#clip0_3695_11896)">
++<path d="M83.0398 32.6876C74.2901 27.2397 62.0735 23.8553 48.7013 23.8553C21.7918 23.8553 0 37.3101 0 53.9016C0 69.0898 18.1598 81.554 41.685 83.7001V74.9504C25.8364 72.9693 13.95 64.3022 13.95 53.9016C13.95 42.0977 29.4684 32.44 48.7013 32.44C58.2765 32.44 66.9436 34.8338 73.217 38.7134L64.3022 44.2439H92.1197V27.0746L83.0398 32.6876Z" fill="#CCCCCC"/>
++<path d="M41.6846 8.99736V74.9504V83.7002L55.6346 74.9504V0L41.6846 8.99736Z" fill="#FF6200"/>
++</g>
++<defs>
++<clipPath id="clip0_3695_11896">
++<rect width="92" height="84" fill="white"/>
++</clipPath>
++</defs>
++</svg>

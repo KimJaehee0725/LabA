@@ -10,7 +10,7 @@
 
 | 엔티티 | System of record | v0.3 상태 | 비고 |
 |---|---|---|---|
-| `LabUser` | Authentik | seed | `demo.member` 계정. Plane에는 현재 local login 사용자로 동기 seed |
+| `LabUser` | Authentik | seed | `demo.member` 계정. Plane에는 OIDC 사용자를 만들고 local login은 break-glass/demo compatibility로 유지 |
 | `LabGroup` | Authentik | seed | `lab-member` |
 | `Project` | Plane | seed | `lab-demo` workspace 안의 Plane projects |
 | `CodeRepository` | Gitea | seed | 공개 demo repositories |
@@ -20,7 +20,7 @@
 | `PaperProject` | Overleaf | planned | Overleaf wave에서 seed |
 | `AccessGrant` | Authentik, Plane, Gitea | seed/planned | 서비스별 membership/visibility로 표현 |
 
-Plane/Auth OIDC는 아직 닫히지 않았다. v0.3 현재 상태는 Plane local login이며, Authentik generic OIDC 연결은 v0.3 blocker로 추적한다.
+Plane/Auth OIDC는 v0.3의 primary login path다. Plane local email/password login은 break-glass와 기존 demo seed compatibility 용도로 유지한다.
 
 ## Entity Definitions
 
@@ -94,7 +94,7 @@ Overleaf project가 원본이다. v0.3 planned 항목은 `lab-platform-demo-pape
 | Grant | System of record | 의미 |
 |---|---|---|
 | `demo-member-lab-member` | Authentik | demo user가 `lab-member` group에 속함 |
-| `demo-member-plane-workspace` | Plane | Plane local user가 `lab-demo` workspace member |
+| `demo-member-plane-workspace` | Plane | Authentik OIDC로 매핑된 Plane user가 `lab-demo` workspace member |
 | `public-demo-repositories` | Gitea | demo repositories가 public read 가능 |
 
 ## Relationships

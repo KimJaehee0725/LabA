@@ -34,4 +34,3 @@ instance.save()
 '
 
 echo "plane instance bootstrap completed"
-echo "Plane generic OIDC remains a v0.3.0 blocker; validate local Plane runtime/data paths for this wave."

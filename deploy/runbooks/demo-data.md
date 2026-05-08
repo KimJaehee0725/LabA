@@ -48,11 +48,11 @@ The script creates:
 
 - an Authentik demo user in `lab-member`
 - public Gitea demo repositories under the bootstrap admin account
-- a Plane local demo user, workspace, projects, states, and issues
+- a Plane demo user, workspace, projects, states, and issues
 
 The seeded Gitea repositories, repository files, Plane workspace, Plane projects, and Plane issues are read from the YAML catalog. The demo password and service credentials are read only from `/srv/lab-platform/env/*.env`.
 
-The Gitea repositories are public so they can be shown without depending on Gitea login. Plane uses a local demo login until the v0.3.0 Plane/Auth generic OIDC blocker is closed.
+The Gitea repositories are public so they can be shown without depending on Gitea login. Plane should be shown through Authentik OIDC; the local demo login remains available for break-glass checks.
 
 ## Cleanup
 

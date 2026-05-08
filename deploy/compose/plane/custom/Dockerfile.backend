@@ -1,0 +1,57 @@
+FROM alpine:3.20 AS source
+
+ARG PLANE_SOURCE_REF=f70eae2f3be48b3cfb6ed579ef587c2a86a1c56b
+WORKDIR /src
+RUN apk add --no-cache git
+RUN git init \
+    && git remote add origin https://github.com/makeplane/plane.git \
+    && git fetch --depth 1 origin "$PLANE_SOURCE_REF" \
+    && git checkout --detach FETCH_HEAD
+COPY patches/plane-authentik-oidc.patch /tmp/plane-authentik-oidc.patch
+RUN git apply --unidiff-zero /tmp/plane-authentik-oidc.patch \
+    && rm -rf .git
+
+FROM python:3.12.5-alpine AS backend
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV INSTANCE_CHANGELOG_URL=https://sites.plane.so/pages/691ef037bcfe416a902e48cb55f59891/
+
+WORKDIR /code
+
+RUN apk add --no-cache \
+    "libpq" \
+    "libxslt" \
+    "nodejs-current" \
+    "xmlsec"
+
+COPY --from=source /src/apiserver/requirements.txt ./
+COPY --from=source /src/apiserver/requirements ./requirements
+RUN apk add --no-cache libffi-dev
+RUN apk add --no-cache --virtual .build-deps \
+    "bash~=5.2" \
+    "g++" \
+    "gcc" \
+    "cargo" \
+    "git" \
+    "make" \
+    "postgresql-dev" \
+    "libc-dev" \
+    "linux-headers" \
+    && pip install -r requirements.txt --compile --no-cache-dir \
+    && apk del .build-deps
+
+COPY --from=source /src/apiserver/manage.py manage.py
+COPY --from=source /src/apiserver/plane plane/
+COPY --from=source /src/apiserver/templates templates/
+COPY --from=source /src/apiserver/package.json package.json
+
+RUN apk --no-cache add "bash~=5.2"
+COPY --from=source /src/apiserver/bin ./bin/
+
+RUN mkdir -p /code/plane/logs \
+    && chmod +x ./bin/* \
+    && chmod -R 777 /code
+
+EXPOSE 8000

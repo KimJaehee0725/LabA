@@ -63,7 +63,6 @@ Redirect URI 후보:
 
 ```text
 https://lab.snu.ac.kr/auth/oidc/callback/
-https://lab.snu.ac.kr/api/auth/oidc/callback/
 ```
 
 구현 메모:

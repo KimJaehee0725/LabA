@@ -4,11 +4,27 @@
 
 Create `/srv/lab-platform/env/40-plane.env` from the example and generate all placeholder values on the server. Keep generated values out of git, history, and chat.
 
+Set the Plane OIDC values in `40-plane.env` before running Plane bootstrap:
+
+- `PLANE_OIDC_DISCOVERY_URL=https://auth.lab.snu.ac.kr/application/o/plane/.well-known/openid-configuration`
+- `PLANE_OIDC_CLIENT_ID=plane`
+- `PLANE_OIDC_CLIENT_SECRET=<generated Authentik provider secret>`
+- `PLANE_OIDC_SCOPES="openid email profile groups"`
+- `PLANE_OIDC_VERIFY_SSL=1` for trusted TLS, or `0` only for the current self-signed staging edge certificate.
+- `PLANE_OIDC_PROVIDER_LABEL=Authentik`
+
 Create the Postgres role/database and MinIO service user after the env file is ready:
 
 ```bash
 sudo /srv/lab-platform/scripts/02-bootstrap-postgres.sh
 sudo /srv/lab-platform/scripts/08-create-minio-service-users.sh
+```
+
+Create or update the Authentik provider/application:
+
+```bash
+sudo /srv/lab-platform/scripts/21-bootstrap-authentik-plane-oidc.sh
+sudo AUTHENTIK_CHECK_DISCOVERY_SLUGS=plane /srv/lab-platform/scripts/20-check-authentik.sh
 ```
 
 ## Start
@@ -21,7 +37,7 @@ docker compose \
   --env-file /srv/lab-platform/env/40-plane.env \
   --env-file /srv/lab-platform/env/80-minio-policies.env \
   -f /srv/lab-platform/compose/plane/docker-compose.yml \
-  up -d
+  up --build -d
 ```
 
 Review `README.patch-notes.md` against the selected Plane release before production.
@@ -31,12 +47,11 @@ Review `README.patch-notes.md` against the selected Plane release before product
 Provider:
 
 - Client ID: `plane`
+- Discovery URL: `https://auth.lab.snu.ac.kr/application/o/plane/.well-known/openid-configuration`
 - Redirect URIs:
   - `https://lab.snu.ac.kr/auth/oidc/callback/`
-  - `https://lab.snu.ac.kr/api/auth/oidc/callback/`
 
-If the selected Plane tag does not support env-driven OIDC, configure it in God Mode and record that decision.
-Store the generated client secret only in `/srv/lab-platform/env/40-plane.env`.
+The local custom Plane backend/web images add generic OIDC support on top of Plane `v0.25.0` from upstream ref `f70eae2f3be48b3cfb6ed579ef587c2a86a1c56b`. Store the generated client secret only in `/srv/lab-platform/env/40-plane.env`.
 
 After the Authentik provider exists, add `plane` to `AUTHENTIK_CHECK_DISCOVERY_SLUGS` in `/srv/lab-platform/env/20-authentik.env` and run:
 
