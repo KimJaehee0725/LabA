@@ -16,8 +16,17 @@ curl_args=(-ksSI)
 if [[ "${CURL_RESOLVE:-}" != "" ]]; then
   curl_args+=(--resolve "$CURL_RESOLVE")
 fi
+curl_get_args=(-ksS)
+if [[ "${CURL_RESOLVE:-}" != "" ]]; then
+  curl_get_args+=(--resolve "$CURL_RESOLVE")
+fi
 
 curl "${curl_args[@]}" "$PLANE_URL" >/dev/null
+curl "${curl_get_args[@]}" -f "$PLANE_URL/auth/get-csrf-token/" | grep -q '"csrf_token"'
+upload_status="$(curl "${curl_get_args[@]}" -o /dev/null -w '%{http_code}' "$PLANE_URL/${PLANE_S3_BUCKET:-plane-uploads}?list-type=2" || true)"
+if [[ "$upload_status" != "403" ]]; then
+  die "Plane MinIO upload route returned HTTP $upload_status instead of anonymous-denied 403"
+fi
 docker compose \
   --env-file "$ENV_DIR/00-global.env" \
   --env-file "$ENV_DIR/10-core.env" \

@@ -17,7 +17,7 @@ if [[ "${CURL_RESOLVE:-}" != "" ]]; then
 fi
 
 curl "${curl_args[@]}" "$GITEA_URL/api/v1/version" >/dev/null
-docker exec gitea gitea doctor check --config /data/gitea/conf/app.ini >/dev/null
+docker exec --user git gitea gitea doctor check --config /data/gitea/conf/app.ini >/dev/null
 docker run --rm \
   --network lab_data \
   -e "MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}" \
