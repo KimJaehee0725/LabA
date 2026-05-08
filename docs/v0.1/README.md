@@ -30,6 +30,7 @@ v0.1의 목표는 v0 청사진을 실제 구현 직전 수준으로 세분화하
 | [10-v0.2-implementation-backlog.md](./10-v0.2-implementation-backlog.md) | v0.2 작업 티켓 후보 |
 | [11-v0.3-smoke-test-plan.md](./11-v0.3-smoke-test-plan.md) | 1차 통합 smoke test 체크리스트 |
 | [12-env-and-git-operations.md](./12-env-and-git-operations.md) | env 분할과 git/branch/worktree 운영 원칙 |
+| [13-data-model.md](./13-data-model.md) | v0.3 Lab domain data model과 demo seed catalog |
 
 ## v0.1 설계 원칙
 

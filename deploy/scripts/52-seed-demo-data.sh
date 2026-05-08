@@ -12,23 +12,73 @@ load_envs \
   "$ENV_DIR/40-plane.env" \
   "$ENV_DIR/99-demo.env"
 
+require_cmd python3
 require_cmd docker
 require_cmd curl
 require_cmd jq
-require_cmd base64
 require_cmd mktemp
+
+CATALOG_RUNTIME_PATH="${DEMO_DATA_CATALOG:-${LAB_PLATFORM_ROOT}/data-model/lab-domain.v0.3.yaml}"
+CATALOG_REPO_PATH="$SCRIPT_DIR/../data-model/lab-domain.v0.3.yaml"
+CATALOG_PATH=""
+if [[ -f "$CATALOG_RUNTIME_PATH" ]]; then
+  CATALOG_PATH="$CATALOG_RUNTIME_PATH"
+elif [[ -z "${DEMO_DATA_CATALOG:-}" && -f "$CATALOG_REPO_PATH" ]]; then
+  CATALOG_PATH="$CATALOG_REPO_PATH"
+else
+  die "demo data catalog not found at $CATALOG_RUNTIME_PATH or $CATALOG_REPO_PATH"
+fi
+
+CATALOG_TMP_DIR="$(mktemp -d)"
+CATALOG_JSON="$CATALOG_TMP_DIR/lab-domain.v0.3.json"
+gitea_netrc=""
+gitea_tmp_dir=""
+
+cleanup_tmp() {
+  if [[ -n "$CATALOG_TMP_DIR" && -d "$CATALOG_TMP_DIR" ]]; then
+    rm -rf "$CATALOG_TMP_DIR"
+  fi
+  if [[ -n "$gitea_tmp_dir" && -d "$gitea_tmp_dir" ]]; then
+    rm -rf "$gitea_tmp_dir"
+  fi
+}
+trap cleanup_tmp EXIT
+
+python3 - "$CATALOG_PATH" "$CATALOG_JSON" <<'PY'
+import json
+import sys
+
+try:
+    import yaml
+except ModuleNotFoundError:
+    sys.stderr.write("ERROR: Python module 'yaml' (PyYAML) is required to read the demo data catalog\n")
+    sys.exit(3)
+
+source, target = sys.argv[1], sys.argv[2]
+with open(source, "r", encoding="utf-8") as handle:
+    data = yaml.safe_load(handle) or {}
+with open(target, "w", encoding="utf-8") as handle:
+    json.dump(data, handle, ensure_ascii=True)
+PY
+
+catalog_required() {
+  local expression="$1"
+  local value
+  value="$(jq -er "$expression" "$CATALOG_JSON")" || die "demo data catalog missing required value: $expression"
+  printf '%s' "$value"
+}
 
 AUTHENTIK_WORKER_CONTAINER="${AUTHENTIK_WORKER_CONTAINER:-authentik-worker}"
 PLANE_CONTAINER="${PLANE_CONTAINER:-plane-api}"
 
-DEMO_USERNAME="${DEMO_USERNAME:-demo.member}"
-DEMO_EMAIL="${DEMO_EMAIL:-demo.member@example.invalid}"
-DEMO_DISPLAY_NAME="${DEMO_DISPLAY_NAME:-Demo Member}"
+DEMO_USERNAME="${DEMO_USERNAME:-$(catalog_required 'first(.lab_users[] | select(.phase == "seed" and .system_of_record == "Authentik")).username')}"
+DEMO_EMAIL="${DEMO_EMAIL:-$(catalog_required 'first(.lab_users[] | select(.phase == "seed" and .system_of_record == "Authentik")).email')}"
+DEMO_DISPLAY_NAME="${DEMO_DISPLAY_NAME:-$(catalog_required 'first(.lab_users[] | select(.phase == "seed" and .system_of_record == "Authentik")).display_name')}"
 DEMO_PASSWORD="${DEMO_PASSWORD:-}"
-DEMO_AUTHENTIK_GROUP="${DEMO_AUTHENTIK_GROUP:-lab-member}"
+DEMO_AUTHENTIK_GROUP="${DEMO_AUTHENTIK_GROUP:-$(catalog_required 'first(.lab_users[] | select(.phase == "seed" and .system_of_record == "Authentik")).groups[0]')}"
 DEMO_GITEA_OWNER="${DEMO_GITEA_OWNER:-${GITEA_BOOTSTRAP_ADMIN_USER:-gitea-bootstrap-admin}}"
-DEMO_PLANE_WORKSPACE_SLUG="${DEMO_PLANE_WORKSPACE_SLUG:-lab-demo}"
-DEMO_PLANE_WORKSPACE_NAME="${DEMO_PLANE_WORKSPACE_NAME:-Lab Demo Workspace}"
+DEMO_PLANE_WORKSPACE_SLUG="${DEMO_PLANE_WORKSPACE_SLUG:-$(catalog_required 'first(.plane.workspaces[] | select(.phase == "seed")).slug')}"
+DEMO_PLANE_WORKSPACE_NAME="${DEMO_PLANE_WORKSPACE_NAME:-$(catalog_required 'first(.plane.workspaces[] | select(.phase == "seed")).name')}"
 GITEA_BASE_URL="${GITEA_EXTERNAL_URL:-https://hub.lab.snu.ac.kr}"
 GITEA_BASE_URL="${GITEA_BASE_URL%/}"
 GITEA_NETRC_HOST="${GITEA_BASE_URL#http://}"
@@ -38,6 +88,7 @@ GITEA_NETRC_HOST="${GITEA_NETRC_HOST%%/*}"
 [[ -n "$DEMO_PASSWORD" && "$DEMO_PASSWORD" != change-me-* ]] || die "DEMO_PASSWORD must be configured in $ENV_DIR/99-demo.env"
 [[ -n "${GITEA_BOOTSTRAP_ADMIN_USER:-}" && -n "${GITEA_BOOTSTRAP_ADMIN_PASSWORD:-}" ]] || die "GITEA_BOOTSTRAP_ADMIN_USER/PASSWORD must be configured"
 [[ "$DEMO_GITEA_OWNER" == "$GITEA_BOOTSTRAP_ADMIN_USER" ]] || die "DEMO_GITEA_OWNER must be the configured Gitea bootstrap admin for this script"
+log "Using demo data catalog: $CATALOG_PATH"
 
 write_secret_to_container() {
   local container="$1"
@@ -80,19 +131,10 @@ user.is_active = True
 user.set_password(password)
 user.save()
 
-group = Group.objects.get(name=group_name)
+group, _ = Group.objects.get_or_create(name=group_name)
 group.users.add(user)
 print(f"authentik demo user ready: {username} ({email}) in {group_name}")
 '
-}
-
-gitea_netrc=""
-gitea_tmp_dir=""
-
-cleanup_gitea_tmp() {
-  if [[ -n "$gitea_tmp_dir" && -d "$gitea_tmp_dir" ]]; then
-    rm -rf "$gitea_tmp_dir"
-  fi
 }
 
 init_gitea_auth() {
@@ -105,7 +147,6 @@ login $GITEA_BOOTSTRAP_ADMIN_USER
 password $GITEA_BOOTSTRAP_ADMIN_PASSWORD
 NETRC
   chmod 0600 "$gitea_netrc"
-  trap cleanup_gitea_tmp EXIT
 }
 
 gitea_request() {
@@ -126,6 +167,8 @@ gitea_request() {
 ensure_gitea_repo() {
   local repo="$1"
   local description="$2"
+  local private="$3"
+  local default_branch="$4"
   local output="$gitea_tmp_dir/repo.json"
   local payload status
 
@@ -139,23 +182,25 @@ ensure_gitea_repo() {
   payload="$(jq -n \
     --arg name "$repo" \
     --arg description "$description" \
-    '{name: $name, description: $description, private: false, auto_init: true, default_branch: "main"}')"
+    --argjson private "$private" \
+    --arg default_branch "$default_branch" \
+    '{name: $name, description: $description, private: $private, auto_init: true, default_branch: $default_branch}')"
   status="$(gitea_request POST "/api/v1/user/repos" "$payload" "$output")"
   [[ "$status" == "201" || "$status" == "409" ]] || die "Gitea repo create failed for $repo with HTTP $status"
   log "Gitea repo ready: $DEMO_GITEA_OWNER/$repo"
 }
 
-put_gitea_file() {
+put_gitea_file_encoded() {
   local repo="$1"
-  local path="$2"
-  local message="$3"
-  local content="$4"
+  local branch="$2"
+  local path="$3"
+  local message="$4"
+  local encoded="$5"
   local get_output="$gitea_tmp_dir/content-get.json"
   local put_output="$gitea_tmp_dir/content-put.json"
-  local encoded existing payload sha status method endpoint
+  local existing payload sha status method endpoint
 
-  encoded="$(printf '%s' "$content" | base64 | tr -d '\n')"
-  status="$(gitea_request GET "/api/v1/repos/$DEMO_GITEA_OWNER/$repo/contents/$path?ref=main" "" "$get_output")"
+  status="$(gitea_request GET "/api/v1/repos/$DEMO_GITEA_OWNER/$repo/contents/$path?ref=$branch" "" "$get_output")"
   if [[ "$status" == "200" ]]; then
     sha="$(jq -r '.sha // empty' "$get_output")"
     existing="$(jq -r '.content // empty' "$get_output" | tr -d '\n')"
@@ -173,7 +218,7 @@ put_gitea_file() {
   payload="$(jq -n \
     --arg content "$encoded" \
     --arg message "$message" \
-    --arg branch "main" \
+    --arg branch "$branch" \
     --arg sha "$sha" \
     '{content: $content, message: $message, branch: $branch} + (if $sha == "" then {} else {sha: $sha} end)')"
   endpoint="/api/v1/repos/$DEMO_GITEA_OWNER/$repo/contents/$path"
@@ -182,88 +227,43 @@ put_gitea_file() {
 }
 
 seed_gitea_repos() {
+  local repo_count repo_json repo description visibility private default_branch file_json path message encoded
+
   init_gitea_auth
 
-  ensure_gitea_repo "lab-platform-demo" "Staging platform demo notes for the current deployment wave."
-  put_gitea_file "lab-platform-demo" "README.md" "Seed demo README" "# Lab Platform Demo
+  repo_count="$(jq '[.code_repositories[] | select(.phase == "seed" and .system_of_record == "Gitea")] | length' "$CATALOG_JSON")"
+  [[ "$repo_count" -gt 0 ]] || die "demo data catalog has no seed Gitea repositories"
 
-This repository is demo data for the staging Lab Platform.
+  while IFS= read -r repo_json; do
+    repo="$(jq -er '.name' <<<"$repo_json")" || die "Gitea repository catalog entry is missing name"
+    description="$(jq -r '.description // ""' <<<"$repo_json")"
+    visibility="$(jq -r '.visibility // "public"' <<<"$repo_json")"
+    private="false"
+    if [[ "$visibility" == "private" ]]; then
+      private="true"
+    fi
+    default_branch="$(jq -r '.default_branch // "main"' <<<"$repo_json")"
+    ensure_gitea_repo "$repo" "$description" "$private" "$default_branch"
 
-It gives visitors a quick, non-sensitive walkthrough of the current platform wave:
-
-- Authentik identity foundation
-- Gitea source hosting
-- Plane project tracking
-- Edge routing through Nginx
-
-Do not store real credentials or research data here.
-"
-  put_gitea_file "lab-platform-demo" "docs/demo-tour.md" "Seed demo tour" "# Demo Tour
-
-1. Open the platform entry points through the staging host aliases.
-2. Show that Authentik has the lab groups and a demo member account.
-3. Open Gitea Explore and show public demo repositories.
-4. Log in to Plane with the local demo account and open the seeded workspace.
-
-Known v0.3.0 follow-up: finish generic OIDC login for Plane.
-"
-  put_gitea_file "lab-platform-demo" "deploy-notes/current-wave.md" "Seed current wave note" "# Current Wave
-
-Runtime validation is focused on the staging stack that is already running:
-
-- core services
-- edge Nginx
-- Authentik
-- Gitea
-- Plane local runtime/data paths
-
-The next integration task is to close the Plane/Auth SSO gap.
-"
-
-  ensure_gitea_repo "vision-baseline-demo" "Small public sample repository for a lab model baseline."
-  put_gitea_file "vision-baseline-demo" "README.md" "Seed vision demo README" "# Vision Baseline Demo
-
-This is placeholder demo content for a lab code repository.
-
-It is intentionally small and contains no private dataset, model weight, or credential.
-"
-  put_gitea_file "vision-baseline-demo" "train.py" "Seed sample training script" "def main():
-    metrics = {\"accuracy\": 0.91, \"loss\": 0.23}
-    for key, value in metrics.items():
-        print(f\"{key}: {value}\")
-
-
-if __name__ == \"__main__\":
-    main()
-"
-  put_gitea_file "vision-baseline-demo" "metrics/sample-run.json" "Seed sample metrics" "{
-  \"run_name\": \"demo-baseline-001\",
-  \"accuracy\": 0.91,
-  \"loss\": 0.23,
-  \"notes\": \"Synthetic demo metrics only\"
-}
-"
-
-  ensure_gitea_repo "paper-template-demo" "Minimal paper template for the collaboration app wave demo."
-  put_gitea_file "paper-template-demo" "README.md" "Seed paper template README" "# Paper Template Demo
-
-This repository is demo content for the future Overleaf/collaboration wave.
-"
-  put_gitea_file "paper-template-demo" "main.tex" "Seed paper template" "\\documentclass{article}
-\\title{Lab Platform Demo Paper}
-\\author{Demo Member}
-\\begin{document}
-\\maketitle
-\\section{Overview}
-This is a synthetic paper template for the staging demo.
-\\end{document}
-"
+    while IFS= read -r file_json; do
+      path="$(jq -er '.path' <<<"$file_json")" || die "Gitea file catalog entry is missing path for $repo"
+      message="$(jq -r '.message // ("Seed " + .path)' <<<"$file_json")"
+      encoded="$(jq -er '.content | @base64' <<<"$file_json")" || die "Gitea file catalog entry is missing content for $repo/$path"
+      put_gitea_file_encoded "$repo" "$default_branch" "$path" "$message" "$encoded"
+    done < <(jq -c '.files[]' <<<"$repo_json")
+  done < <(jq -c '.code_repositories[] | select(.phase == "seed" and .system_of_record == "Gitea")' "$CATALOG_JSON")
 }
 
 seed_plane_workspace() {
   local password_file="/tmp/lab-demo-password"
+  local seed_file="/tmp/lab-demo-plane-seed.json"
+  local workspace_json
+
+  workspace_json="$(jq -c --arg slug "$DEMO_PLANE_WORKSPACE_SLUG" 'first(.plane.workspaces[] | select(.phase == "seed" and .slug == $slug))' "$CATALOG_JSON")"
+  [[ "$workspace_json" != "null" ]] || die "demo data catalog has no seed Plane workspace with slug $DEMO_PLANE_WORKSPACE_SLUG"
 
   write_secret_to_container "$PLANE_CONTAINER" "$password_file" "$DEMO_PASSWORD"
+  write_secret_to_container "$PLANE_CONTAINER" "$seed_file" "$workspace_json"
   docker exec \
     -e "DEMO_EMAIL=$DEMO_EMAIL" \
     -e "DEMO_USERNAME=$DEMO_USERNAME" \
@@ -271,7 +271,10 @@ seed_plane_workspace() {
     -e "DEMO_PLANE_WORKSPACE_SLUG=$DEMO_PLANE_WORKSPACE_SLUG" \
     -e "DEMO_PLANE_WORKSPACE_NAME=$DEMO_PLANE_WORKSPACE_NAME" \
     -e "DEMO_PASSWORD_FILE=$password_file" \
+    -e "DEMO_PLANE_SEED_FILE=$seed_file" \
     "$PLANE_CONTAINER" python manage.py shell -c '
+import html
+import json
 import os
 from plane.db.models import (
     Issue,
@@ -294,11 +297,26 @@ try:
 except FileNotFoundError:
     pass
 
+seed_path = os.environ["DEMO_PLANE_SEED_FILE"]
+with open(seed_path, "r", encoding="utf-8") as handle:
+    seed = json.load(handle)
+try:
+    os.remove(seed_path)
+except FileNotFoundError:
+    pass
+
 email = os.environ["DEMO_EMAIL"].lower()
 username = os.environ["DEMO_USERNAME"]
 display_name = os.environ["DEMO_DISPLAY_NAME"]
 workspace_slug = os.environ["DEMO_PLANE_WORKSPACE_SLUG"]
 workspace_name = os.environ["DEMO_PLANE_WORKSPACE_NAME"]
+timezone = seed.get("timezone", "Asia/Seoul")
+organization_size = str(seed.get("organization_size", "1-10"))
+state_specs = seed.get("states", [])
+projects = seed.get("projects", [])
+if not state_specs:
+    raise ValueError("Plane workspace seed requires at least one state")
+default_state_name = next((state["name"] for state in state_specs if state.get("default")), state_specs[0]["name"])
 
 user, created = User.objects.get_or_create(
     email=email,
@@ -321,8 +339,8 @@ workspace, _ = Workspace.objects.update_or_create(
     defaults={
         "name": workspace_name,
         "owner": user,
-        "organization_size": "1-10",
-        "timezone": "Asia/Seoul",
+        "organization_size": organization_size,
+        "timezone": timezone,
     },
 )
 WorkspaceMember.objects.update_or_create(
@@ -345,36 +363,10 @@ profile.role = "Research member"
 profile.company_name = workspace_name
 profile.save()
 
-projects = [
-    (
-        "Platform Rollout",
-        "ROLL",
-        "Demo project for staging rollout tasks.",
-        [
-            ("Confirm professor demo path", "high", "Ready", "Validate the browser path and demo credentials before the walkthrough."),
-            ("Close Plane generic OIDC gap", "urgent", "In Progress", "Track the v0.3.0 blocker for Authentik to Plane login."),
-            ("Prepare app wave smoke checks", "medium", "Backlog", "Draft checks for Gitea and Plane before adding the next apps."),
-        ],
-    ),
-    (
-        "Research Workbench",
-        "RND",
-        "Demo project for research workflow tasks.",
-        [
-            ("Register baseline experiment", "medium", "Ready", "Create a sample experiment record and link code artifacts."),
-            ("Upload sanitized sample dataset", "low", "Backlog", "Use synthetic data only for staging demos."),
-            ("Write reproducibility note", "medium", "Done", "Document how the demo result can be reproduced."),
-        ],
-    ),
-]
-state_specs = [
-    ("Backlog", "backlog", "#6B7280", True),
-    ("Ready", "unstarted", "#2563EB", False),
-    ("In Progress", "started", "#F59E0B", False),
-    ("Done", "completed", "#16A34A", False),
-]
-
-for project_name, identifier, description, issue_specs in projects:
+for project_spec in projects:
+    project_name = project_spec["name"]
+    identifier = project_spec["identifier"]
+    description = project_spec.get("description", "")
     project, _ = Project.objects.update_or_create(
         workspace=workspace,
         name=project_name,
@@ -384,7 +376,7 @@ for project_name, identifier, description, issue_specs in projects:
             "network": 2,
             "project_lead": user,
             "default_assignee": user,
-            "timezone": "Asia/Seoul",
+            "timezone": timezone,
         },
     )
     ProjectIdentifier.objects.update_or_create(
@@ -400,29 +392,33 @@ for project_name, identifier, description, issue_specs in projects:
     )
 
     states = {}
-    for sequence, (state_name, group, color, is_default) in enumerate(state_specs, start=1):
+    for sequence, state_spec in enumerate(state_specs, start=1):
+        state_name = state_spec["name"]
         state, _ = State.objects.update_or_create(
             workspace=workspace,
             project=project,
             name=state_name,
             defaults={
-                "group": group,
-                "color": color,
-                "default": is_default,
+                "group": state_spec["group"],
+                "color": state_spec["color"],
+                "default": bool(state_spec.get("default", False)),
                 "sequence": sequence * 15000,
             },
         )
         states[state_name] = state
-    project.default_state = states["Backlog"]
+    project.default_state = states[default_state_name]
     project.save()
 
-    for issue_name, priority, state_name, description_text in issue_specs:
+    for issue_spec in project_spec.get("issues", []):
+        issue_name = issue_spec["name"]
+        state_name = issue_spec.get("state", default_state_name)
         issue = Issue.objects.filter(workspace=workspace, project=project, name=issue_name).first()
         if issue is None:
             issue = Issue(workspace=workspace, project=project, name=issue_name)
-        issue.priority = priority
+        issue.priority = issue_spec.get("priority", "none")
         issue.state = states[state_name]
         issue.description = {}
+        description_text = html.escape(issue_spec.get("description", ""))
         issue.description_html = f"<p>{description_text}</p>"
         issue.save()
         IssueAssignee.objects.update_or_create(
@@ -448,7 +444,7 @@ seed_plane_workspace
 echo "demo data seed completed"
 echo "Auth user: $DEMO_USERNAME / $DEMO_EMAIL"
 echo "Gitea public repos:"
-echo "  $GITEA_BASE_URL/$DEMO_GITEA_OWNER/lab-platform-demo"
-echo "  $GITEA_BASE_URL/$DEMO_GITEA_OWNER/vision-baseline-demo"
-echo "  $GITEA_BASE_URL/$DEMO_GITEA_OWNER/paper-template-demo"
+while IFS= read -r repo; do
+  echo "  $GITEA_BASE_URL/$DEMO_GITEA_OWNER/$repo"
+done < <(jq -r '.code_repositories[] | select(.phase == "seed" and .system_of_record == "Gitea") | .name' "$CATALOG_JSON")
 echo "Plane workspace slug: $DEMO_PLANE_WORKSPACE_SLUG"

@@ -17,9 +17,26 @@ Required fields:
 - `DEMO_PLANE_WORKSPACE_SLUG`
 - `DEMO_PLANE_WORKSPACE_NAME`
 
+## Prepare the Catalog
+
+Copy the non-secret catalog to the runtime data-model directory:
+
+```bash
+sudo install -d -m 0755 /srv/lab-platform/data-model
+sudo install -m 0644 deploy/data-model/lab-domain.v0.3.yaml /srv/lab-platform/data-model/lab-domain.v0.3.yaml
+```
+
+Validate it on the host before seeding:
+
+```bash
+python3 -c "import yaml; yaml.safe_load(open('/srv/lab-platform/data-model/lab-domain.v0.3.yaml'))"
+```
+
+`52-seed-demo-data.sh` uses `/srv/lab-platform/data-model/lab-domain.v0.3.yaml` by default. If that file is absent and the script is run from the repository, it falls back to `deploy/data-model/lab-domain.v0.3.yaml`. To test a different catalog, set `DEMO_DATA_CATALOG=/path/to/catalog.yaml`.
+
 ## Seed Demo Data
 
-Copy the updated scripts to `/srv/lab-platform/scripts`, then run:
+Copy the updated scripts and catalog to `/srv/lab-platform`, then run:
 
 ```bash
 sudo /srv/lab-platform/scripts/52-seed-demo-data.sh
@@ -30,6 +47,8 @@ The script creates:
 - an Authentik demo user in `lab-member`
 - public Gitea demo repositories under the bootstrap admin account
 - a Plane local demo user, workspace, projects, states, and issues
+
+The seeded Gitea repositories, repository files, Plane workspace, Plane projects, and Plane issues are read from the YAML catalog. The demo password and service credentials are read only from `/srv/lab-platform/env/*.env`.
 
 The Gitea repositories are public so they can be shown without depending on Gitea login. Plane uses a local demo login until the v0.3.0 Plane/Auth generic OIDC blocker is closed.
 

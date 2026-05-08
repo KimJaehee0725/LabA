@@ -1,0 +1,273 @@
+catalog_version: v0.3
+kind: lab-domain-catalog
+metadata:
+  name: lab-domain
+  description: Non-secret v0.3 logical catalog for Lab Platform smoke/demo data.
+  owner: lab-platform
+  secret_policy: Secrets remain only in /srv/lab-platform/env/*.env.
+  plane_auth_status: current local Plane login; Authentik OIDC is a v0.3 blocker.
+
+lab_groups:
+  - id: lab-member
+    phase: seed
+    system_of_record: Authentik
+    name: lab-member
+    description: Default non-admin lab member group.
+
+lab_users:
+  - id: demo-member
+    phase: seed
+    system_of_record: Authentik
+    username: demo.member
+    email: demo.member@example.invalid
+    display_name: Demo Member
+    groups:
+      - lab-member
+
+access_grants:
+  - id: demo-member-lab-member
+    phase: seed
+    system_of_record: Authentik
+    subject_ref: demo-member
+    resource_ref: lab-member
+    role: member
+  - id: demo-member-plane-workspace
+    phase: seed
+    system_of_record: Plane
+    subject_ref: demo-member
+    resource_ref: lab-demo
+    role: workspace-member
+  - id: public-demo-repositories
+    phase: seed
+    system_of_record: Gitea
+    subject_ref: public
+    resource_ref: demo-code-repositories
+    role: read
+
+code_repositories:
+  - id: lab-platform-demo
+    phase: seed
+    system_of_record: Gitea
+    owner_env: DEMO_GITEA_OWNER
+    name: lab-platform-demo
+    description: Staging platform demo notes for the current deployment wave.
+    visibility: public
+    default_branch: main
+    files:
+      - path: README.md
+        message: Seed demo README
+        content: |
+          # Lab Platform Demo
+
+          This repository is demo data for the staging Lab Platform.
+
+          It gives visitors a quick, non-sensitive walkthrough of the current platform wave:
+
+          - Authentik identity foundation
+          - Gitea source hosting
+          - Plane project tracking
+          - Edge routing through Nginx
+
+          Do not store real credentials or research data here.
+      - path: docs/demo-tour.md
+        message: Seed demo tour
+        content: |
+          # Demo Tour
+
+          1. Open the platform entry points through the staging host aliases.
+          2. Show that Authentik has the lab groups and a demo member account.
+          3. Open Gitea Explore and show public demo repositories.
+          4. Log in to Plane with the local demo account and open the seeded workspace.
+
+          Known v0.3.0 follow-up: finish generic OIDC login for Plane.
+      - path: deploy-notes/current-wave.md
+        message: Seed current wave note
+        content: |
+          # Current Wave
+
+          Runtime validation is focused on the staging stack that is already running:
+
+          - core services
+          - edge Nginx
+          - Authentik
+          - Gitea
+          - Plane local runtime/data paths
+
+          The next integration task is to close the Plane/Auth SSO gap.
+
+  - id: vision-baseline-demo
+    phase: seed
+    system_of_record: Gitea
+    owner_env: DEMO_GITEA_OWNER
+    name: vision-baseline-demo
+    description: Small public sample repository for a lab model baseline.
+    visibility: public
+    default_branch: main
+    files:
+      - path: README.md
+        message: Seed vision demo README
+        content: |
+          # Vision Baseline Demo
+
+          This is placeholder demo content for a lab code repository.
+
+          It is intentionally small and contains no private dataset, model weight, or credential.
+      - path: train.py
+        message: Seed sample training script
+        content: |
+          def main():
+              metrics = {"accuracy": 0.91, "loss": 0.23}
+              for key, value in metrics.items():
+                  print(f"{key}: {value}")
+
+
+          if __name__ == "__main__":
+              main()
+      - path: metrics/sample-run.json
+        message: Seed sample metrics
+        content: |
+          {
+            "run_name": "demo-baseline-001",
+            "accuracy": 0.91,
+            "loss": 0.23,
+            "notes": "Synthetic demo metrics only"
+          }
+
+  - id: paper-template-demo
+    phase: seed
+    system_of_record: Gitea
+    owner_env: DEMO_GITEA_OWNER
+    name: paper-template-demo
+    description: Minimal paper template for the collaboration app wave demo.
+    visibility: public
+    default_branch: main
+    files:
+      - path: README.md
+        message: Seed paper template README
+        content: |
+          # Paper Template Demo
+
+          This repository is demo content for the future Overleaf/collaboration wave.
+      - path: main.tex
+        message: Seed paper template
+        content: |
+          \documentclass{article}
+          \title{Lab Platform Demo Paper}
+          \author{Demo Member}
+          \begin{document}
+          \maketitle
+          \section{Overview}
+          This is a synthetic paper template for the staging demo.
+          \end{document}
+
+plane:
+  workspaces:
+    - id: lab-demo
+      phase: seed
+      system_of_record: Plane
+      slug: lab-demo
+      name: Lab Demo Workspace
+      owner_ref: demo-member
+      auth_mode: local-login
+      oidc_status: current local Plane login; Authentik OIDC is a v0.3 blocker
+      timezone: Asia/Seoul
+      organization_size: 1-10
+      states:
+        - name: Backlog
+          group: backlog
+          color: "#6B7280"
+          default: true
+        - name: Ready
+          group: unstarted
+          color: "#2563EB"
+          default: false
+        - name: In Progress
+          group: started
+          color: "#F59E0B"
+          default: false
+        - name: Done
+          group: completed
+          color: "#16A34A"
+          default: false
+      projects:
+        - id: platform-rollout
+          phase: seed
+          system_of_record: Plane
+          name: Platform Rollout
+          identifier: ROLL
+          description: Demo project for staging rollout tasks.
+          issues:
+            - name: Confirm professor demo path
+              priority: high
+              state: Ready
+              description: Validate the browser path and demo credentials before the walkthrough.
+            - name: Close Plane generic OIDC gap
+              priority: urgent
+              state: In Progress
+              description: Track the v0.3.0 blocker for Authentik to Plane login.
+            - name: Prepare app wave smoke checks
+              priority: medium
+              state: Backlog
+              description: Draft checks for Gitea and Plane before adding the next apps.
+        - id: research-workbench
+          phase: seed
+          system_of_record: Plane
+          name: Research Workbench
+          identifier: RND
+          description: Demo project for research workflow tasks.
+          issues:
+            - name: Register baseline experiment
+              priority: medium
+              state: Ready
+              description: Create a sample experiment record and link code artifacts.
+            - name: Upload sanitized sample dataset
+              priority: low
+              state: Backlog
+              description: Use synthetic data only for staging demos.
+            - name: Write reproducibility note
+              priority: medium
+              state: Done
+              description: Document how the demo result can be reproduced.
+
+experiments:
+  - id: demo-baseline-001
+    phase: planned
+    system_of_record: MLflow
+    name: Demo Baseline 001
+    owner_ref: demo-member
+    project_ref: research-workbench
+    code_repository_ref: vision-baseline-demo
+    tracking_uri_env: MLFLOW_TRACKING_URI
+    metrics:
+      accuracy: 0.91
+      loss: 0.23
+
+artifacts:
+  - id: demo-baseline-metrics
+    phase: planned
+    system_of_record: MLflow
+    experiment_ref: demo-baseline-001
+    type: metrics-json
+    storage_ref: mlflow-artifacts
+    path: demo-baseline-001/metrics/sample-run.json
+    source_repository_ref: vision-baseline-demo
+
+document_workspaces:
+  - id: lab-demo-documents
+    phase: planned
+    system_of_record: Nextcloud
+    name: Lab Demo Documents
+    owner_group_ref: lab-member
+    storage_ref: nextcloud-group-folders
+    planned_items:
+      - README.md
+      - reproducibility-note.docx
+
+paper_projects:
+  - id: lab-platform-demo-paper
+    phase: planned
+    system_of_record: Overleaf
+    name: Lab Platform Demo Paper
+    owner_ref: demo-member
+    source_repository_ref: paper-template-demo
+    main_file: main.tex
