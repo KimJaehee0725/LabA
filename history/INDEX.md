@@ -1,6 +1,6 @@
 # History Index
 
-Generated: 2026-05-08 10:15 +0000
+Generated: 2026-05-08 10:18 +0000
 
 ## Current Context
 
@@ -15,6 +15,7 @@ Generated: 2026-05-08 10:15 +0000
 
 ### changes
 
+- `history/changes/2026-05-08-101842-update-track-research-history-skill.md` - Change - Update track-research-history skill
 - `history/changes/2026-05-08-101459-document-env-split-and-git-operations.md` - Change - Document env split and git operations
 - `history/changes/2026-05-08-101442-enable-history-recall-with-numpy.md` - Change - Enable history recall with numpy
 - `history/changes/2026-05-08-100819-add-v0-1-detailed-planning-docs.md` - Change - Add v0.1 detailed planning docs
@@ -44,3 +45,13 @@ Generated: 2026-05-08 10:15 +0000
 ### sessions
 
 - `history/sessions/2026-05-08-100051-codex-create-v0-1-detailed-planning-for-lab-self-hosted-platform.md` - Session - Create v0.1 detailed planning for lab self-hosted platform
+
+## Collaboration
+
+- none
+
+## Archive
+
+Archive records are tracked for provenance but excluded from default collaboration recall.
+
+- none
