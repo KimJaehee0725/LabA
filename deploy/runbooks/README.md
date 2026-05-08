@@ -2,16 +2,17 @@
 
 Run modules in this order:
 
-1. `core.md`
-2. `edge-nginx.md`
-3. `authentik.md`
-4. `gitea.md`
-5. `plane.md`
-6. `mlflow.md`
-7. `nextcloud-collabora.md`
-8. `overleaf.md`
-9. `backup-restore.md`
-10. `v0.3-smoke.md`
+1. `v0.2-runtime-gate-1.md`
+2. `core.md`
+3. `edge-nginx.md`
+4. `authentik.md`
+5. `gitea.md`
+6. `plane.md`
+7. `mlflow.md`
+8. `nextcloud-collabora.md`
+9. `overleaf.md`
+10. `backup-restore.md`
+11. `v0.3-smoke.md`
 
 Common preflight:
 

@@ -15,7 +15,7 @@ Open `https://auth.lab.snu.ac.kr/if/flow/initial-setup/` for first setup.
 
 ## Blueprints
 
-Apply or import:
+Blueprint files are mounted into `/blueprints/` in the Authentik containers and should be visible under System -> Blueprints. Apply or import:
 
 - `authentik/blueprints/10-groups.yaml`
 - `authentik/blueprints/20-oauth-scopes.yaml`
@@ -32,3 +32,11 @@ Create OAuth2 providers in the Authentik UI, then store generated client secrets
 - `lab-guest`
 
 Docker socket mounts are intentionally absent.
+
+## Check
+
+```bash
+/srv/lab-platform/scripts/20-check-authentik.sh
+```
+
+The check verifies reachability and confirms that the required groups exist through the Authentik API. Keep `AUTHENTIK_BOOTSTRAP_TOKEN` only in `/srv/lab-platform/env/20-authentik.env`.

@@ -30,7 +30,10 @@ services:
     volumes:
       - ${LAB_PLATFORM_ROOT}/data/authentik/media:/media
       - ${LAB_PLATFORM_ROOT}/data/authentik/custom-templates:/templates
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints:/blueprints/custom:ro
+      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/10-groups.yaml:/blueprints/10-groups.yaml:ro
+      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/20-oauth-scopes.yaml:/blueprints/20-oauth-scopes.yaml:ro
+      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/30-applications.yaml:/blueprints/30-applications.yaml:ro
+      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/40-policies.yaml:/blueprints/40-policies.yaml:ro
     networks:
       - lab_backend
       - lab_data
@@ -62,7 +65,10 @@ services:
       - ${LAB_PLATFORM_ROOT}/data/authentik/media:/media
       - ${LAB_PLATFORM_ROOT}/data/authentik/certs:/certs
       - ${LAB_PLATFORM_ROOT}/data/authentik/custom-templates:/templates
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints:/blueprints/custom:ro
+      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/10-groups.yaml:/blueprints/10-groups.yaml:ro
+      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/20-oauth-scopes.yaml:/blueprints/20-oauth-scopes.yaml:ro
+      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/30-applications.yaml:/blueprints/30-applications.yaml:ro
+      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/40-policies.yaml:/blueprints/40-policies.yaml:ro
     networks:
       - lab_data
 

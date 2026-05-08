@@ -24,12 +24,13 @@ deploy/
 1. Create directories and Docker networks.
 2. Start core services: Postgres, Redis, MinIO.
 3. Bootstrap Postgres databases and MinIO buckets/policies.
-4. Start edge Nginx after TLS placeholder certs exist.
-5. Start Authentik and apply blueprints through the Authentik UI/API.
-6. Create OIDC providers and write generated client secrets into server env files only.
-7. Start app modules.
-8. Run module checks.
-9. Run backup dry-run and integrated smoke.
+4. Generate staging-only `/etc/hosts` entries and self-signed TLS files when using the hosts+self-signed gate.
+5. Start edge Nginx after TLS placeholder certs exist.
+6. Start Authentik and apply blueprints through the Authentik UI/API.
+7. Create OIDC providers and write generated client secrets into server env files only.
+8. Start app modules.
+9. Run module checks.
+10. Run backup dry-run and integrated smoke.
 
 ## Secret Policy
 

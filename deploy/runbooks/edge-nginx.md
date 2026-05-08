@@ -21,7 +21,8 @@ docker compose \
 /srv/lab-platform/scripts/10-check-edge.sh
 ```
 
-Only ports `80`, `443`, and Gitea SSH `2222` should be published.
+For the v0.2 Runtime Gate 1 stage, only ports `80` and `443` should be published.
+Gitea SSH port `2222` is introduced later in the app wave, not during this gate.
 
 ## Rollback
 
