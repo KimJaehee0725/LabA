@@ -23,13 +23,15 @@ DEMO_USERNAME="${DEMO_USERNAME:-demo.member}"
 DEMO_EMAIL="${DEMO_EMAIL:-demo.member@example.invalid}"
 DEMO_GITEA_OWNER="${DEMO_GITEA_OWNER:-${GITEA_BOOTSTRAP_ADMIN_USER:-gitea-bootstrap-admin}}"
 DEMO_PLANE_WORKSPACE_SLUG="${DEMO_PLANE_WORKSPACE_SLUG:-lab-demo}"
+GITEA_BOOTSTRAP_ADMIN_TOKEN="${GITEA_BOOTSTRAP_ADMIN_TOKEN:-}"
 GITEA_BASE_URL="${GITEA_EXTERNAL_URL:-https://hub.lab.snu.ac.kr}"
 GITEA_BASE_URL="${GITEA_BASE_URL%/}"
 GITEA_NETRC_HOST="${GITEA_BASE_URL#http://}"
 GITEA_NETRC_HOST="${GITEA_NETRC_HOST#https://}"
 GITEA_NETRC_HOST="${GITEA_NETRC_HOST%%/*}"
 
-[[ -n "${GITEA_BOOTSTRAP_ADMIN_USER:-}" && -n "${GITEA_BOOTSTRAP_ADMIN_PASSWORD:-}" ]] || die "GITEA_BOOTSTRAP_ADMIN_USER/PASSWORD must be configured"
+[[ -n "${GITEA_BOOTSTRAP_ADMIN_USER:-}" ]] || die "GITEA_BOOTSTRAP_ADMIN_USER must be configured"
+[[ -n "${GITEA_BOOTSTRAP_ADMIN_PASSWORD:-}" || -n "$GITEA_BOOTSTRAP_ADMIN_TOKEN" ]] || die "GITEA_BOOTSTRAP_ADMIN_PASSWORD or GITEA_BOOTSTRAP_ADMIN_TOKEN must be configured"
 [[ "$DEMO_GITEA_OWNER" == "$GITEA_BOOTSTRAP_ADMIN_USER" ]] || die "DEMO_GITEA_OWNER must be the configured Gitea bootstrap admin for this script"
 
 docker exec \
@@ -45,18 +47,31 @@ print(f"authentik demo users deleted: {deleted}")
 
 gitea_tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$gitea_tmp_dir"' EXIT
-gitea_netrc="$gitea_tmp_dir/netrc"
 chmod 0700 "$gitea_tmp_dir"
-cat >"$gitea_netrc" <<NETRC
+if [[ -n "$GITEA_BOOTSTRAP_ADMIN_TOKEN" ]]; then
+  gitea_curl_auth_config="$gitea_tmp_dir/curl-auth.conf"
+  printf 'header = "Authorization: token %s"\n' "$GITEA_BOOTSTRAP_ADMIN_TOKEN" >"$gitea_curl_auth_config"
+  chmod 0600 "$gitea_curl_auth_config"
+else
+  gitea_netrc="$gitea_tmp_dir/netrc"
+  cat >"$gitea_netrc" <<NETRC
 machine $GITEA_NETRC_HOST
 login $GITEA_BOOTSTRAP_ADMIN_USER
 password $GITEA_BOOTSTRAP_ADMIN_PASSWORD
 NETRC
-chmod 0600 "$gitea_netrc"
+  chmod 0600 "$gitea_netrc"
+fi
 
 for repo in lab-platform-demo vision-baseline-demo paper-template-demo; do
   output="$gitea_tmp_dir/$repo.json"
-  status="$(curl -sS -k --netrc-file "$gitea_netrc" -X DELETE -o "$output" -w "%{http_code}" "$GITEA_BASE_URL/api/v1/repos/$DEMO_GITEA_OWNER/$repo")"
+  curl_args=(-sS -k -X DELETE -o "$output" -w "%{http_code}")
+  if [[ -n "${gitea_curl_auth_config:-}" ]]; then
+    curl_args+=(--config "$gitea_curl_auth_config")
+  else
+    curl_args+=(--netrc-file "$gitea_netrc")
+  fi
+  curl_args+=("$GITEA_BASE_URL/api/v1/repos/$DEMO_GITEA_OWNER/$repo")
+  status="$(curl "${curl_args[@]}")"
   if [[ "$status" == "204" || "$status" == "404" ]]; then
     log "Gitea demo repo removed or absent: $DEMO_GITEA_OWNER/$repo"
   else

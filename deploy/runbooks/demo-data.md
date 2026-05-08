@@ -17,6 +17,8 @@ Required fields:
 - `DEMO_PLANE_WORKSPACE_SLUG`
 - `DEMO_PLANE_WORKSPACE_NAME`
 
+Gitea API auth can use either `GITEA_BOOTSTRAP_ADMIN_PASSWORD` from the normal Gitea env or a temporary `GITEA_BOOTSTRAP_ADMIN_TOKEN` exported only for the seed/cleanup command. Do not commit either value.
+
 ## Prepare the Catalog
 
 Copy the non-secret catalog to the runtime data-model directory:

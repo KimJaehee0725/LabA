@@ -79,6 +79,7 @@ DEMO_AUTHENTIK_GROUP="${DEMO_AUTHENTIK_GROUP:-$(catalog_required 'first(.lab_use
 DEMO_GITEA_OWNER="${DEMO_GITEA_OWNER:-${GITEA_BOOTSTRAP_ADMIN_USER:-gitea-bootstrap-admin}}"
 DEMO_PLANE_WORKSPACE_SLUG="${DEMO_PLANE_WORKSPACE_SLUG:-$(catalog_required 'first(.plane.workspaces[] | select(.phase == "seed")).slug')}"
 DEMO_PLANE_WORKSPACE_NAME="${DEMO_PLANE_WORKSPACE_NAME:-$(catalog_required 'first(.plane.workspaces[] | select(.phase == "seed")).name')}"
+GITEA_BOOTSTRAP_ADMIN_TOKEN="${GITEA_BOOTSTRAP_ADMIN_TOKEN:-}"
 GITEA_BASE_URL="${GITEA_EXTERNAL_URL:-https://hub.lab.snu.ac.kr}"
 GITEA_BASE_URL="${GITEA_BASE_URL%/}"
 GITEA_NETRC_HOST="${GITEA_BASE_URL#http://}"
@@ -86,7 +87,8 @@ GITEA_NETRC_HOST="${GITEA_NETRC_HOST#https://}"
 GITEA_NETRC_HOST="${GITEA_NETRC_HOST%%/*}"
 
 [[ -n "$DEMO_PASSWORD" && "$DEMO_PASSWORD" != change-me-* ]] || die "DEMO_PASSWORD must be configured in $ENV_DIR/99-demo.env"
-[[ -n "${GITEA_BOOTSTRAP_ADMIN_USER:-}" && -n "${GITEA_BOOTSTRAP_ADMIN_PASSWORD:-}" ]] || die "GITEA_BOOTSTRAP_ADMIN_USER/PASSWORD must be configured"
+[[ -n "${GITEA_BOOTSTRAP_ADMIN_USER:-}" ]] || die "GITEA_BOOTSTRAP_ADMIN_USER must be configured"
+[[ -n "${GITEA_BOOTSTRAP_ADMIN_PASSWORD:-}" || -n "$GITEA_BOOTSTRAP_ADMIN_TOKEN" ]] || die "GITEA_BOOTSTRAP_ADMIN_PASSWORD or GITEA_BOOTSTRAP_ADMIN_TOKEN must be configured"
 [[ "$DEMO_GITEA_OWNER" == "$GITEA_BOOTSTRAP_ADMIN_USER" ]] || die "DEMO_GITEA_OWNER must be the configured Gitea bootstrap admin for this script"
 log "Using demo data catalog: $CATALOG_PATH"
 
@@ -139,14 +141,20 @@ print(f"authentik demo user ready: {username} ({email}) in {group_name}")
 
 init_gitea_auth() {
   gitea_tmp_dir="$(mktemp -d)"
-  gitea_netrc="$gitea_tmp_dir/netrc"
   chmod 0700 "$gitea_tmp_dir"
-  cat >"$gitea_netrc" <<NETRC
+  if [[ -n "$GITEA_BOOTSTRAP_ADMIN_TOKEN" ]]; then
+    gitea_curl_auth_config="$gitea_tmp_dir/curl-auth.conf"
+    printf 'header = "Authorization: token %s"\n' "$GITEA_BOOTSTRAP_ADMIN_TOKEN" >"$gitea_curl_auth_config"
+    chmod 0600 "$gitea_curl_auth_config"
+  else
+    gitea_netrc="$gitea_tmp_dir/netrc"
+    cat >"$gitea_netrc" <<NETRC
 machine $GITEA_NETRC_HOST
 login $GITEA_BOOTSTRAP_ADMIN_USER
 password $GITEA_BOOTSTRAP_ADMIN_PASSWORD
 NETRC
-  chmod 0600 "$gitea_netrc"
+    chmod 0600 "$gitea_netrc"
+  fi
 }
 
 gitea_request() {
@@ -155,7 +163,12 @@ gitea_request() {
   local data="${3:-}"
   local output="$4"
   local status
-  local curl_args=(-sS -k --netrc-file "$gitea_netrc" -H "Content-Type: application/json" -X "$method" -o "$output" -w "%{http_code}")
+  local curl_args=(-sS -k -H "Content-Type: application/json" -X "$method" -o "$output" -w "%{http_code}")
+  if [[ -n "${gitea_curl_auth_config:-}" ]]; then
+    curl_args+=(--config "$gitea_curl_auth_config")
+  else
+    curl_args+=(--netrc-file "$gitea_netrc")
+  fi
   if [[ -n "$data" ]]; then
     curl_args+=(-d "$data")
   fi
