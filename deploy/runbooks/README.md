@@ -22,4 +22,6 @@ sudo ./scripts/00-create-directories.sh
 sudo ./scripts/01-create-networks.sh
 ```
 
+After `v0.2-runtime-gate-1.md` passes, keep core, edge, and Authentik running. App waves build on those services.
+
 Rollback rule: stop the affected module first, keep database/object storage intact, preserve logs, and do not rotate or overwrite secrets during incident triage.

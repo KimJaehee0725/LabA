@@ -21,19 +21,34 @@ if [[ "${DRY_RUN:-false}" == "true" ]]; then
   exit 0
 fi
 
-docker exec -i postgres psql -v ON_ERROR_STOP=1 -U "${POSTGRES_USER:-postgres}" <<SQL
-DO \$\$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${AUTHENTIK_POSTGRES_USER:-authentik_user}') THEN CREATE ROLE ${AUTHENTIK_POSTGRES_USER:-authentik_user} LOGIN PASSWORD '${AUTHENTIK_POSTGRES_PASSWORD:-change-me}'; END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${GITEA_DB_USER:-gitea_user}') THEN CREATE ROLE ${GITEA_DB_USER:-gitea_user} LOGIN PASSWORD '${GITEA_DB_PASSWORD:-change-me}'; END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${PLANE_DB_USER:-plane_user}') THEN CREATE ROLE ${PLANE_DB_USER:-plane_user} LOGIN PASSWORD '${PLANE_DB_PASSWORD:-change-me}'; END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${MLFLOW_DB_USER:-mlflow_user}') THEN CREATE ROLE ${MLFLOW_DB_USER:-mlflow_user} LOGIN PASSWORD '${MLFLOW_DB_PASSWORD:-change-me}'; END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${NEXTCLOUD_DB_USER:-nextcloud_user}') THEN CREATE ROLE ${NEXTCLOUD_DB_USER:-nextcloud_user} LOGIN PASSWORD '${NEXTCLOUD_DB_PASSWORD:-change-me}'; END IF;
-END
-\$\$;
-SELECT 'CREATE DATABASE ${AUTHENTIK_POSTGRES_DB:-authentik} OWNER ${AUTHENTIK_POSTGRES_USER:-authentik_user}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${AUTHENTIK_POSTGRES_DB:-authentik}')\gexec
-SELECT 'CREATE DATABASE ${GITEA_DB_NAME:-gitea} OWNER ${GITEA_DB_USER:-gitea_user}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${GITEA_DB_NAME:-gitea}')\gexec
-SELECT 'CREATE DATABASE ${PLANE_DB_NAME:-plane} OWNER ${PLANE_DB_USER:-plane_user}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${PLANE_DB_NAME:-plane}')\gexec
-SELECT 'CREATE DATABASE ${MLFLOW_DB_NAME:-mlflow} OWNER ${MLFLOW_DB_USER:-mlflow_user}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${MLFLOW_DB_NAME:-mlflow}')\gexec
-SELECT 'CREATE DATABASE ${NEXTCLOUD_DB_NAME:-nextcloud} OWNER ${NEXTCLOUD_DB_USER:-nextcloud_user}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${NEXTCLOUD_DB_NAME:-nextcloud}')\gexec
+bootstrap_database() {
+  local label="$1"
+  local db_name="$2"
+  local db_user="$3"
+  local db_password="$4"
+
+  if [[ -z "$db_password" || "$db_password" == change-me* ]]; then
+    log "skipping $label database bootstrap because its password is not configured"
+    return 0
+  fi
+
+  docker exec -i postgres psql \
+    -v ON_ERROR_STOP=1 \
+    -U "${POSTGRES_USER:-postgres}" \
+    -v db_name="$db_name" \
+    -v db_user="$db_user" \
+    -v db_password="$db_password" <<'SQL'
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', :'db_password')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'db_user')\gexec
+SELECT format('ALTER ROLE %I WITH LOGIN PASSWORD %L', :'db_user', :'db_password')\gexec
+SELECT format('CREATE DATABASE %I OWNER %I', :'db_name', :'db_user')
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'db_name')\gexec
+SELECT format('ALTER DATABASE %I OWNER TO %I', :'db_name', :'db_user')\gexec
 SQL
+}
+
+bootstrap_database "authentik" "${AUTHENTIK_POSTGRES_DB:-authentik}" "${AUTHENTIK_POSTGRES_USER:-authentik_user}" "${AUTHENTIK_POSTGRES_PASSWORD:-}"
+bootstrap_database "gitea" "${GITEA_DB_NAME:-gitea}" "${GITEA_DB_USER:-gitea_user}" "${GITEA_DB_PASSWORD:-}"
+bootstrap_database "plane" "${PLANE_DB_NAME:-plane}" "${PLANE_DB_USER:-plane_user}" "${PLANE_DB_PASSWORD:-}"
+bootstrap_database "mlflow" "${MLFLOW_DB_NAME:-mlflow}" "${MLFLOW_DB_USER:-mlflow_user}" "${MLFLOW_DB_PASSWORD:-}"
+bootstrap_database "nextcloud" "${NEXTCLOUD_DB_NAME:-nextcloud}" "${NEXTCLOUD_DB_USER:-nextcloud_user}" "${NEXTCLOUD_DB_PASSWORD:-}"
