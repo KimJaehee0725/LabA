@@ -1,0 +1,61 @@
+name: lab_overleaf
+
+services:
+  overleaf:
+    build:
+      context: .
+    image: ${OVERLEAF_CUSTOM_IMAGE}
+    container_name: overleaf
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      SHARELATEX_APP_NAME: ${OVERLEAF_APP_NAME}
+      SHARELATEX_MONGO_URL: mongodb://mongo:27017/${OVERLEAF_MONGO_DB}
+      SHARELATEX_REDIS_HOST: overleaf-redis
+      SHARELATEX_REDIS_PORT: 6379
+      SHARELATEX_SITE_URL: ${OVERLEAF_SITE_URL}
+      SHARELATEX_NAV_TITLE: ${OVERLEAF_NAV_TITLE}
+      SHARELATEX_SESSION_SECRET: ${OVERLEAF_SESSION_SECRET}
+      SHARELATEX_EMAIL_SMTP_HOST: ${OVERLEAF_SMTP_HOST}
+      SHARELATEX_EMAIL_SMTP_PORT: ${OVERLEAF_SMTP_PORT}
+      SHARELATEX_EMAIL_SMTP_USER: ${OVERLEAF_SMTP_USER}
+      SHARELATEX_EMAIL_SMTP_PASS: ${OVERLEAF_SMTP_PASSWORD}
+      SHARELATEX_EMAIL_FROM_ADDRESS: ${OVERLEAF_SMTP_FROM}
+      ENABLED_LINKED_FILE_TYPES: project_file,project_output_file
+      ENABLE_CONVERSIONS: "true"
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/data/overleaf/overleaf:/var/lib/overleaf
+    networks:
+      - lab_backend
+      - lab_data
+    depends_on:
+      - mongo
+      - overleaf-redis
+
+  mongo:
+    image: ${OVERLEAF_MONGO_IMAGE}
+    container_name: overleaf-mongo
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "overleaf-rs", "--bind_ip_all"]
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/data/overleaf/mongo:/data/db
+    networks:
+      - lab_data
+
+  overleaf-redis:
+    image: ${OVERLEAF_REDIS_IMAGE}
+    container_name: overleaf-redis
+    restart: unless-stopped
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$${OVERLEAF_REDIS_PASSWORD}\""]
+    environment:
+      OVERLEAF_REDIS_PASSWORD: ${OVERLEAF_REDIS_PASSWORD}
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/data/overleaf/redis:/data
+    networks:
+      - lab_data
+
+networks:
+  lab_backend:
+    external: true
+  lab_data:
+    external: true

@@ -1,0 +1,15 @@
+version: 1
+metadata:
+  name: lab-oauth-scopes
+entries:
+  - model: authentik_providers_oauth2.scopemapping
+    identifiers:
+      name: lab-groups
+    attrs:
+      name: lab-groups
+      scope_name: groups
+      description: Add Authentik group names to OIDC claims.
+      expression: |
+        return {
+            "groups": [group.name for group in user.ak_groups.all()],
+        }

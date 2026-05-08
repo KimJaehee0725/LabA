@@ -1,0 +1,49 @@
+name: lab_mlflow
+
+services:
+  mlflow:
+    build:
+      context: .
+      args:
+        MLFLOW_VERSION: ${MLFLOW_VERSION}
+    image: ${MLFLOW_IMAGE}
+    container_name: mlflow
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_S3_ENDPOINT}
+      AWS_ACCESS_KEY_ID: ${MLFLOW_S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${MLFLOW_S3_SECRET_KEY}
+    command:
+      - mlflow
+      - server
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+      - --backend-store-uri
+      - postgresql://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@postgres:5432/${MLFLOW_DB_NAME}
+      - --default-artifact-root
+      - s3://${MLFLOW_S3_BUCKET}
+      - --serve-artifacts
+    networks:
+      - lab_backend
+      - lab_data
+
+  authentik-outpost-mlflow:
+    image: ${AUTHENTIK_OUTPOST_IMAGE}
+    container_name: authentik-outpost-mlflow
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      AUTHENTIK_HOST: https://${AUTH_DOMAIN}
+      AUTHENTIK_INSECURE: "false"
+      AUTHENTIK_TOKEN: ${AUTHENTIK_OUTPOST_MLFLOW_TOKEN}
+    networks:
+      - lab_backend
+
+networks:
+  lab_backend:
+    external: true
+  lab_data:
+    external: true

@@ -1,0 +1,25 @@
+version: 1
+metadata:
+  name: lab-groups
+entries:
+  - model: authentik_core.group
+    identifiers:
+      name: lab-admin
+    attrs:
+      name: lab-admin
+      is_superuser: true
+  - model: authentik_core.group
+    identifiers:
+      name: lab-member
+    attrs:
+      name: lab-member
+  - model: authentik_core.group
+    identifiers:
+      name: lab-collab
+    attrs:
+      name: lab-collab
+  - model: authentik_core.group
+    identifiers:
+      name: lab-guest
+    attrs:
+      name: lab-guest

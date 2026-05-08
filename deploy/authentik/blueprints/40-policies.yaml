@@ -1,0 +1,21 @@
+version: 1
+metadata:
+  name: lab-policy-skeletons
+entries:
+  - model: authentik_policies_expression.expressionpolicy
+    identifiers:
+      name: require-active-lab-user
+    attrs:
+      name: require-active-lab-user
+      expression: |
+        if not request.user.is_active:
+            return False
+        allowed = {"lab-admin", "lab-member", "lab-collab"}
+        return bool(allowed.intersection({group.name for group in request.user.ak_groups.all()}))
+  - model: authentik_policies_expression.expressionpolicy
+    identifiers:
+      name: require-lab-admin
+    attrs:
+      name: require-lab-admin
+      expression: |
+        return request.user.is_active and request.user.ak_groups.filter(name="lab-admin").exists()

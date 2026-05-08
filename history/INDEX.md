@@ -1,6 +1,6 @@
 # History Index
 
-Generated: 2026-05-08 10:18 +0000
+Generated: 2026-05-08 10:35 +0000
 
 ## Current Context
 
@@ -15,6 +15,7 @@ Generated: 2026-05-08 10:18 +0000
 
 ### changes
 
+- `history/changes/2026-05-08-103555-add-v0-2-deploy-implementation-baseline.md` - Change - Add v0.2 deploy implementation baseline
 - `history/changes/2026-05-08-101842-update-track-research-history-skill.md` - Change - Update track-research-history skill
 - `history/changes/2026-05-08-101459-document-env-split-and-git-operations.md` - Change - Document env split and git operations
 - `history/changes/2026-05-08-101442-enable-history-recall-with-numpy.md` - Change - Enable history recall with numpy

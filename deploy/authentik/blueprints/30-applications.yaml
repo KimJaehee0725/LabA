@@ -1,0 +1,39 @@
+version: 1
+metadata:
+  name: lab-application-skeletons
+entries:
+  - model: authentik_core.application
+    identifiers:
+      slug: gitea
+    attrs:
+      name: Gitea
+      slug: gitea
+      meta_launch_url: https://hub.lab.snu.ac.kr
+  - model: authentik_core.application
+    identifiers:
+      slug: plane
+    attrs:
+      name: Plane
+      slug: plane
+      meta_launch_url: https://lab.snu.ac.kr
+  - model: authentik_core.application
+    identifiers:
+      slug: nextcloud
+    attrs:
+      name: Nextcloud
+      slug: nextcloud
+      meta_launch_url: https://files.lab.snu.ac.kr
+  - model: authentik_core.application
+    identifiers:
+      slug: minio
+    attrs:
+      name: MinIO Console
+      slug: minio
+      meta_launch_url: https://storage.lab.snu.ac.kr
+  - model: authentik_core.application
+    identifiers:
+      slug: mlflow
+    attrs:
+      name: MLflow
+      slug: mlflow
+      meta_launch_url: https://mlflow.lab.snu.ac.kr

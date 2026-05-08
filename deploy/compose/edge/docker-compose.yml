@@ -1,0 +1,35 @@
+name: lab_edge
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${LAB_PLATFORM_ROOT}/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ${LAB_PLATFORM_ROOT}/nginx/snippets:/etc/nginx/snippets:ro
+      - ${LAB_PLATFORM_ROOT}/nginx/ssl:/etc/nginx/ssl:ro
+      - ${LAB_PLATFORM_ROOT}/logs/nginx:/var/log/nginx
+    networks:
+      - lab_public
+      - lab_backend
+      - lab_data
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  lab_public:
+    external: true
+  lab_backend:
+    external: true
+  lab_data:
+    external: true

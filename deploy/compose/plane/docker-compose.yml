@@ -1,0 +1,101 @@
+name: lab_plane
+
+services:
+  plane-web:
+    image: ${PLANE_WEB_IMAGE}
+    container_name: plane-web
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      WEB_URL: ${PLANE_WEB_URL}
+    networks:
+      - lab_backend
+
+  plane-space:
+    image: ${PLANE_SPACE_IMAGE}
+    container_name: plane-space
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      WEB_URL: ${PLANE_WEB_URL}
+    networks:
+      - lab_backend
+
+  plane-admin:
+    image: ${PLANE_ADMIN_IMAGE}
+    container_name: plane-admin
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      WEB_URL: ${PLANE_WEB_URL}
+    networks:
+      - lab_backend
+
+  plane-api:
+    image: ${PLANE_API_IMAGE}
+    container_name: plane-api
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      WEB_URL: ${PLANE_WEB_URL}
+      DATABASE_URL: postgresql://${PLANE_DB_USER}:${PLANE_DB_PASSWORD}@postgres:5432/${PLANE_DB_NAME}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/${PLANE_REDIS_DB}
+      SECRET_KEY: ${PLANE_SECRET_KEY}
+      AWS_ACCESS_KEY_ID: ${PLANE_S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${PLANE_S3_SECRET_KEY}
+      AWS_S3_BUCKET_NAME: ${PLANE_S3_BUCKET}
+      AWS_S3_ENDPOINT_URL: ${PLANE_S3_ENDPOINT}
+      AWS_REGION: ${PLANE_S3_REGION}
+      OIDC_CLIENT_ID: ${PLANE_OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${PLANE_OIDC_CLIENT_SECRET}
+    networks:
+      - lab_backend
+      - lab_data
+
+  plane-worker:
+    image: ${PLANE_API_IMAGE}
+    container_name: plane-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      TZ: ${TZ}
+      DATABASE_URL: postgresql://${PLANE_DB_USER}:${PLANE_DB_PASSWORD}@postgres:5432/${PLANE_DB_NAME}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/${PLANE_REDIS_DB}
+      SECRET_KEY: ${PLANE_SECRET_KEY}
+      AWS_ACCESS_KEY_ID: ${PLANE_S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${PLANE_S3_SECRET_KEY}
+      AWS_S3_BUCKET_NAME: ${PLANE_S3_BUCKET}
+      AWS_S3_ENDPOINT_URL: ${PLANE_S3_ENDPOINT}
+      AWS_REGION: ${PLANE_S3_REGION}
+    networks:
+      - lab_data
+
+  plane-beat:
+    image: ${PLANE_API_IMAGE}
+    container_name: plane-beat
+    restart: unless-stopped
+    command: beat
+    environment:
+      TZ: ${TZ}
+      DATABASE_URL: postgresql://${PLANE_DB_USER}:${PLANE_DB_PASSWORD}@postgres:5432/${PLANE_DB_NAME}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/${PLANE_REDIS_DB}
+      SECRET_KEY: ${PLANE_SECRET_KEY}
+    networks:
+      - lab_data
+
+  plane-live:
+    image: ${PLANE_LIVE_IMAGE}
+    container_name: plane-live
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/${PLANE_REDIS_DB}
+    networks:
+      - lab_backend
+      - lab_data
+
+networks:
+  lab_backend:
+    external: true
+  lab_data:
+    external: true

@@ -1,0 +1,47 @@
+name: lab_gitea
+
+services:
+  gitea:
+    image: ${GITEA_IMAGE}
+    container_name: gitea
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      USER_UID: 1000
+      USER_GID: 1000
+      GITEA__database__DB_TYPE: postgres
+      GITEA__database__HOST: postgres:5432
+      GITEA__database__NAME: ${GITEA_DB_NAME}
+      GITEA__database__USER: ${GITEA_DB_USER}
+      GITEA__database__PASSWD: ${GITEA_DB_PASSWORD}
+      GITEA__server__DOMAIN: ${GITEA_DOMAIN}
+      GITEA__server__ROOT_URL: https://${GITEA_DOMAIN}/
+      GITEA__server__SSH_DOMAIN: ${GITEA_DOMAIN}
+      GITEA__server__SSH_PORT: ${GITEA_SSH_PORT}
+      GITEA__server__START_SSH_SERVER: "true"
+      GITEA__server__LFS_START_SERVER: "true"
+      GITEA__service__DISABLE_REGISTRATION: "true"
+      GITEA__security__SECRET_KEY: ${GITEA_SECRET_KEY}
+      GITEA__security__INTERNAL_TOKEN: ${GITEA_INTERNAL_TOKEN}
+      GITEA__lfs__JWT_SECRET: ${GITEA_LFS_JWT_SECRET}
+      GITEA__lfs__STORAGE_TYPE: minio
+      GITEA__storage.minio__MINIO_ENDPOINT: minio:9000
+      GITEA__storage.minio__MINIO_ACCESS_KEY_ID: ${GITEA_LFS_ACCESS_KEY}
+      GITEA__storage.minio__MINIO_SECRET_ACCESS_KEY: ${GITEA_LFS_SECRET_KEY}
+      GITEA__storage.minio__MINIO_BUCKET: ${GITEA_LFS_BUCKET}
+      GITEA__storage.minio__MINIO_LOCATION: us-east-1
+      GITEA__storage.minio__MINIO_USE_SSL: "false"
+    ports:
+      - "${GITEA_SSH_PORT}:22"
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/data/gitea:/data
+      - ${LAB_PLATFORM_ROOT}/gitea/app.ini.template:/etc/gitea/app.ini.template:ro
+    networks:
+      - lab_backend
+      - lab_data
+
+networks:
+  lab_backend:
+    external: true
+  lab_data:
+    external: true

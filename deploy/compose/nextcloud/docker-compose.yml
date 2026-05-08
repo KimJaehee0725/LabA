@@ -1,0 +1,75 @@
+name: lab_nextcloud
+
+services:
+  nextcloud:
+    image: ${NEXTCLOUD_IMAGE}
+    container_name: nextcloud
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${NEXTCLOUD_DB_NAME}
+      POSTGRES_USER: ${NEXTCLOUD_DB_USER}
+      POSTGRES_PASSWORD: ${NEXTCLOUD_DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_HOST_PASSWORD: ${REDIS_PASSWORD}
+      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
+      NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_DOMAIN}
+      TRUSTED_PROXIES: ${NEXTCLOUD_TRUSTED_PROXIES}
+      OVERWRITEHOST: ${NEXTCLOUD_DOMAIN}
+      OVERWRITEPROTOCOL: https
+      OVERWRITECLIURL: https://${NEXTCLOUD_DOMAIN}
+      PHP_MEMORY_LIMIT: 1024M
+      PHP_UPLOAD_LIMIT: ${NEXTCLOUD_UPLOAD_LIMIT}
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/data/nextcloud/html:/var/www/html
+      - ${LAB_PLATFORM_ROOT}/data/nextcloud/data:/var/www/html/data
+      - ${LAB_PLATFORM_ROOT}/data/nextcloud/custom_apps:/var/www/html/custom_apps
+      - ${LAB_PLATFORM_ROOT}/data/nextcloud/config:/var/www/html/config
+    networks:
+      - lab_backend
+      - lab_data
+
+  nextcloud-cron:
+    image: ${NEXTCLOUD_IMAGE}
+    container_name: nextcloud-cron
+    restart: unless-stopped
+    entrypoint: /cron.sh
+    environment:
+      TZ: ${TZ}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${NEXTCLOUD_DB_NAME}
+      POSTGRES_USER: ${NEXTCLOUD_DB_USER}
+      POSTGRES_PASSWORD: ${NEXTCLOUD_DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_HOST_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/data/nextcloud/html:/var/www/html
+      - ${LAB_PLATFORM_ROOT}/data/nextcloud/data:/var/www/html/data
+      - ${LAB_PLATFORM_ROOT}/data/nextcloud/custom_apps:/var/www/html/custom_apps
+      - ${LAB_PLATFORM_ROOT}/data/nextcloud/config:/var/www/html/config
+    networks:
+      - lab_data
+
+  collabora:
+    image: ${COLLABORA_IMAGE}
+    container_name: collabora
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      domain: files\\.lab\\.snu\\.ac\\.kr
+      server_name: ${COLLABORA_DOMAIN}
+      username: ${COLLABORA_USERNAME}
+      password: ${COLLABORA_PASSWORD}
+      extra_params: --o:ssl.enable=false --o:ssl.termination=true
+    cap_add:
+      - MKNOD
+    networks:
+      - lab_backend
+
+networks:
+  lab_backend:
+    external: true
+  lab_data:
+    external: true
