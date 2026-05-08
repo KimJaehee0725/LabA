@@ -22,7 +22,8 @@ docker run --rm \
   --network lab_data \
   -e "MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}" \
   -e "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}" \
+  --entrypoint /bin/sh \
   "$MINIO_MC_IMAGE" \
-  sh -c 'mc alias set "$1" http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null; shift; exec mc "$@"' \
+  -c 'mc alias set "$1" http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null; shift; exec mc "$@"' \
   sh "$MINIO_ALIAS" ls "$MINIO_ALIAS/${GITEA_LFS_BUCKET:-gitea-lfs}" >/dev/null
 echo "gitea checks passed"

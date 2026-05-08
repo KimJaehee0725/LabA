@@ -18,24 +18,33 @@ services:
       GITEA__server__ROOT_URL: https://${GITEA_DOMAIN}/
       GITEA__server__SSH_DOMAIN: ${GITEA_DOMAIN}
       GITEA__server__SSH_PORT: ${GITEA_SSH_PORT}
-      GITEA__server__START_SSH_SERVER: "true"
+      GITEA__server__START_SSH_SERVER: "false"
       GITEA__server__LFS_START_SERVER: "true"
       GITEA__service__DISABLE_REGISTRATION: "true"
+      GITEA__security__INSTALL_LOCK: "true"
       GITEA__security__SECRET_KEY: ${GITEA_SECRET_KEY}
       GITEA__security__INTERNAL_TOKEN: ${GITEA_INTERNAL_TOKEN}
+      GITEA__oauth2_client__ENABLE_AUTO_REGISTRATION: "true"
+      GITEA__oauth2_client__USERNAME: email
+      GITEA__oauth2_client__UPDATE_AVATAR: "true"
+      GITEA__oauth2_client__ACCOUNT_LINKING: login
       GITEA__lfs__JWT_SECRET: ${GITEA_LFS_JWT_SECRET}
-      GITEA__lfs__STORAGE_TYPE: minio
-      GITEA__storage.minio__MINIO_ENDPOINT: minio:9000
-      GITEA__storage.minio__MINIO_ACCESS_KEY_ID: ${GITEA_LFS_ACCESS_KEY}
-      GITEA__storage.minio__MINIO_SECRET_ACCESS_KEY: ${GITEA_LFS_SECRET_KEY}
-      GITEA__storage.minio__MINIO_BUCKET: ${GITEA_LFS_BUCKET}
-      GITEA__storage.minio__MINIO_LOCATION: us-east-1
-      GITEA__storage.minio__MINIO_USE_SSL: "false"
+      GITEA__lfs__STORAGE_TYPE: gitea-lfs-minio
+      GITEA__storage.gitea-lfs-minio__STORAGE_TYPE: minio
+      GITEA__storage.gitea-lfs-minio__MINIO_ENDPOINT: minio:9000
+      GITEA__storage.gitea-lfs-minio__MINIO_ACCESS_KEY_ID: ${GITEA_LFS_ACCESS_KEY}
+      GITEA__storage.gitea-lfs-minio__MINIO_SECRET_ACCESS_KEY: ${GITEA_LFS_SECRET_KEY}
+      GITEA__storage.gitea-lfs-minio__MINIO_BUCKET: ${GITEA_LFS_BUCKET}
+      GITEA__storage.gitea-lfs-minio__MINIO_LOCATION: us-east-1
+      GITEA__storage.gitea-lfs-minio__MINIO_USE_SSL: "false"
     ports:
       - "${GITEA_SSH_PORT}:22"
+    extra_hosts:
+      - "${AUTH_DOMAIN}:host-gateway"
     volumes:
       - ${LAB_PLATFORM_ROOT}/data/gitea:/data
       - ${LAB_PLATFORM_ROOT}/gitea/app.ini.template:/etc/gitea/app.ini.template:ro
+      - ${LAB_PLATFORM_ROOT}/gitea/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
     networks:
       - lab_backend
       - lab_data

@@ -7,7 +7,7 @@ DOMAIN = ${GITEA_DOMAIN}
 ROOT_URL = https://${GITEA_DOMAIN}/
 SSH_DOMAIN = ${GITEA_DOMAIN}
 SSH_PORT = ${GITEA_SSH_PORT}
-START_SSH_SERVER = true
+START_SSH_SERVER = false
 LFS_START_SERVER = true
 
 [database]
@@ -29,9 +29,10 @@ UPDATE_AVATAR = true
 ACCOUNT_LINKING = login
 
 [lfs]
-STORAGE_TYPE = minio
+STORAGE_TYPE = gitea-lfs-minio
 
-[storage.minio]
+[storage.gitea-lfs-minio]
+STORAGE_TYPE = minio
 MINIO_ENDPOINT = minio:9000
 MINIO_ACCESS_KEY_ID = ${GITEA_LFS_ACCESS_KEY}
 MINIO_SECRET_ACCESS_KEY = ${GITEA_LFS_SECRET_KEY}

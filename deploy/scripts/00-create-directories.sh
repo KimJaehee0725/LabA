@@ -5,6 +5,8 @@ LAB_PLATFORM_ROOT="${LAB_PLATFORM_ROOT:-/srv/lab-platform}"
 DRY_RUN="${DRY_RUN:-false}"
 AUTHENTIK_CONTAINER_UID="${AUTHENTIK_CONTAINER_UID:-1000}"
 AUTHENTIK_CONTAINER_GID="${AUTHENTIK_CONTAINER_GID:-1000}"
+GITEA_CONTAINER_UID="${GITEA_CONTAINER_UID:-1000}"
+GITEA_CONTAINER_GID="${GITEA_CONTAINER_GID:-1000}"
 
 run() {
   if [[ "$DRY_RUN" == "true" ]]; then
@@ -25,8 +27,10 @@ run install -d -m 0700 "$LAB_PLATFORM_ROOT"/nginx/ssl
 
 if [[ "$DRY_RUN" == "true" ]]; then
   echo "+ chown -R ${AUTHENTIK_CONTAINER_UID}:${AUTHENTIK_CONTAINER_GID} $LAB_PLATFORM_ROOT/data/authentik"
+  echo "+ chown -R ${GITEA_CONTAINER_UID}:${GITEA_CONTAINER_GID} $LAB_PLATFORM_ROOT/data/gitea"
 else
   chown -R "${AUTHENTIK_CONTAINER_UID}:${AUTHENTIK_CONTAINER_GID}" "$LAB_PLATFORM_ROOT"/data/authentik
+  chown -R "${GITEA_CONTAINER_UID}:${GITEA_CONTAINER_GID}" "$LAB_PLATFORM_ROOT"/data/gitea
 fi
 
 if compgen -G "$LAB_PLATFORM_ROOT/env/*.env" >/dev/null; then

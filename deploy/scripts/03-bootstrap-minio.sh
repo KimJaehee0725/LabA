@@ -25,8 +25,9 @@ run_mc() {
     -v "$LAB_PLATFORM_ROOT/minio/policies:/policies:ro" \
     -e "MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}" \
     -e "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}" \
+    --entrypoint /bin/sh \
     "$MINIO_MC_IMAGE" \
-    sh -c 'mc alias set "$1" http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null; shift; exec mc "$@"' \
+    -c 'mc alias set "$1" http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null; shift; exec mc "$@"' \
     sh "$MINIO_ALIAS" "$@"
 }
 

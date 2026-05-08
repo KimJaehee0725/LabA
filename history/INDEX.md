@@ -1,6 +1,6 @@
 # History Index
 
-Generated: 2026-05-08 12:50 +0000
+Generated: 2026-05-08 13:30 +0000
 
 ## Current Context
 
@@ -15,6 +15,7 @@ Generated: 2026-05-08 12:50 +0000
 
 ### changes
 
+- `history/changes/2026-05-08-133019-validate-gitea-plane-app-wave-runtime.md` - Change - Validate Gitea Plane app wave runtime
 - `history/changes/2026-05-08-125015-prepare-gitea-plane-app-wave-runtime-helpers.md` - Change - Prepare Gitea Plane app wave runtime helpers
 - `history/changes/2026-05-08-111637-validate-v0-2-runtime-gate-for-core-edge-authentik.md` - Change - Validate v0.2 runtime gate for core edge authentik
 - `history/changes/2026-05-08-103555-add-v0-2-deploy-implementation-baseline.md` - Change - Add v0.2 deploy implementation baseline
