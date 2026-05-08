@@ -13,6 +13,7 @@ Run modules in this order:
 9. `overleaf.md`
 10. `backup-restore.md`
 11. `v0.3-smoke.md`
+12. `demo-data.md`
 
 Common preflight:
 

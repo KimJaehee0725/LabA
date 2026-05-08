@@ -23,3 +23,5 @@ sudo /srv/lab-platform/scripts/08-create-minio-service-users.sh
 
 Generated Authentik client secrets and MinIO access keys belong only in `/srv/lab-platform/env/*.env`.
 `08-create-minio-service-users.sh` creates missing MinIO users and re-attaches policies; rotate an existing MinIO access key as an explicit maintenance action.
+
+`99-demo.env` is staging-only. It stores temporary demo login data for `52-seed-demo-data.sh` and must not be committed.

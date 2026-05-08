@@ -1,6 +1,6 @@
 # History Index
 
-Generated: 2026-05-08 14:34 +0000
+Generated: 2026-05-08 15:43 +0000
 
 ## Current Context
 
@@ -15,6 +15,7 @@ Generated: 2026-05-08 14:34 +0000
 
 ### changes
 
+- `history/changes/2026-05-08-154331-add-staging-demo-data-seed-scripts.md` - Change - Add staging demo data seed scripts
 - `history/changes/2026-05-08-143446-validate-v0-2-1-staging-current-wave.md` - Change - Validate v0.2.1 staging current wave
 - `history/changes/2026-05-08-133019-validate-gitea-plane-app-wave-runtime.md` - Change - Validate Gitea Plane app wave runtime
 - `history/changes/2026-05-08-125015-prepare-gitea-plane-app-wave-runtime-helpers.md` - Change - Prepare Gitea Plane app wave runtime helpers
