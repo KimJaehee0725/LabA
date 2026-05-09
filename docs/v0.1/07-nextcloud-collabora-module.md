@@ -2,7 +2,7 @@
 
 ## 모듈 목표
 
-Nextcloud는 연구실 파일 보관, 캘린더, 연락처, 태스크, 그룹 폴더를 담당한다. Collabora는 Nextcloud Office를 통한 문서 공동 편집을 담당한다.
+Nextcloud는 연구실 파일 보관, 캘린더, 연락처, 태스크, 그룹 폴더를 담당한다. v0.3 app wave에서는 단순 파일 저장소가 아니라 Notion 대체에 가까운 문서/연구 허브로 확장한다. Collabora는 Nextcloud Office를 통한 문서 공동 편집을 담당한다.
 
 포함:
 
@@ -14,6 +14,8 @@ Nextcloud는 연구실 파일 보관, 캘린더, 연락처, 태스크, 그룹 �
 - Nginx routing
 - app install script
 - group folders 초안
+- Collectives, Tables, Deck, Calendar/Tasks, GitHub integration
+- document hub seed/check script
 
 ## 공식 문서 반영사항
 
@@ -66,7 +68,7 @@ MinIO primary storage는 v0.2 범위에서 제외한다.
 
 ## 필수 앱
 
-설치 후보:
+설치 목록:
 
 ```bash
 occ app:install richdocuments
@@ -76,6 +78,10 @@ occ app:install contacts
 occ app:install notes
 occ app:install tasks
 occ app:install groupfolders
+occ app:install collectives
+occ app:install tables
+occ app:install deck
+occ app:install integration_github
 ```
 
 `richdocumentscode`는 사용하지 않는다.
@@ -99,13 +105,16 @@ occ user_oidc:provider "Authentik" \
   --mapping-uid="sub" \
   --mapping-email="email" \
   --mapping-display-name="name" \
-  --unique-uid=1
+  --unique-uid=1 \
+  --group-provisioning=1 \
+  --group-whitelist-regex='/^lab-(admin|member|collab|guest)$/' \
+  --group-restrict-login-to-whitelist=1
 ```
 
 주의:
 
 - `oidc_login`용 callback과 혼동하지 않는다.
-- 자동 provision 범위는 Authentik group policy와 함께 결정한다.
+- 자동 provision 범위는 `lab-admin`, `lab-member`, `lab-collab`, `lab-guest`로 제한한다.
 
 ## Reverse proxy config
 
@@ -155,18 +164,59 @@ curl -k https://office.lab.snu.ac.kr/hosting/discovery
 
 ## Group Folders
 
-초기:
+v0.3 seed:
 
 | Folder | 대상 |
 |---|---|
-| `lab-shared` | `lab-member` |
-| `lab-admin-only` | `lab-admin` |
-| `lab-projects` | 프로젝트별 세분화 |
+| `Lab Demo Documents` | `lab-member` |
+
+하위 folder:
+
+- `00-inbox`
+- `01-meeting-notes`
+- `02-literature`
+- `03-slides`
+- `04-reports`
+
+초기 운영 후보:
+
+| Folder | 대상 |
+|---|---|
+| `Lab Shared` | `lab-member` |
+| `Lab Admin Only` | `lab-admin` |
+| `Lab Projects` | 프로젝트별 세분화 |
 
 권한:
 
 - 초기 quota는 보수적으로 설정
 - 외부 협업자는 project folder 단위로 부여
+
+## Document Hub
+
+v0.3 문서 허브 seed는 `deploy/data-model/lab-domain.v0.3.yaml`의 `nextcloud` 섹션을 기준으로 한다.
+
+구성:
+
+- Group folder: `Lab Demo Documents`
+- Collectives: `Lab Knowledge Base`
+- Pages: `Home`, `Research Onboarding`, `Meeting Notes`, `Experiment Log`, `Paper Reading`
+- Tables: `Research Resources`
+- Columns: title/type/owner/date/status/file link/GitHub link/tags
+- Deck board: `Research Ops`
+- Calendar: `research-demo`
+
+Seed script:
+
+```bash
+NEXTCLOUD_SEED_APP_PASSWORD=<runtime app password> \
+  /srv/lab-platform/scripts/73-seed-nextcloud-document-hub.sh
+```
+
+WebDAV/API credential은 runtime env에서만 읽고 출력하지 않는다. 가능하면 admin password 대신 app password를 쓴다.
+
+## GitHub Integration
+
+`integration_github`는 설치/활성화만 v0.3 pass 조건에 포함한다. GitHub PAT 또는 OAuth secret은 서버 env에 저장하지 않는다. 각 사용자가 Nextcloud Personal settings -> Connected accounts에서 연결한다.
 
 ## Cron
 
@@ -215,10 +265,14 @@ occ maintenance:mode --off
 - 파일 업로드
 - 파일 다운로드
 - group folder 접근
+- Collectives landing page 접근
+- Tables app에서 `Research Resources` 접근
+- Deck에서 `Research Ops` board 접근
 - docx 생성
 - Collabora 편집 후 저장
 - Calendar 접근
 - app password 생성과 WebDAV 간단 테스트
+- GitHub integration app enabled/provider presence 확인
 
 ## 위험
 
@@ -229,4 +283,3 @@ occ maintenance:mode --off
 | Collabora WOPI 실패 | discovery, WebSocket, domain regex 체크리스트 |
 | 큰 파일 upload 실패 | PHP/Nginx upload limit 동시 설정 |
 | primary storage 변경 난이도 | v0.2에서는 로컬 disk 고정 |
-

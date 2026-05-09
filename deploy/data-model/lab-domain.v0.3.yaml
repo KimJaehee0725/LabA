@@ -229,9 +229,120 @@ plane:
               state: Done
               description: Document how the demo result can be reproduced.
 
+nextcloud:
+  group_folders:
+    - id: lab-demo-documents
+      phase: seed
+      system_of_record: Nextcloud
+      name: Lab Demo Documents
+      group_ref: lab-member
+      quota: unlimited
+      folders:
+        - 00-inbox
+        - 01-meeting-notes
+        - 02-literature
+        - 03-slides
+        - 04-reports
+      seed_files:
+        - path: README.md
+          title: Lab Demo Documents
+        - path: 01-meeting-notes/2026-05-09-platform-wave.md
+          title: Platform Wave Meeting Notes
+        - path: 02-literature/paper-reading-template.md
+          title: Paper Reading Template
+        - path: 04-reports/reproducibility-note.md
+          title: Reproducibility Note
+  collectives:
+    - id: lab-knowledge-base
+      phase: seed
+      system_of_record: Nextcloud Collectives
+      name: Lab Knowledge Base
+      owner_env: NEXTCLOUD_SEED_USER
+      pages:
+        - title: Home
+        - title: Research Onboarding
+        - title: Meeting Notes
+        - title: Experiment Log
+        - title: Paper Reading
+  tables:
+    - id: research-resources
+      phase: seed
+      system_of_record: Nextcloud Tables
+      name: Research Resources
+      owner_env: NEXTCLOUD_SEED_USER
+      columns:
+        - title: Title
+          type: text
+        - title: Type
+          type: selection
+          options:
+            - Paper
+            - Dataset
+            - Code
+            - Note
+        - title: Owner
+          type: text
+        - title: Date
+          type: date
+        - title: Status
+          type: selection
+          options:
+            - New
+            - Reading
+            - Active
+            - Done
+        - title: File Link
+          type: text
+        - title: GitHub Link
+          type: text
+        - title: Tags
+          type: text
+      seed_rows:
+        - title: Demo baseline resources
+          type: Code
+          owner: Demo Member
+          date: "2026-05-09"
+          status: Active
+          file_link: Lab Demo Documents/04-reports/reproducibility-note.md
+          github_link: https://hub.lab.snu.ac.kr/explore/repos
+          tags:
+            - demo
+            - mlflow
+            - nextcloud
+  deck_boards:
+    - id: research-ops
+      phase: seed
+      system_of_record: Nextcloud Deck
+      name: Research Ops
+      group_ref: lab-member
+      stacks:
+        - Backlog
+        - Doing
+        - Done
+      cards:
+        - title: Confirm MLflow artifact smoke
+          stack: Backlog
+          due: "2026-05-12"
+          description: Run 60-check-mlflow.sh and verify Postgres metadata plus MinIO object presence.
+        - title: Review document hub entry points
+          stack: Doing
+          due: "2026-05-13"
+          description: Open Files, Collectives, Tables, Deck, and Calendar after Authentik login.
+        - title: Keep GitHub integration user-scoped
+          stack: Done
+          due: "2026-05-09"
+          description: Install integration_github but keep PAT/OAuth setup in each user's Connected accounts.
+  calendars:
+    - id: research-demo-calendar
+      phase: seed
+      system_of_record: Nextcloud Calendar
+      uri: research-demo
+      name: Research Demo
+      owner_env: NEXTCLOUD_SEED_USER
+
 experiments:
   - id: demo-baseline-001
-    phase: planned
+    phase: seed
     system_of_record: MLflow
     name: Demo Baseline 001
     owner_ref: demo-member
@@ -244,7 +355,7 @@ experiments:
 
 artifacts:
   - id: demo-baseline-metrics
-    phase: planned
+    phase: seed
     system_of_record: MLflow
     experiment_ref: demo-baseline-001
     type: metrics-json
@@ -254,7 +365,7 @@ artifacts:
 
 document_workspaces:
   - id: lab-demo-documents
-    phase: planned
+    phase: seed
     system_of_record: Nextcloud
     name: Lab Demo Documents
     owner_group_ref: lab-member

@@ -1,6 +1,6 @@
 # History Index
 
-Generated: 2026-05-09 03:55 +0000
+Generated: 2026-05-09 04:33 +0000
 
 ## Current Context
 
@@ -16,6 +16,7 @@ Generated: 2026-05-09 03:55 +0000
 
 ### changes
 
+- `history/changes/2026-05-09-043204-implement-mlflow-and-nextcloud-document-app-wave.md` - Change - Implement MLflow and Nextcloud document app wave
 - `history/changes/2026-05-09-035429-validate-internal-ca-tls-and-plane-oidc-ssl-verification.md` - Change - Validate internal CA TLS and Plane OIDC SSL verification
 - `history/changes/2026-05-08-180602-add-plane-authentik-oidc-custom-images.md` - Change - Plane Authentik OIDC custom image 추가
 - `history/changes/2026-05-08-154331-add-staging-demo-data-seed-scripts.md` - Change - Add staging demo data seed scripts
@@ -27,7 +28,6 @@ Generated: 2026-05-09 03:55 +0000
 - `history/changes/2026-05-08-101842-update-track-research-history-skill.md` - Change - Update track-research-history skill
 - `history/changes/2026-05-08-101459-document-env-split-and-git-operations.md` - Change - Document env split and git operations
 - `history/changes/2026-05-08-101442-enable-history-recall-with-numpy.md` - Change - Enable history recall with numpy
-- `history/changes/2026-05-08-100819-add-v0-1-detailed-planning-docs.md` - Change - Add v0.1 detailed planning docs
 
 ### decisions
 
@@ -53,6 +53,7 @@ Generated: 2026-05-09 03:55 +0000
 
 ### sessions
 
+- `history/sessions/2026-05-09-041024-codex-implement-v0-3-mlflow-nextcloud-document-app-wave.md` - Session - Implement v0.3 MLflow Nextcloud document app wave
 - `history/sessions/2026-05-08-100051-codex-create-v0-1-detailed-planning-for-lab-self-hosted-platform.md` - Session - Create v0.1 detailed planning for lab self-hosted platform
 
 ## Collaboration

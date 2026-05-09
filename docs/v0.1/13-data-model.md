@@ -14,9 +14,12 @@
 | `LabGroup` | Authentik | seed | `lab-member` |
 | `Project` | Plane | seed | `lab-demo` workspace 안의 Plane projects |
 | `CodeRepository` | Gitea | seed | 공개 demo repositories |
-| `Experiment` | MLflow | planned | 앱 wave 연결 전까지 논리 모델만 유지 |
-| `Artifact` | MLflow/MinIO | planned | MLflow artifact store 연결 후 seed |
-| `DocumentWorkspace` | Nextcloud | planned | group folders wave에서 seed |
+| `Experiment` | MLflow | seed | `60-check-mlflow.sh` smoke run으로 실제 생성 |
+| `Artifact` | MLflow/MinIO | seed | MLflow artifact smoke에서 MinIO object 존재 확인 |
+| `DocumentWorkspace` | Nextcloud | seed | group folder와 문서 허브 baseline 생성 |
+| `KnowledgeBase` | Nextcloud Collectives | seed | `Lab Knowledge Base` |
+| `ResourceTable` | Nextcloud Tables | seed | `Research Resources` |
+| `OpsBoard` | Nextcloud Deck | seed | `Research Ops` |
 | `PaperProject` | Overleaf | planned | Overleaf wave에서 seed |
 | `AccessGrant` | Authentik, Plane, Gitea | seed/planned | 서비스별 membership/visibility로 표현 |
 
@@ -73,15 +76,51 @@ Gitea owner는 운영 env의 `DEMO_GITEA_OWNER`로 결정하며, 현재 cleanup 
 
 ### Experiment
 
-MLflow experiment가 원본이다. v0.3에서는 `demo-baseline-001`을 planned 상태로만 둔다. `vision-baseline-demo` repository와 `Research Workbench` project를 연결하는 논리 관계를 먼저 고정하고, MLflow app wave에서 실제 seed/check를 붙인다.
+MLflow experiment가 원본이다. v0.3 MLflow app wave에서는 `lab-platform-smoke` experiment 아래 smoke run을 생성한다. 카탈로그의 `demo-baseline-001`은 `vision-baseline-demo` repository와 `Research Workbench` project를 연결하는 논리 seed 항목이며, 실제 runtime 검증은 `61-smoke-mlflow-artifact.sh`가 만든 run ID로 증명한다.
 
 ### Artifact
 
-MLflow artifact와 그 backing MinIO object가 원본이다. v0.3 planned 항목은 `demo-baseline-metrics`이며, synthetic metrics JSON을 가리킨다.
+MLflow artifact와 그 backing MinIO object가 원본이다. `demo-baseline-metrics`는 synthetic metrics JSON을 가리키는 논리 항목이고, runtime smoke는 `mlflow-artifacts` bucket에서 smoke artifact file을 찾는다.
 
 ### DocumentWorkspace
 
-Nextcloud group folder 또는 shared folder가 원본이다. v0.3 planned 항목은 `lab-demo-documents`이고 `lab-member` group 소유로 모델링한다.
+Nextcloud group folder 또는 shared folder가 원본이다. v0.3 seed 항목은 `lab-demo-documents`이고 `lab-member` group 소유로 모델링한다.
+
+Seed structure:
+
+| 항목 | 값 |
+|---|---|
+| Group folder | `Lab Demo Documents` |
+| Group | `lab-member` |
+| Folders | `00-inbox`, `01-meeting-notes`, `02-literature`, `03-slides`, `04-reports` |
+
+### KnowledgeBase
+
+Nextcloud Collectives가 원본이다.
+
+| 항목 | 값 |
+|---|---|
+| Collective | `Lab Knowledge Base` |
+| Pages | `Home`, `Research Onboarding`, `Meeting Notes`, `Experiment Log`, `Paper Reading` |
+
+### ResourceTable
+
+Nextcloud Tables가 원본이다.
+
+| 항목 | 값 |
+|---|---|
+| Table | `Research Resources` |
+| Columns | title, type, owner, date, status, file link, GitHub link, tags |
+
+### OpsBoard
+
+Nextcloud Deck이 원본이다.
+
+| 항목 | 값 |
+|---|---|
+| Board | `Research Ops` |
+| Stacks | `Backlog`, `Doing`, `Done` |
+| Seed cards | MLflow artifact smoke, document hub entry points, user-scoped GitHub integration |
 
 ### PaperProject
 
@@ -110,7 +149,10 @@ LabUser(demo-member)
   -> CodeRepository(vision-baseline-demo)
   -> CodeRepository(paper-template-demo)
       -> PaperProject(lab-platform-demo-paper, planned)
-  -> DocumentWorkspace(lab-demo-documents, planned)
+  -> DocumentWorkspace(lab-demo-documents)
+      -> KnowledgeBase(lab-knowledge-base)
+      -> ResourceTable(research-resources)
+      -> OpsBoard(research-ops)
 ```
 
 ## Catalog Contract
@@ -123,4 +165,4 @@ LabUser(demo-member)
 - `*_ref`: 같은 catalog 안의 논리 ID 참조
 - `*_env`: 운영 환경별 값이 필요한 경우 참조할 env var 이름
 
-`52-seed-demo-data.sh`는 현재 `phase: seed`인 Authentik, Gitea, Plane 항목만 처리한다. MLflow, Nextcloud, Overleaf planned 항목은 후속 app wave에서 별도 seed/check로 연결한다.
+`52-seed-demo-data.sh`는 Authentik, Gitea, Plane 항목을 처리한다. `60-check-mlflow.sh`/`61-smoke-mlflow-artifact.sh`는 MLflow experiment/artifact smoke를 처리한다. `73-seed-nextcloud-document-hub.sh`는 Nextcloud group folder, Collectives, Tables, Deck, Calendar baseline을 처리한다. Overleaf planned 항목은 후속 wave로 남긴다.

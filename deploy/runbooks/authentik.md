@@ -22,7 +22,14 @@ Blueprint files are mounted into `/blueprints/` in the Authentik containers and 
 - `authentik/blueprints/30-applications.yaml`
 - `authentik/blueprints/40-policies.yaml`
 
-Create OAuth2 providers in the Authentik UI, then store generated client secrets only in `/srv/lab-platform/env/*.env`.
+Create OAuth2/proxy providers with the module bootstrap scripts where available, then store generated client secrets only in `/srv/lab-platform/env/*.env`.
+
+Current app bootstrap helpers:
+
+- `21-bootstrap-authentik-plane-oidc.sh`
+- `22-bootstrap-authentik-mlflow-nextcloud.sh`
+
+`22-bootstrap-authentik-mlflow-nextcloud.sh` creates the Nextcloud OIDC provider/application and the MLflow Proxy Provider/manual outpost. It updates the MLflow outpost token in `50-mlflow.env` without printing it.
 
 ## Required Groups
 

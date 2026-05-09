@@ -73,8 +73,11 @@ MLFLOW_S3_ENDPOINT_URL=http://minio:9000
 구성:
 
 - Authentik Proxy Provider: `mlflow-proxy`
-- Outpost: `authentik-outpost-mlflow`
+- Outpost object: `mlflow-outpost`
+- Runtime container: `authentik-outpost-mlflow`
 - Nginx `auth_request`
+- External host: `https://mlflow.lab.snu.ac.kr`
+- Internal upstream: `http://mlflow:5000`
 
 접근:
 
@@ -119,7 +122,28 @@ with mlflow.start_run(run_name="v0.3-smoke"):
     mlflow.log_artifact("/tmp/mlflow-smoke.txt")
 ```
 
-인증 방식이 미정이면 내부 컨테이너에서 direct `http://mlflow:5000`로 artifact path만 먼저 검증하고, 외부 UI 인증은 별도 검증한다.
+인증 방식이 미정이면 내부 컨테이너에서 direct `http://127.0.0.1:5000`로 experiment/run/artifact를 생성하고, 외부 UI 인증은 Authentik Forward Auth gate로 별도 검증한다. `60-check-mlflow.sh`는 이 범위를 현재 wave 기준으로 자동화한다.
+
+## v0.3 구현 checkpoint
+
+추가 산출물:
+
+```text
+deploy/scripts/22-bootstrap-authentik-mlflow-nextcloud.sh
+deploy/scripts/61-smoke-mlflow-artifact.sh
+```
+
+검증 순서:
+
+1. `50-mlflow.env` 실값 생성
+2. `02-bootstrap-postgres.sh`
+3. `03-bootstrap-minio.sh`
+4. `08-create-minio-service-users.sh`
+5. `22-bootstrap-authentik-mlflow-nextcloud.sh`
+6. MLflow compose build/up
+7. `60-check-mlflow.sh`
+
+`61-smoke-mlflow-artifact.sh`는 MLflow Python client로 내부 tracking URI에 run을 만들고, Postgres `runs` row와 MinIO `mlflow-artifacts` object 존재를 함께 확인한다.
 
 ## 백업
 
@@ -154,4 +178,3 @@ MLflow 완료 조건:
 | Forward Auth가 API client를 막음 | v0.3 범위와 v0.4 자동화 인증을 분리 |
 | 대용량 artifact timeout | Nginx buffering/upload 설정 |
 | MinIO endpoint/path 오류 | S3 URI와 endpoint env를 분리 |
-

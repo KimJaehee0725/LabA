@@ -73,8 +73,8 @@ deploy/env/
 | `20-authentik.env` | Authentik secret, DB, SMTP, bootstrap | `AUTHENTIK_SECRET_KEY`, `AUTHENTIK_BOOTSTRAP_PASSWORD` |
 | `30-gitea.env` | Gitea DB, OIDC, internal tokens | `GITEA_DB_PASSWORD`, `GITEA_SECRET_KEY` |
 | `40-plane.env` | Plane DB/Redis/S3/OIDC | `PLANE_DB_PASSWORD`, `PLANE_OIDC_CLIENT_SECRET` |
-| `50-mlflow.env` | MLflow DB/S3/outpost | `MLFLOW_DB_PASSWORD`, `MLFLOW_S3_ACCESS_KEY` |
-| `60-nextcloud.env` | Nextcloud DB/admin/OIDC | `NEXTCLOUD_ADMIN_PASSWORD`, `NEXTCLOUD_OIDC_CLIENT_SECRET` |
+| `50-mlflow.env` | MLflow DB/S3/outpost | `MLFLOW_DB_PASSWORD`, `MLFLOW_S3_ACCESS_KEY`, `AUTHENTIK_OUTPOST_MLFLOW_TOKEN` |
+| `60-nextcloud.env` | Nextcloud DB/admin/OIDC/seed app password | `NEXTCLOUD_ADMIN_PASSWORD`, `NEXTCLOUD_OIDC_CLIENT_SECRET`, `NEXTCLOUD_SEED_APP_PASSWORD` |
 | `70-overleaf.env` | Overleaf admin/SMTP/Mongo | `OVERLEAF_ADMIN_EMAIL`, `OVERLEAF_MONGO_PASSWORD` |
 | `80-minio-policies.env` | service access keys | `GITEA_LFS_ACCESS_KEY`, `MLFLOW_S3_SECRET_KEY` |
 | `90-backup.env` | backup target/retention | `BACKUP_RETENTION_DAILY`, `BACKUP_REMOTE_TARGET` |
@@ -109,6 +109,7 @@ docker compose \
 - Docker Compose는 뒤쪽 `--env-file` 값이 앞쪽 값을 덮어쓸 수 있다.
 - 같은 변수명을 여러 파일에서 정의하지 않는 것을 원칙으로 한다.
 - 공통 변수는 `00-global.env`, secret은 각 서비스 파일에 둔다.
+- GitHub PAT/OAuth secret은 Nextcloud 사용자별 Connected accounts 설정에 두고 server env에는 저장하지 않는다.
 
 ## Secret rotation 단위
 
@@ -226,4 +227,3 @@ v0.2 Epic A에 추가한다.
 - split env example files
 - `.gitignore` secret patterns
 - compose helper script 또는 runbook에 multi `--env-file` 명령
-

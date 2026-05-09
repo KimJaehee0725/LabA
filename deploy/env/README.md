@@ -25,3 +25,5 @@ Generated Authentik client secrets and MinIO access keys belong only in `/srv/la
 `08-create-minio-service-users.sh` creates missing MinIO users and re-attaches policies; rotate an existing MinIO access key as an explicit maintenance action.
 
 `99-demo.env` is staging-only. It stores temporary demo login data for `52-seed-demo-data.sh` and must not be committed.
+
+Nextcloud WebDAV/API seed and smoke credentials should be runtime-only app passwords when possible (`NEXTCLOUD_SEED_APP_PASSWORD`, `NEXTCLOUD_SMOKE_PASSWORD`). Do not store user GitHub PATs or OAuth secrets in server env files; the Nextcloud GitHub integration uses each user's Connected accounts settings.

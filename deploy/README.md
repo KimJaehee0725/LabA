@@ -27,10 +27,11 @@ deploy/
 4. Generate staging-only `/etc/hosts` entries and self-signed TLS files when using the hosts+self-signed gate.
 5. Start edge Nginx after TLS placeholder certs exist.
 6. Start Authentik and apply blueprints through the Authentik UI/API.
-7. Create OIDC providers and write generated client secrets into server env files only.
+7. Create OIDC/proxy providers with module bootstrap scripts and write generated client secrets into server env files only.
 8. Start app modules.
-9. Run module checks.
-10. Run backup dry-run and integrated smoke.
+9. Seed demo/runtime baselines where applicable, such as Gitea/Plane demo data and the Nextcloud document hub.
+10. Run module checks.
+11. Run backup dry-run and integrated smoke.
 
 ## Secret Policy
 
