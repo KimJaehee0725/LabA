@@ -39,6 +39,9 @@ services:
       AUTHENTIK_HOST: https://${AUTH_DOMAIN}
       AUTHENTIK_INSECURE: "false"
       AUTHENTIK_TOKEN: ${AUTHENTIK_OUTPOST_MLFLOW_TOKEN}
+      SSL_CERT_FILE: /run/lab-platform-ca/lab-internal-ca.crt
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/nginx/ssl/lab-internal-ca.crt:/run/lab-platform-ca/lab-internal-ca.crt:ro
     networks:
       - lab_backend
 

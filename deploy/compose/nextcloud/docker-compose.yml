@@ -27,6 +27,9 @@ services:
       - ${LAB_PLATFORM_ROOT}/data/nextcloud/data:/var/www/html/data
       - ${LAB_PLATFORM_ROOT}/data/nextcloud/custom_apps:/var/www/html/custom_apps
       - ${LAB_PLATFORM_ROOT}/data/nextcloud/config:/var/www/html/config
+      - ${LAB_PLATFORM_ROOT}/gitea/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - ${LAB_PLATFORM_ROOT}/gitea/ca-certificates.crt:/var/www/html/resources/config/ca-bundle.crt:ro
+      - ./lab-ca.ini:/usr/local/etc/php/conf.d/lab-ca.ini:ro
     networks:
       - lab_backend
       - lab_data
@@ -49,6 +52,9 @@ services:
       - ${LAB_PLATFORM_ROOT}/data/nextcloud/data:/var/www/html/data
       - ${LAB_PLATFORM_ROOT}/data/nextcloud/custom_apps:/var/www/html/custom_apps
       - ${LAB_PLATFORM_ROOT}/data/nextcloud/config:/var/www/html/config
+      - ${LAB_PLATFORM_ROOT}/gitea/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - ${LAB_PLATFORM_ROOT}/gitea/ca-certificates.crt:/var/www/html/resources/config/ca-bundle.crt:ro
+      - ./lab-ca.ini:/usr/local/etc/php/conf.d/lab-ca.ini:ro
     networks:
       - lab_data
 
@@ -65,6 +71,8 @@ services:
       extra_params: --o:ssl.enable=false --o:ssl.termination=true
     cap_add:
       - MKNOD
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/gitea/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
     networks:
       - lab_backend
 

@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=deploy/scripts/lib/common.sh
 . "$SCRIPT_DIR/lib/common.sh"
 
-load_envs "$ENV_DIR/00-global.env" "$ENV_DIR/10-core.env" "$ENV_DIR/80-minio-policies.env"
+load_envs "$ENV_DIR/00-global.env" "$ENV_DIR/10-core.env" "$ENV_DIR/80-minio-policies.env" "$ENV_DIR/50-mlflow.env"
 require_cmd docker
 
 MINIO_ALIAS="${MINIO_ALIAS:-labminio}"
@@ -51,9 +51,9 @@ ensure_user() {
   if run_mc admin user info "$MINIO_ALIAS" "$access_key" >/dev/null 2>&1; then
     log "minio user exists: $label"
   else
-    run_mc admin user add "$MINIO_ALIAS" "$access_key" "$secret_key"
+    run_mc admin user add "$MINIO_ALIAS" "$access_key" "$secret_key" >/dev/null
   fi
-  run_mc admin policy attach "$MINIO_ALIAS" "$policy" --user "$access_key"
+  run_mc admin policy attach "$MINIO_ALIAS" "$policy" --user "$access_key" >/dev/null
 }
 
 ensure_user "gitea-lfs" "${GITEA_LFS_ACCESS_KEY:-}" "${GITEA_LFS_SECRET_KEY:-}" "${MINIO_POLICY_GITEA_LFS:-gitea-lfs-rw}"

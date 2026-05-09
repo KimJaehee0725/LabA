@@ -8,8 +8,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 load_envs \
   "$ENV_DIR/00-global.env" \
   "$ENV_DIR/10-core.env" \
-  "$ENV_DIR/50-mlflow.env" \
-  "$ENV_DIR/80-minio-policies.env"
+  "$ENV_DIR/80-minio-policies.env" \
+  "$ENV_DIR/50-mlflow.env"
 
 require_cmd docker
 require_cmd jq
@@ -25,11 +25,13 @@ MLFLOW_SMOKE_EXPERIMENT="${MLFLOW_SMOKE_EXPERIMENT:-lab-platform-smoke}"
 if [[ -z "${MLFLOW_S3_ACCESS_KEY:-}" || -z "${MLFLOW_S3_SECRET_KEY:-}" || "${MLFLOW_S3_ACCESS_KEY:-}" == change-me* || "${MLFLOW_S3_SECRET_KEY:-}" == change-me* ]]; then
   die "MLFLOW_S3_ACCESS_KEY and MLFLOW_S3_SECRET_KEY must be configured before artifact smoke"
 fi
+export MLFLOW_S3_ACCESS_KEY MLFLOW_S3_SECRET_KEY
 
-smoke_json="$(
-  docker exec \
+smoke_output="$(
+  docker exec -i \
     -e "MLFLOW_INTERNAL_TRACKING_URI=${MLFLOW_INTERNAL_TRACKING_URI}" \
     -e "MLFLOW_SMOKE_EXPERIMENT=${MLFLOW_SMOKE_EXPERIMENT}" \
+    -e GIT_PYTHON_REFRESH=quiet \
     "$MLFLOW_CONTAINER" python - <<'PY'
 import json
 import os
@@ -72,6 +74,7 @@ with mlflow.start_run(run_name=f"v0.3-smoke-{int(time.time())}") as run:
     }))
 PY
 )"
+smoke_json="$(awk '/^\{.*\}$/ { line = $0 } END { if (line == "") exit 1; print line }' <<<"$smoke_output")"
 
 run_id="$(jq -er '.run_id' <<<"$smoke_json")"
 artifact_file="$(jq -er '.artifact_file' <<<"$smoke_json")"
@@ -89,8 +92,8 @@ fi
 run_mc() {
   docker run --rm \
     --network lab_data \
-    -e "MLFLOW_S3_ACCESS_KEY=${MLFLOW_S3_ACCESS_KEY}" \
-    -e "MLFLOW_S3_SECRET_KEY=${MLFLOW_S3_SECRET_KEY}" \
+    -e MLFLOW_S3_ACCESS_KEY \
+    -e MLFLOW_S3_SECRET_KEY \
     --entrypoint /bin/sh \
     "$MINIO_MC_IMAGE" \
     -c 'mc alias set "$1" http://minio:9000 "$MLFLOW_S3_ACCESS_KEY" "$MLFLOW_S3_SECRET_KEY" >/dev/null; shift; exec mc "$@"' \

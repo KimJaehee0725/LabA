@@ -35,7 +35,7 @@ case "$status" in
   *) echo "unexpected unauthenticated MLflow status: $status" >&2; exit 1 ;;
 esac
 
-docker exec \
+docker exec -i \
   -e "MLFLOW_INTERNAL_URL=${MLFLOW_INTERNAL_URL}" \
   "$MLFLOW_CONTAINER" python - <<'PY'
 import os

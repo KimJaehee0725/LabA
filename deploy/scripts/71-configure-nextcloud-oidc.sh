@@ -14,7 +14,8 @@ NEXTCLOUD_DISCOVERY_URL="${NEXTCLOUD_DISCOVERY_URL:-https://${AUTH_DOMAIN:-auth.
 NEXTCLOUD_OIDC_GROUP_WHITELIST_REGEX="${NEXTCLOUD_OIDC_GROUP_WHITELIST_REGEX:-^lab-(admin|member|collab|guest)$}"
 NEXTCLOUD_OIDC_GROUP_PROVISIONING="${NEXTCLOUD_OIDC_GROUP_PROVISIONING:-1}"
 NEXTCLOUD_OIDC_GROUP_RESTRICT_LOGIN="${NEXTCLOUD_OIDC_GROUP_RESTRICT_LOGIN:-1}"
-COLLABORA_URL="${COLLABORA_URL:-https://${COLLABORA_DOMAIN:-office.lab.snu.ac.kr}}"
+COLLABORA_PUBLIC_URL="${COLLABORA_PUBLIC_URL:-${COLLABORA_URL:-https://${COLLABORA_DOMAIN:-office.lab.snu.ac.kr}}}"
+COLLABORA_INTERNAL_URL="${COLLABORA_INTERNAL_URL:-http://collabora:9980}"
 
 if [[ -z "${NEXTCLOUD_OIDC_CLIENT_SECRET:-}" || "${NEXTCLOUD_OIDC_CLIENT_SECRET:-}" == change-me* ]]; then
   die "set NEXTCLOUD_OIDC_CLIENT_SECRET in $ENV_DIR/60-nextcloud.env before running"
@@ -38,6 +39,8 @@ docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ user_oidc:provider "$NEXT
   --group-whitelist-regex="$provider_group_regex" \
   --group-restrict-login-to-whitelist="$NEXTCLOUD_OIDC_GROUP_RESTRICT_LOGIN"
 
-docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ richdocuments:activate-config
-docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ config:app:set richdocuments wopi_url --value="$COLLABORA_URL"
-docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ config:app:set richdocuments public_wopi_url --value="$COLLABORA_URL"
+docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ config:app:set richdocuments wopi_url --value="$COLLABORA_INTERNAL_URL"
+docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ config:app:set richdocuments public_wopi_url --value="$COLLABORA_PUBLIC_URL"
+docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ richdocuments:activate-config \
+  --wopi-url="$COLLABORA_INTERNAL_URL" \
+  --callback-url="https://${NEXTCLOUD_DOMAIN:-files.lab.snu.ac.kr}"

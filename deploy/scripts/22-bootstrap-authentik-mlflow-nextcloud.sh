@@ -18,6 +18,7 @@ require_cmd mktemp
 AUTHENTIK_WORKER_CONTAINER="${AUTHENTIK_WORKER_CONTAINER:-authentik-worker}"
 AUTH_URL="${AUTH_URL:-https://${AUTH_DOMAIN:-auth.lab.snu.ac.kr}}"
 APP_POLICY_NAME="${APP_POLICY_NAME:-require-active-lab-user}"
+AUTHENTIK_OIDC_SIGNING_KEY_NAME="${AUTHENTIK_OIDC_SIGNING_KEY_NAME:-authentik Self-signed Certificate}"
 
 NEXTCLOUD_OIDC_CLIENT_ID="${NEXTCLOUD_OIDC_CLIENT_ID:-nextcloud}"
 NEXTCLOUD_OIDC_CLIENT_SECRET="${NEXTCLOUD_OIDC_CLIENT_SECRET:-}"
@@ -40,6 +41,7 @@ trap 'rm -f "$authentik_output"' EXIT
 if [[ -z "$NEXTCLOUD_OIDC_CLIENT_SECRET" || "$NEXTCLOUD_OIDC_CLIENT_SECRET" == change-me* ]]; then
   die "set NEXTCLOUD_OIDC_CLIENT_SECRET in $ENV_DIR/60-nextcloud.env before bootstrapping Nextcloud OIDC"
 fi
+export NEXTCLOUD_OIDC_CLIENT_SECRET
 
 update_env_value() {
   local file="$1"
@@ -53,8 +55,11 @@ update_env_value() {
   owner="$(stat -c '%u' "$file")"
   group="$(stat -c '%g' "$file")"
 
-  awk -v key="$key" -v value="$value" '
-    BEGIN { updated = 0 }
+  ENV_VALUE="$value" awk -v key="$key" '
+    BEGIN {
+      updated = 0
+      value = ENVIRON["ENV_VALUE"]
+    }
     $0 ~ "^" key "=" {
       print key "=" value
       updated = 1
@@ -75,8 +80,9 @@ update_env_value() {
 docker exec \
   -e "AUTH_URL=${AUTH_URL}" \
   -e "APP_POLICY_NAME=${APP_POLICY_NAME}" \
+  -e "AUTHENTIK_OIDC_SIGNING_KEY_NAME=${AUTHENTIK_OIDC_SIGNING_KEY_NAME}" \
   -e "NEXTCLOUD_OIDC_CLIENT_ID=${NEXTCLOUD_OIDC_CLIENT_ID}" \
-  -e "NEXTCLOUD_OIDC_CLIENT_SECRET=${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
+  -e NEXTCLOUD_OIDC_CLIENT_SECRET \
   -e "NEXTCLOUD_OIDC_APP_SLUG=${NEXTCLOUD_OIDC_APP_SLUG}" \
   -e "NEXTCLOUD_OIDC_APP_NAME=${NEXTCLOUD_OIDC_APP_NAME}" \
   -e "NEXTCLOUD_OIDC_REDIRECT_URI=${NEXTCLOUD_OIDC_REDIRECT_URI}" \
@@ -90,6 +96,7 @@ docker exec \
 import os
 
 from authentik.core.models import Application
+from authentik.crypto.models import CertificateKeyPair
 from authentik.flows.models import Flow
 from authentik.outposts.models import Outpost, OutpostConfig, OutpostType
 from authentik.policies.expression.models import ExpressionPolicy
@@ -109,6 +116,13 @@ policy_name = os.environ["APP_POLICY_NAME"]
 policy = ExpressionPolicy.objects.get(name=policy_name)
 authorization_flow = Flow.objects.get(slug="default-provider-authorization-implicit-consent")
 invalidation_flow = Flow.objects.get(slug="default-provider-invalidation-flow")
+signing_key = CertificateKeyPair.objects.filter(
+    name=os.environ["AUTHENTIK_OIDC_SIGNING_KEY_NAME"]
+).first()
+if signing_key is None:
+    raise SystemExit(
+        f"missing Authentik signing key: {os.environ['AUTHENTIK_OIDC_SIGNING_KEY_NAME']}"
+    )
 
 
 def bind_policy(application):
@@ -160,6 +174,7 @@ nextcloud_provider.client_id = os.environ["NEXTCLOUD_OIDC_CLIENT_ID"]
 nextcloud_provider.client_secret = os.environ["NEXTCLOUD_OIDC_CLIENT_SECRET"]
 nextcloud_provider.include_claims_in_id_token = True
 nextcloud_provider.issuer_mode = IssuerMode.PER_PROVIDER
+nextcloud_provider.signing_key = signing_key
 nextcloud_provider.redirect_uris = [
     RedirectURI(RedirectURIMatchingMode.STRICT, os.environ["NEXTCLOUD_OIDC_REDIRECT_URI"]),
 ]

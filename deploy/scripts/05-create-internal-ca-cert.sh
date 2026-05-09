@@ -17,6 +17,8 @@ CA_CERT_FILE="${CERT_DIR}/lab-internal-ca.crt"
 CA_KEY_FILE="${CERT_DIR}/lab-internal-ca.key"
 CERT_FILE="${CERT_DIR}/origin.crt"
 KEY_FILE="${CERT_DIR}/origin.key"
+LAB_CA_BUNDLE_FILE="${LAB_CA_BUNDLE_FILE:-$LAB_PLATFORM_ROOT/gitea/ca-certificates.crt}"
+SYSTEM_CA_BUNDLE_FILE="${SYSTEM_CA_BUNDLE_FILE:-/etc/ssl/certs/ca-certificates.crt}"
 CA_VALID_DAYS="${CA_VALID_DAYS:-3650}"
 LEAF_VALID_DAYS="${LEAF_VALID_DAYS:-397}"
 
@@ -36,6 +38,7 @@ if [[ "${DRY_RUN:-false}" == "true" ]]; then
   echo "+ create or reuse internal CA at $CA_CERT_FILE"
   echo "+ backup existing $CERT_FILE and $KEY_FILE when present"
   echo "+ create CA-signed origin certificate chain at $CERT_FILE"
+  echo "+ append $CA_CERT_FILE to $LAB_CA_BUNDLE_FILE"
   exit 0
 fi
 
@@ -161,8 +164,27 @@ create_leaf() {
   log "created CA-signed origin certificate chain at $CERT_FILE"
 }
 
+update_lab_ca_bundle() {
+  local bundle_dir tmp_bundle
+
+  bundle_dir="$(dirname "$LAB_CA_BUNDLE_FILE")"
+  install -d -m 0750 "$bundle_dir"
+  tmp_bundle="$(mktemp "$bundle_dir/ca-certificates.crt.XXXXXX")"
+
+  if [[ -f "$SYSTEM_CA_BUNDLE_FILE" ]]; then
+    cat "$SYSTEM_CA_BUNDLE_FILE" "$CA_CERT_FILE" >"$tmp_bundle"
+  else
+    cp "$CA_CERT_FILE" "$tmp_bundle"
+  fi
+
+  install -m 0644 "$tmp_bundle" "$LAB_CA_BUNDLE_FILE"
+  rm -f "$tmp_bundle"
+  log "updated lab CA bundle at $LAB_CA_BUNDLE_FILE"
+}
+
 create_ca
 create_leaf
+update_lab_ca_bundle
 
 chown root:root "$CERT_DIR" "$CA_CERT_FILE" "$CA_KEY_FILE" "$CERT_FILE" "$KEY_FILE"
 chmod 0700 "$CERT_DIR"

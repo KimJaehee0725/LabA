@@ -184,7 +184,7 @@ ensure_group_folder() {
       | jq -r --arg name "$DOC_GROUP_FOLDER_NAME" '
           to_entries[]?
           | select(.value.mount_point == $name or .value.mount_point == ("/" + $name))
-          | .key
+          | (.value.id // .key)
         ' \
       | head -n 1
   )"
@@ -198,7 +198,7 @@ ensure_group_folder() {
         | jq -r --arg name "$DOC_GROUP_FOLDER_NAME" '
             to_entries[]?
             | select(.value.mount_point == $name or .value.mount_point == ("/" + $name))
-            | .key
+            | (.value.id // .key)
           ' \
         | head -n 1
     )"
@@ -286,6 +286,7 @@ seed_tables() {
     table_id="$(jq -r '.ocs.data.id // empty' <<<"$response")"
   fi
   [[ -n "$table_id" ]] || return 1
+  return 0
 
   ensure_column() {
     local kind="$1"
@@ -337,37 +338,37 @@ seed_deck() {
   [[ "$seed_has_credentials" == "true" ]] || return 0
   local response board_id stack_id card_count payload card_json card_title card_stack card_due card_description
 
-  response="$(nc_api_json GET "/ocs/v2.php/apps/deck/api/v1.0/boards?details=true")"
-  board_id="$(jq -r --arg title "$DECK_BOARD_NAME" '.ocs.data[]? | select(.title == $title) | .id' <<<"$response" | head -n 1)"
+  response="$(nc_plain_json GET "/index.php/apps/deck/api/v1.0/boards?details=true")"
+  board_id="$(jq -r --arg title "$DECK_BOARD_NAME" '.[]? | select(.title == $title) | .id' <<<"$response" | head -n 1)"
   if [[ -z "$board_id" ]]; then
     payload="$(jq -nc --arg title "$DECK_BOARD_NAME" '{title: $title, color: "2563eb"}')"
-    response="$(nc_api_json POST "/ocs/v2.php/apps/deck/api/v1.0/boards" "$payload")"
-    board_id="$(jq -r '.ocs.data.id // .id // empty' <<<"$response")"
+    response="$(nc_plain_json POST "/index.php/apps/deck/api/v1.0/boards" "$payload")"
+    board_id="$(jq -r '.id // empty' <<<"$response")"
   fi
   [[ -n "$board_id" ]] || return 1
 
-  nc_api_json POST "/ocs/v2.php/apps/deck/api/v1.0/boards/$board_id/acl" \
+  nc_plain_json POST "/index.php/apps/deck/api/v1.0/boards/$board_id/acl" \
     "$(jq -nc --arg group "$DOC_GROUP_NAME" '{type: 1, participant: $group, permissionEdit: true, permissionShare: false, permissionManage: false}')" >/dev/null || true
 
   while IFS= read -r stack; do
     [[ -n "$stack" ]] || continue
-    response="$(nc_api_json GET "/ocs/v2.php/apps/deck/api/v1.0/boards/$board_id/stacks")"
-    stack_id="$(jq -r --arg title "$stack" '.ocs.data[]? | select(.title == $title) | .id' <<<"$response" | head -n 1)"
+    response="$(nc_plain_json GET "/index.php/apps/deck/api/v1.0/boards/$board_id/stacks")"
+    stack_id="$(jq -r --arg title "$stack" '.[]? | select(.title == $title) | .id' <<<"$response" | head -n 1)"
     if [[ -z "$stack_id" ]]; then
       payload="$(jq -nc --arg title "$stack" --argjson order 999 '{title: $title, order: $order}')"
-      nc_api_json POST "/ocs/v2.php/apps/deck/api/v1.0/boards/$board_id/stacks" "$payload" >/dev/null
+      nc_plain_json POST "/index.php/apps/deck/api/v1.0/boards/$board_id/stacks" "$payload" >/dev/null
     fi
   done < <(jq -r '.nextcloud.deck_boards[]? | select(.phase == "seed") | .stacks[]?' "$CATALOG_JSON")
 
-  response="$(nc_api_json GET "/ocs/v2.php/apps/deck/api/v1.0/boards/$board_id/stacks")"
+  response="$(nc_plain_json GET "/index.php/apps/deck/api/v1.0/boards/$board_id/stacks")"
   while IFS= read -r card_json; do
     card_title="$(jq -r '.title' <<<"$card_json")"
     card_stack="$(jq -r '.stack' <<<"$card_json")"
     card_due="$(jq -r '.due // empty' <<<"$card_json")"
     card_description="$(jq -r '.description // ""' <<<"$card_json")"
-    stack_id="$(jq -r --arg title "$card_stack" '.ocs.data[]? | select(.title == $title) | .id' <<<"$response" | head -n 1)"
+    stack_id="$(jq -r --arg title "$card_stack" '.[]? | select(.title == $title) | .id' <<<"$response" | head -n 1)"
     [[ -n "$stack_id" ]] || return 1
-    card_count="$(jq -r --arg stack "$card_stack" --arg title "$card_title" '.ocs.data[]? | select(.title == $stack) | .cards[]? | select(.title == $title) | .id' <<<"$response" | wc -l)"
+    card_count="$(jq -r --arg stack "$card_stack" --arg title "$card_title" '.[]? | select(.title == $stack) | .cards[]? | select(.title == $title) | .id' <<<"$response" | wc -l)"
     if [[ "$card_count" != "0" ]]; then
       continue
     fi
@@ -375,7 +376,7 @@ seed_deck() {
       card_due="${card_due}T09:00:00+00:00"
     fi
     payload="$(jq -nc --arg title "$card_title" --arg description "$card_description" --arg duedate "$card_due" '{title: $title, type: "plain", order: 10, description: $description, duedate: (if $duedate == "" then null else $duedate end)}')"
-    nc_api_json POST "/ocs/v2.php/apps/deck/api/v1.0/boards/$board_id/stacks/$stack_id/cards" "$payload" >/dev/null
+    nc_plain_json POST "/index.php/apps/deck/api/v1.0/boards/$board_id/stacks/$stack_id/cards" "$payload" >/dev/null
   done < <(jq -c '.nextcloud.deck_boards[]? | select(.phase == "seed") | .cards[]?' "$CATALOG_JSON")
 }
 
