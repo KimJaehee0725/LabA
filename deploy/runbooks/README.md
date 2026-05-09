@@ -1,28 +1,41 @@
 # Runbook Index
 
-Run modules in this order:
+## Active Huly Workspace MVP Runbooks
 
-1. `v0.2-runtime-gate-1.md`
-2. `core.md`
-3. `edge-nginx.md`
-4. `authentik.md`
-5. `gitea.md`
-6. `plane.md`
-7. `mlflow.md`
-8. `nextcloud-collabora.md`
-9. `overleaf.md`
-10. `backup-restore.md`
-11. `v0.3-smoke.md`
-12. `demo-data.md`
+Run the active Huly workspace MVP phases in this order:
 
-Common preflight:
+1. `phase1-host-skeleton.md`
+2. Edge/Auth runbook to be written in Phase 2
+3. Huly pilot runbook to be written in Phase 3
+4. Storage/HF UI runbooks to be written in later phases
+5. Overleaf runbook refresh to be written before Overleaf CE deployment
+6. Backup/monitoring runbooks to be refreshed before pilot opening
+
+Common Phase 1 dry-run:
 
 ```bash
-cd /srv/lab-platform
-sudo ./scripts/00-create-directories.sh
-sudo ./scripts/01-create-networks.sh
+DRY_RUN=true LAB_STACK_ROOT=/opt/lab-stack deploy/scripts/00-create-directories.sh
+DRY_RUN=true deploy/scripts/01-create-networks.sh
+DRY_RUN=true deploy/scripts/09-check-host-readiness.sh
 ```
 
-After `v0.2-runtime-gate-1.md` passes, keep core, edge, and Authentik running. App waves build on those services.
+Phase 1 does not start live services and does not create real secrets.
 
-Rollback rule: stop the affected module first, keep database/object storage intact, preserve logs, and do not rotate or overwrite secrets during incident triage.
+## Historical v0.x Runbooks
+
+The following runbooks document the archived Plane/Gitea/MLflow/Nextcloud direction and remain reference material only unless a later decision explicitly reactivates them:
+
+- `v0.2-runtime-gate-1.md`
+- `core.md`
+- `edge-nginx.md`
+- `authentik.md`
+- `gitea.md`
+- `plane.md`
+- `mlflow.md`
+- `nextcloud-collabora.md`
+- `overleaf.md`
+- `backup-restore.md`
+- `v0.3-smoke.md`
+- `demo-data.md`
+
+Rollback rule for any later live phase: stop the affected module first, preserve data and logs, and do not rotate or overwrite secrets during incident triage.

@@ -61,9 +61,9 @@
                 </tr>
                 <tr>
                   <td>1. Host skeleton</td>
-                  <td>새 runtime root와 Docker/network/env skeleton 구성</td>
-                  <td>`/opt/lab-stack`, compose skeleton, env examples, secret policy</td>
-                  <td>Docker hello-world, root permissions, no secret in git</td>
+                  <td>새 runtime root와 Docker/network/env skeleton을 repo + dry-run으로만 확정</td>
+                  <td>`/opt/lab-stack`, `labstack_public`, `labstack_backend`, `labstack_data`, compose/env examples, secret policy</td>
+                  <td>dry-run evidence, root path 확인, no secret in git</td>
                 </tr>
                 <tr>
                   <td>2. Edge/Auth</td>
@@ -127,7 +127,13 @@
                 </tr>
                 <tr>
                   <td>Week 1</td>
-                  <td>Host skeleton, Nginx TLS, Authentik bootstrap</td>
+                  <td>Phase 1 Host Skeleton repo 정리와 dry-run</td>
+                  <td>`/opt/lab-stack` layout와 `labstack_public/backend/data` 네트워크 dry-run evidence</td>
+                  <td>Plane/Gitea/Nextcloud/MLflow를 active order에서 제외</td>
+                </tr>
+                <tr>
+                  <td>Week 1-2</td>
+                  <td>Nginx TLS, Authentik bootstrap</td>
                   <td>auth host HTTPS + admin 2FA + SMTP test</td>
                   <td>forward-auth fallback 채택 기준</td>
                 </tr>
@@ -187,7 +193,10 @@
         <section class="section">
           <h2>Dependency order</h2>
           <pre><code>external readiness
-  -> host skeleton
+  -> host skeleton repo + dry-run only
+     - root: /opt/lab-stack
+     - networks: labstack_public, labstack_backend, labstack_data
+     - inactive in Phase 1: Plane, Gitea, Nextcloud, MLflow
   -> school TLS and Nginx
   -> Authentik identity baseline
     -> Huly pilot
@@ -197,6 +206,16 @@
     -> Overleaf account policy
   -> portal, backup, monitoring
   -> onboarding and production pilot</code></pre>
+        </section>
+
+        <section class="section">
+          <h2>Phase 1 boundaries</h2>
+          <ul>
+            <li>Phase 1 produces repo documentation, placeholder env examples, compose layout notes, and dry-run evidence only.</li>
+            <li>No live Huly, Authentik, MinIO, Overleaf, or HF-like UI service is started as a Phase 1 completion requirement.</li>
+            <li>No real secret, TLS private key, token, generated client secret, or service account credential is written to git.</li>
+            <li>Legacy Plane, Gitea, Nextcloud, and MLflow files are not deleted here, but they are excluded from the active Phase 1 order.</li>
+          </ul>
         </section>
 
         <section class="section">

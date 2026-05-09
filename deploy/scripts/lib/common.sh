@@ -3,8 +3,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LAB_PLATFORM_ROOT="${LAB_PLATFORM_ROOT:-/srv/lab-platform}"
-ENV_DIR="${ENV_DIR:-${LAB_PLATFORM_ROOT}/env}"
+LAB_STACK_ROOT="${LAB_STACK_ROOT:-/opt/lab-stack}"
+ENV_DIR="${ENV_DIR:-${LAB_STACK_ROOT}/env}"
+DRY_RUN="${DRY_RUN:-false}"
 
 log() {
   printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >&2
@@ -33,12 +34,41 @@ load_envs() {
 }
 
 run_cmd() {
-  if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    printf '+ %q' "$@"
+  if is_dry_run; then
+    printf '+'
+    printf ' %q' "$@"
     printf '\n'
     return 0
   fi
   "$@"
+}
+
+is_dry_run() {
+  [[ "$DRY_RUN" == "true" || "$DRY_RUN" == "1" ]]
+}
+
+parse_common_args() {
+  while (($#)); do
+    case "$1" in
+      --dry-run)
+        DRY_RUN=true
+        ;;
+      -h|--help)
+        print_usage
+        exit 0
+        ;;
+      *)
+        die "unknown argument: $1"
+        ;;
+    esac
+    shift
+  done
+}
+
+print_usage() {
+  cat <<USAGE
+Usage: ${0##*/} [--dry-run]
+USAGE
 }
 
 require_cmd() {

@@ -1,27 +1,30 @@
 # Deployment Env Files
 
-Copy each `*.env.example` file to `/srv/lab-platform/env/*.env` and replace placeholders on the server.
+Phase 1 is repo + dry-run only. Keep tracked files as examples with placeholders, and do not add real secrets, generated client secrets, access keys, tokens, private keys, activation URLs, or production SMTP credentials.
+
+For a later real host deployment, copy each active `*.env.example` file to `/opt/lab-stack/env/*.env` and replace placeholders on the server. Plane, Gitea, Nextcloud, and MLflow env examples are historical reference only for Phase 1 and are not part of the active Huly workspace MVP env surface.
 
 Recommended permissions:
 
 ```bash
-sudo install -d -m 0750 /srv/lab-platform/env
-sudo chown -R root:lab-ops /srv/lab-platform/env
-sudo chmod 0640 /srv/lab-platform/env/*.env
+sudo install -d -m 0750 /opt/lab-stack/env
+sudo chown -R root:lab-ops /opt/lab-stack/env
+sudo chmod 0640 /opt/lab-stack/env/*.env
 ```
 
 For a single-operator host, use `root:root` and `0600`.
 
 Compose commands should explicitly load only the env files required by the module. Later env files can override earlier ones, so keep variable names service-scoped unless a value is intentionally global.
 
-After adding a new service env file, re-run the relevant bootstrap scripts so server-side state matches the env values:
+Phase 1 dry-runs may render or lint examples, but they should not start services or bootstrap server-side state. The active host skeleton networks are:
 
-```bash
-sudo /srv/lab-platform/scripts/02-bootstrap-postgres.sh
-sudo /srv/lab-platform/scripts/08-create-minio-service-users.sh
+```text
+labstack_public
+labstack_backend
+labstack_data
 ```
 
-Generated Authentik client secrets and MinIO access keys belong only in `/srv/lab-platform/env/*.env`.
-`08-create-minio-service-users.sh` creates missing MinIO users and re-attaches policies; rotate an existing MinIO access key as an explicit maintenance action.
+Generated Authentik client secrets and MinIO access keys belong only in `/opt/lab-stack/env/*.env`.
+MinIO user/key rotation remains an explicit maintenance action, not a repo change.
 
-`99-demo.env` is staging-only. It stores temporary demo login data for `52-seed-demo-data.sh` and must not be committed.
+`99-demo.env` is staging-only. It stores temporary demo login data and must not be committed.
