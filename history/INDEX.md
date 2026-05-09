@@ -1,6 +1,6 @@
 # History Index
 
-Generated: 2026-05-08 23:38 +0000
+Generated: 2026-05-09 03:55 +0000
 
 ## Current Context
 
@@ -11,10 +11,12 @@ Generated: 2026-05-08 23:38 +0000
 
 ### daily
 
+- `history/daily/2026-05-09.md` - Daily Log - 2026-05-09
 - `history/daily/2026-05-08.md` - Daily Log - 2026-05-08
 
 ### changes
 
+- `history/changes/2026-05-09-035429-validate-internal-ca-tls-and-plane-oidc-ssl-verification.md` - Change - Validate internal CA TLS and Plane OIDC SSL verification
 - `history/changes/2026-05-08-180602-add-plane-authentik-oidc-custom-images.md` - Change - Plane Authentik OIDC custom image 추가
 - `history/changes/2026-05-08-154331-add-staging-demo-data-seed-scripts.md` - Change - Add staging demo data seed scripts
 - `history/changes/2026-05-08-143446-validate-v0-2-1-staging-current-wave.md` - Change - Validate v0.2.1 staging current wave

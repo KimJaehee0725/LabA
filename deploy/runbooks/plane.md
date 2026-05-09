@@ -10,8 +10,10 @@ Set the Plane OIDC values in `40-plane.env` before running Plane bootstrap:
 - `PLANE_OIDC_CLIENT_ID=plane`
 - `PLANE_OIDC_CLIENT_SECRET=<generated Authentik provider secret>`
 - `PLANE_OIDC_SCOPES="openid email profile groups"`
-- `PLANE_OIDC_VERIFY_SSL=1` for trusted TLS, or `0` only for the current self-signed staging edge certificate.
+- `PLANE_OIDC_VERIFY_SSL=1` after the internal CA certificate is installed, or `0` only for early smoke with the self-signed edge certificate.
 - `PLANE_OIDC_PROVIDER_LABEL=Authentik`
+
+The Plane API container mounts `/srv/lab-platform/nginx/ssl/lab-internal-ca.crt` and sets `REQUESTS_CA_BUNDLE` so Python `requests` can verify Authentik HTTPS endpoints when `PLANE_OIDC_VERIFY_SSL=1`.
 
 Create the Postgres role/database and MinIO service user after the env file is ready:
 
@@ -41,6 +43,12 @@ docker compose \
 ```
 
 Review `README.patch-notes.md` against the selected Plane release before production.
+
+Run bootstrap after Plane is up. It marks the instance as set up and synchronizes the OIDC keys from `40-plane.env` into Plane `InstanceConfiguration`, including `OIDC_VERIFY_SSL`.
+
+```bash
+sudo /srv/lab-platform/scripts/50-bootstrap-plane.sh
+```
 
 ## OIDC
 

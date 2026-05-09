@@ -74,12 +74,15 @@ services:
       OIDC_SCOPES: ${PLANE_OIDC_SCOPES:-openid email profile groups}
       OIDC_VERIFY_SSL: ${PLANE_OIDC_VERIFY_SSL:-1}
       OIDC_PROVIDER_LABEL: ${PLANE_OIDC_PROVIDER_LABEL:-Authentik}
+      REQUESTS_CA_BUNDLE: /run/lab-platform-ca/lab-internal-ca.crt
       ENABLE_SIGNUP: ${PLANE_ENABLE_SIGNUP:-0}
       ENABLE_EMAIL_PASSWORD: ${PLANE_ENABLE_EMAIL_PASSWORD:-1}
       DISABLE_WORKSPACE_CREATION: ${PLANE_DISABLE_WORKSPACE_CREATION:-0}
       ENABLE_MAGIC_LINK_LOGIN: ${PLANE_ENABLE_MAGIC_LINK_LOGIN:-0}
       IS_INTERCOM_ENABLED: ${PLANE_IS_INTERCOM_ENABLED:-0}
       FILE_SIZE_LIMIT: ${PLANE_FILE_SIZE_LIMIT:-5242880}
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/nginx/ssl/lab-internal-ca.crt:/run/lab-platform-ca/lab-internal-ca.crt:ro
     networks:
       - lab_backend
       - lab_data
