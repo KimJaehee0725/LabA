@@ -27,3 +27,5 @@ Generated Authentik client secrets and MinIO access keys belong only in `/srv/la
 `99-demo.env` is staging-only. It stores temporary demo login data for `52-seed-demo-data.sh` and must not be committed.
 
 Nextcloud WebDAV/API seed and smoke credentials should be runtime-only app passwords when possible (`NEXTCLOUD_SEED_APP_PASSWORD`, `NEXTCLOUD_SMOKE_PASSWORD`). Do not store user GitHub PATs or OAuth secrets in server env files; the Nextcloud GitHub integration uses each user's Connected accounts settings.
+
+For Grist, keep `GRIST_OIDC_CLIENT_SECRET`, `GRIST_SESSION_SECRET`, `GRIST_BOOT_KEY`, and any `GRIST_SEED_API_KEY` only in `/srv/lab-platform/env/65-grist.env`. The seed/check scripts can use either a runtime API key or the boot key header; do not copy either value into reports, history, or demo data.

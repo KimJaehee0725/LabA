@@ -12,7 +12,8 @@ load_envs \
   "$ENV_DIR/30-gitea.env" \
   "$ENV_DIR/40-plane.env" \
   "$ENV_DIR/50-mlflow.env" \
-  "$ENV_DIR/60-nextcloud.env"
+  "$ENV_DIR/60-nextcloud.env" \
+  "$ENV_DIR/65-grist.env"
 
 require_cmd docker
 
@@ -52,3 +53,4 @@ bootstrap_database "gitea" "${GITEA_DB_NAME:-gitea}" "${GITEA_DB_USER:-gitea_use
 bootstrap_database "plane" "${PLANE_DB_NAME:-plane}" "${PLANE_DB_USER:-plane_user}" "${PLANE_DB_PASSWORD:-}"
 bootstrap_database "mlflow" "${MLFLOW_DB_NAME:-mlflow}" "${MLFLOW_DB_USER:-mlflow_user}" "${MLFLOW_DB_PASSWORD:-}"
 bootstrap_database "nextcloud" "${NEXTCLOUD_DB_NAME:-nextcloud}" "${NEXTCLOUD_DB_USER:-nextcloud_user}" "${NEXTCLOUD_DB_PASSWORD:-}"
+bootstrap_database "grist" "${GRIST_DB_NAME:-grist}" "${GRIST_DB_USER:-grist_user}" "${GRIST_DB_PASSWORD:-}"

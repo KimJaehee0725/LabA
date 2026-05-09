@@ -12,6 +12,7 @@ v0.1의 목표는 v0 청사진을 실제 구현 직전 수준으로 세분화하
 | v0.1 | 상세 기획 | 모듈별 구현 계획, 검증 기준, v0.2 backlog |
 | v0.2 | 모듈별 구현 | compose, nginx, blueprints, scripts, env example |
 | v0.3 | 1차 통합 검증 | 전 서비스 기동, 로그인/업로드/백업 smoke test |
+| v0.4 | 연구 워크스페이스 MVP | Grist 구조화 DB, Plane/Collectives 책임 분리, strict OSS seed/check |
 
 ## 문서 목록
 
@@ -31,6 +32,7 @@ v0.1의 목표는 v0 청사진을 실제 구현 직전 수준으로 세분화하
 | [11-v0.3-smoke-test-plan.md](./11-v0.3-smoke-test-plan.md) | 1차 통합 smoke test 체크리스트 |
 | [12-env-and-git-operations.md](./12-env-and-git-operations.md) | env 분할과 git/branch/worktree 운영 원칙 |
 | [13-data-model.md](./13-data-model.md) | v0.3 Lab domain data model과 demo seed catalog |
+| [14-v0.4-research-workspace.md](./14-v0.4-research-workspace.md) | v0.4 strict-OSS 연구 워크스페이스, Grist, 책임 분리, GitHub 정책 |
 
 ## v0.1 설계 원칙
 
@@ -51,5 +53,7 @@ v0.1의 목표는 v0 청사진을 실제 구현 직전 수준으로 세분화하
 - Gitea authentication: https://docs.gitea.com/usage/authentication
 - MLflow artifact stores: https://mlflow.org/docs/latest/self-hosting/architecture/artifact-store/
 - Nextcloud OIDC authentication: https://docs.nextcloud.com/server/latest/admin_manual/configuration_user/user_auth_oidc.html
+- Grist OIDC: https://support.getgrist.com/install/oidc/
+- Grist API: https://support.getgrist.com/api/
 - Overleaf Toolkit: https://docs.overleaf.com/on-premises/getting-started/what-is-the-overleaf-toolkit
 - MinIO identity management: https://min.io/docs/minio/linux/administration/identity-access-management/minio-identity-management.html

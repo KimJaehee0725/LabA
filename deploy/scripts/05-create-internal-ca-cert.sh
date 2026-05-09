@@ -29,6 +29,7 @@ domains=(
   "${MLFLOW_DOMAIN:-mlflow.lab.snu.ac.kr}"
   "${NEXTCLOUD_DOMAIN:-files.lab.snu.ac.kr}"
   "${COLLABORA_DOMAIN:-office.lab.snu.ac.kr}"
+  "${GRIST_DOMAIN:-data.lab.snu.ac.kr}"
   "${OVERLEAF_DOMAIN:-papers.lab.snu.ac.kr}"
   "${MINIO_CONSOLE_DOMAIN:-storage.lab.snu.ac.kr}"
 )

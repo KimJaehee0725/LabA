@@ -105,6 +105,7 @@ return {
 | Plane | OAuth2/OIDC | `plane` | `/auth/oidc/callback/` |
 | Gitea | OAuth2/OIDC | `gitea` | `/user/oauth2/authentik/callback` |
 | Nextcloud | OAuth2/OIDC | `nextcloud` | `/apps/user_oidc/code` |
+| Grist | OAuth2/OIDC | `grist` | `/oauth2/callback` |
 | MinIO Console | OAuth2/OIDC | `minio` | `/oauth_callback` |
 | MLflow | Proxy Provider | none | Forward Auth outpost |
 
@@ -114,6 +115,7 @@ return {
 https://lab.snu.ac.kr
 https://hub.lab.snu.ac.kr
 https://files.lab.snu.ac.kr
+https://data.lab.snu.ac.kr
 https://storage.lab.snu.ac.kr
 https://mlflow.lab.snu.ac.kr
 ```

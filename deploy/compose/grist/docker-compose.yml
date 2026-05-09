@@ -1,0 +1,58 @@
+name: lab_grist
+
+services:
+  grist:
+    image: ${GRIST_IMAGE}
+    container_name: grist
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PORT: 8484
+      APP_HOME_URL: https://${GRIST_DOMAIN}
+      NODE_EXTRA_CA_CERTS: /run/lab-platform-ca/lab-internal-ca.crt
+      TYPEORM_TYPE: postgres
+      TYPEORM_HOST: postgres
+      TYPEORM_PORT: 5432
+      TYPEORM_DATABASE: ${GRIST_DB_NAME}
+      TYPEORM_USERNAME: ${GRIST_DB_USER}
+      TYPEORM_PASSWORD: ${GRIST_DB_PASSWORD}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/${GRIST_REDIS_DB}
+      GRIST_SESSION_SECRET: ${GRIST_SESSION_SECRET}
+      GRIST_DEFAULT_EMAIL: ${GRIST_DEFAULT_EMAIL}
+      GRIST_ADMIN_EMAIL: ${GRIST_ADMIN_EMAIL}
+      GRIST_SINGLE_ORG: ${GRIST_SINGLE_ORG}
+      GRIST_IN_SERVICE: ${GRIST_IN_SERVICE:-true}
+      GRIST_BOOT_KEY: ${GRIST_BOOT_KEY}
+      GRIST_LOGIN_SYSTEM_TYPE: oidc
+      GRIST_OIDC_SP_HOST: https://${GRIST_DOMAIN}
+      GRIST_OIDC_IDP_ISSUER: ${GRIST_OIDC_IDP_ISSUER}
+      GRIST_OIDC_IDP_CLIENT_ID: ${GRIST_OIDC_CLIENT_ID}
+      GRIST_OIDC_IDP_CLIENT_SECRET: ${GRIST_OIDC_CLIENT_SECRET}
+      GRIST_OIDC_IDP_SCOPES: ${GRIST_OIDC_IDP_SCOPES:-openid email profile groups}
+      GRIST_OIDC_SP_IGNORE_EMAIL_VERIFIED: ${GRIST_OIDC_SP_IGNORE_EMAIL_VERIFIED:-true}
+      GRIST_FORCE_LOGIN: ${GRIST_FORCE_LOGIN:-true}
+      GRIST_ANON_PLAYGROUND: ${GRIST_ANON_PLAYGROUND:-false}
+      GRIST_ORG_CREATION_ANYONE: ${GRIST_ORG_CREATION_ANYONE:-false}
+      GRIST_PERSONAL_ORGS: ${GRIST_PERSONAL_ORGS:-false}
+      GRIST_SANDBOX_FLAVOR: ${GRIST_SANDBOX_FLAVOR:-gvisor}
+      GRIST_HIDE_UI_ELEMENTS: ${GRIST_HIDE_UI_ELEMENTS:-helpCenter,billing,templates,multiSite,multiAccounts}
+      GRIST_ALLOW_AUTOMATIC_VERSION_CHECKING: "false"
+    volumes:
+      - ${LAB_PLATFORM_ROOT}/data/grist/persist:/persist
+      - ${LAB_PLATFORM_ROOT}/nginx/ssl/lab-internal-ca.crt:/run/lab-platform-ca/lab-internal-ca.crt:ro
+    networks:
+      - lab_backend
+      - lab_data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'node -e "require(''http'').get(''http://127.0.0.1:8484/status'', r => process.exit(r.statusCode >= 200 && r.statusCode < 400 ? 0 : 1)).on(''error'', () => process.exit(1))"'
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+networks:
+  lab_backend:
+    external: true
+  lab_data:
+    external: true

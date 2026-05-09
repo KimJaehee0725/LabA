@@ -34,7 +34,7 @@ Validate it on the host before seeding:
 python3 -c "import yaml; yaml.safe_load(open('/srv/lab-platform/data-model/lab-domain.v0.3.yaml'))"
 ```
 
-`52-seed-demo-data.sh` uses `/srv/lab-platform/data-model/lab-domain.v0.3.yaml` by default. If that file is absent and the script is run from the repository, it falls back to `deploy/data-model/lab-domain.v0.3.yaml`. To test a different catalog, set `DEMO_DATA_CATALOG=/path/to/catalog.yaml`.
+`52-seed-demo-data.sh` uses `/srv/lab-platform/data-model/lab-domain.v0.3.yaml` by default. If that file is absent and the script is run from the repository, it falls back to `deploy/data-model/lab-domain.v0.3.yaml`. To seed the v0.4 workspace catalog, install `deploy/data-model/lab-domain.v0.4.yaml` and run with `LAB_DOMAIN_CATALOG_VERSION=v0.4`. To test a different catalog, set `DEMO_DATA_CATALOG=/path/to/catalog.yaml`.
 
 ## Seed Demo Data
 
@@ -44,11 +44,19 @@ Copy the updated scripts and catalog to `/srv/lab-platform`, then run:
 sudo /srv/lab-platform/scripts/52-seed-demo-data.sh
 ```
 
+For the v0.4 workspace seed:
+
+```bash
+sudo LAB_DOMAIN_CATALOG_VERSION=v0.4 /srv/lab-platform/scripts/52-seed-demo-data.sh
+sudo LAB_DOMAIN_CATALOG_VERSION=v0.4 /srv/lab-platform/scripts/73-seed-nextcloud-document-hub.sh
+sudo /srv/lab-platform/scripts/75-seed-grist-research-hub.sh
+```
+
 The script creates:
 
 - an Authentik demo user in `lab-member`
 - public Gitea demo repositories under the bootstrap admin account
-- a Plane demo user, workspace, projects, states, and issues
+- a Plane demo user, workspace, projects, states, labels, due dates, reference links, and issues
 
 The seeded Gitea repositories, repository files, Plane workspace, Plane projects, and Plane issues are read from the YAML catalog. The demo password and service credentials are read only from `/srv/lab-platform/env/*.env`.
 

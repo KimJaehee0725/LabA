@@ -37,3 +37,10 @@ entries:
       name: MLflow
       slug: mlflow
       meta_launch_url: https://mlflow.lab.snu.ac.kr
+  - model: authentik_core.application
+    identifiers:
+      slug: grist
+    attrs:
+      name: Grist
+      slug: grist
+      meta_launch_url: https://data.lab.snu.ac.kr

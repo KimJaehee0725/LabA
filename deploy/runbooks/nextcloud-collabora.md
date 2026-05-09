@@ -74,6 +74,8 @@ The seed creates or updates:
 - Deck board `Research Ops`
 - Calendar `research-demo`
 
+For the v0.4 research workspace templates, install `deploy/data-model/lab-domain.v0.4.yaml` and run the same script with `LAB_DOMAIN_CATALOG_VERSION=v0.4`.
+
 The GitHub integration app is installed and enabled, but GitHub PAT/OAuth setup stays user-scoped under Nextcloud Connected accounts. Do not store GitHub tokens in `/srv/lab-platform/env/`.
 
 ## Smoke

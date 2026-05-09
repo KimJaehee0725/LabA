@@ -13,5 +13,6 @@ export DRY_RUN
 "$SCRIPT_DIR/93-backup-gitea.sh"
 "$SCRIPT_DIR/94-backup-nextcloud.sh"
 "$SCRIPT_DIR/95-backup-overleaf.sh"
+"$SCRIPT_DIR/96-backup-grist.sh"
 
 echo "backup-all completed with DRY_RUN=$DRY_RUN"

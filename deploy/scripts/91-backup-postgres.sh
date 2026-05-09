@@ -3,7 +3,7 @@ set -euo pipefail
 
 BACKUP_ROOT="${BACKUP_ROOT:-/srv/lab-platform/backups/archive/daily/$(date -u +%F)}"
 DRY_RUN="${DRY_RUN:-false}"
-dbs=(authentik plane gitea mlflow nextcloud)
+dbs=(authentik plane gitea mlflow nextcloud grist)
 
 mkdir -p "$BACKUP_ROOT/postgres"
 for db in "${dbs[@]}"; do

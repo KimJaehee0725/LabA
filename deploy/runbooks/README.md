@@ -10,10 +10,11 @@ Run modules in this order:
 6. `plane.md`
 7. `mlflow.md`
 8. `nextcloud-collabora.md`
-9. `overleaf.md`
-10. `backup-restore.md`
-11. `v0.3-smoke.md`
-12. `demo-data.md`
+9. `grist.md`
+10. `overleaf.md`
+11. `backup-restore.md`
+12. `v0.3-smoke.md`
+13. `demo-data.md`
 
 Common preflight:
 

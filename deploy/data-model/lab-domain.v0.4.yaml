@@ -1,0 +1,787 @@
+catalog_version: v0.4
+kind: lab-domain-catalog
+metadata:
+  name: lab-domain
+  description: Non-secret v0.4 research workspace catalog for Plane, Nextcloud Collectives, and Grist.
+  owner: lab-platform
+  strict_oss_policy: Core functionality uses OSS editions only; do not depend on paid/enterprise-only integrations.
+  secret_policy: Secrets, API keys, OAuth client secrets, and GitHub PATs remain only in /srv/lab-platform/env/*.env or user-scoped connected accounts.
+
+responsibility_split:
+  plane:
+    canonical_scope: Work and task execution.
+    owns:
+      - assignees
+      - due dates
+      - project, module, cycle, and status views
+      - task activity
+  nextcloud_collectives:
+    canonical_scope: Page, wiki, and document hub.
+    owns:
+      - lab pages
+      - meeting notes
+      - SOPs
+      - onboarding
+      - experiment notes
+      - page links
+  grist:
+    canonical_scope: Structured database and dashboard layer.
+    owns:
+      - people
+      - teams
+      - projects
+      - resources
+      - papers
+      - datasets
+      - experiments
+      - GitHub references
+      - review queue
+      - dashboard definitions
+  nextcloud_calendar:
+    canonical_scope: Team calendars.
+    owns:
+      - shared lab calendars
+      - recurring events
+    note: Grist may mirror important date records, but calendar ownership stays in Nextcloud.
+
+lab_groups:
+  - id: lab-member
+    phase: seed
+    system_of_record: Authentik
+    name: lab-member
+    description: Default non-admin lab member group.
+  - id: lab-admin
+    phase: seed
+    system_of_record: Authentik
+    name: lab-admin
+    description: Platform administrators.
+
+people:
+  - id: demo-member
+    phase: seed
+    system_of_record: Authentik
+    username: demo.member
+    email: demo.member@example.invalid
+    display_name: Demo Member
+    role: Research member
+    team_ref: platform-team
+    groups:
+      - lab-member
+
+teams:
+  - id: platform-team
+    phase: seed
+    system_of_record: Grist
+    name: Platform Team
+    lead_ref: demo-member
+    collective_page_ref: platform-team-page
+
+projects:
+  - id: platform-rollout
+    phase: seed
+    system_of_record: Plane
+    name: Platform Rollout
+    owner_ref: demo-member
+    team_ref: platform-team
+    status: Active
+    grist_row_key: Platform Rollout
+    collective_page_ref: platform-rollout-page
+  - id: research-workbench
+    phase: seed
+    system_of_record: Plane
+    name: Research Workbench
+    owner_ref: demo-member
+    team_ref: platform-team
+    status: Active
+    grist_row_key: Research Workbench
+    collective_page_ref: research-workbench-page
+
+pages:
+  - id: lab-home
+    phase: seed
+    system_of_record: Nextcloud Collectives
+    title: Lab Home
+    path: Home
+    template: lab-home
+  - id: platform-team-page
+    phase: seed
+    system_of_record: Nextcloud Collectives
+    title: Platform Team
+    path: Teams/Platform Team
+    template: team-page
+  - id: platform-rollout-page
+    phase: seed
+    system_of_record: Nextcloud Collectives
+    title: Platform Rollout
+    path: Projects/Platform Rollout
+    template: project-page
+  - id: research-workbench-page
+    phase: seed
+    system_of_record: Nextcloud Collectives
+    title: Research Workbench
+    path: Projects/Research Workbench
+    template: project-page
+  - id: meeting-note-template
+    phase: seed
+    system_of_record: Nextcloud Collectives
+    title: Meeting Note Template
+    path: Templates/Meeting Note
+    template: meeting-note
+  - id: literature-note-template
+    phase: seed
+    system_of_record: Nextcloud Collectives
+    title: Literature Note Template
+    path: Templates/Literature Note
+    template: literature-note
+  - id: experiment-log-template
+    phase: seed
+    system_of_record: Nextcloud Collectives
+    title: Experiment Log Template
+    path: Templates/Experiment Log
+    template: experiment-log
+  - id: sop-template
+    phase: seed
+    system_of_record: Nextcloud Collectives
+    title: SOP Template
+    path: Templates/SOP
+    template: sop
+  - id: onboarding-template
+    phase: seed
+    system_of_record: Nextcloud Collectives
+    title: Onboarding
+    path: Onboarding
+    template: onboarding
+
+tasks:
+  - id: confirm-grist-oidc
+    phase: seed
+    system_of_record: Plane
+    project_ref: platform-rollout
+    title: Confirm Grist Authentik OIDC login
+    status: Ready
+    assignee_ref: demo-member
+    due_date: "2026-05-12"
+    labels:
+      - sso
+      - grist
+    collectives_page_ref: platform-rollout-page
+    grist_table_ref: Projects
+    grist_record_key: Platform Rollout
+    code_ref: lab-platform-demo
+    github_ref: grist-core
+  - id: seed-research-hub
+    phase: seed
+    system_of_record: Plane
+    project_ref: research-workbench
+    title: Seed Lab Research Hub tables
+    status: In Progress
+    assignee_ref: demo-member
+    due_date: "2026-05-13"
+    labels:
+      - data-model
+      - workspace
+    collectives_page_ref: research-workbench-page
+    grist_table_ref: DashboardPages
+    grist_record_key: Research Overview
+    code_ref: lab-platform-demo
+  - id: review-github-policy
+    phase: seed
+    system_of_record: Plane
+    project_ref: platform-rollout
+    title: Review user-scoped GitHub connected accounts policy
+    status: Done
+    assignee_ref: demo-member
+    due_date: "2026-05-09"
+    labels:
+      - policy
+      - github
+    collectives_page_ref: lab-home
+    grist_table_ref: GitHubRefs
+    grist_record_key: grist-core
+    github_ref: grist-core
+
+resources:
+  - id: reproducibility-note
+    phase: seed
+    system_of_record: Nextcloud
+    title: Reproducibility Note
+    type: Note
+    owner_ref: demo-member
+    status: Active
+    page_ref: research-workbench-page
+    file_link: Lab Demo Documents/04-reports/reproducibility-note.md
+  - id: grist-research-hub-doc
+    phase: seed
+    system_of_record: Grist
+    title: Lab Research Hub
+    type: Database
+    owner_ref: demo-member
+    status: Active
+    grist_table_ref: DashboardPages
+
+papers:
+  - id: workspace-paper-template
+    phase: seed
+    system_of_record: Gitea
+    title: Lab Platform Demo Paper
+    status: Draft
+    owner_ref: demo-member
+    repository_ref: paper-template-demo
+    literature_note_ref: literature-note-template
+
+datasets:
+  - id: synthetic-baseline-dataset
+    phase: seed
+    system_of_record: Gitea
+    name: Synthetic Baseline Dataset
+    status: Demo
+    owner_ref: demo-member
+    repository_ref: vision-baseline-demo
+    license: synthetic-demo-only
+
+experiments:
+  - id: demo-baseline-001
+    phase: seed
+    system_of_record: MLflow
+    name: Demo Baseline 001
+    owner_ref: demo-member
+    project_ref: research-workbench
+    dataset_ref: synthetic-baseline-dataset
+    code_repository_ref: vision-baseline-demo
+    status: Complete
+    metrics:
+      accuracy: 0.91
+      loss: 0.23
+
+github_refs:
+  - id: grist-core
+    phase: seed
+    system_of_record: Grist
+    title: Grist Core
+    url: https://github.com/gristlabs/grist-core
+    owner: gristlabs
+    repo: grist-core
+    policy: URL reference only; no PAT or OAuth token is stored.
+  - id: lab-platform-demo
+    phase: seed
+    system_of_record: Gitea
+    title: Lab Platform Demo
+    url: https://hub.lab.snu.ac.kr/gitea-bootstrap-admin/lab-platform-demo
+    owner: gitea-bootstrap-admin
+    repo: lab-platform-demo
+    policy: Local Gitea demo repository.
+
+events:
+  - id: grist-smoke-review
+    phase: seed
+    system_of_record: Nextcloud Calendar
+    title: Grist smoke review
+    date: "2026-05-13"
+    owner_ref: demo-member
+    project_ref: platform-rollout
+    grist_table_ref: Events
+    note: Mirrored into Grist for dashboards; Nextcloud Calendar remains canonical.
+
+code_repositories:
+  - id: lab-platform-demo
+    phase: seed
+    system_of_record: Gitea
+    owner_env: DEMO_GITEA_OWNER
+    name: lab-platform-demo
+    description: Staging platform demo notes for the current deployment wave.
+    visibility: public
+    default_branch: main
+    files:
+      - path: README.md
+        message: Seed demo README
+        content: |
+          # Lab Platform Demo
+
+          This repository is demo data for the staging Lab Platform.
+
+          It gives visitors a quick, non-sensitive walkthrough of the current platform wave:
+
+          - Authentik identity foundation
+          - Gitea source hosting
+          - Plane project tracking
+          - MLflow experiment tracking
+          - Nextcloud/Collabora document hub
+          - Grist structured research hub
+
+          Do not store real credentials or research data here.
+      - path: docs/v0.4-workspace.md
+        message: Seed v0.4 workspace note
+        content: |
+          # v0.4 Research Workspace
+
+          v0.4 uses Plane for work items, Nextcloud Collectives for pages, and Grist for structured research data and dashboards.
+
+          GitHub links are explicit URL fields. User GitHub PATs stay in each user's connected accounts, not in server env files or seed data.
+  - id: vision-baseline-demo
+    phase: seed
+    system_of_record: Gitea
+    owner_env: DEMO_GITEA_OWNER
+    name: vision-baseline-demo
+    description: Small public sample repository for a lab model baseline.
+    visibility: public
+    default_branch: main
+    files:
+      - path: README.md
+        message: Seed vision demo README
+        content: |
+          # Vision Baseline Demo
+
+          This is placeholder demo content for a lab code repository.
+
+          It is intentionally small and contains no private dataset, model weight, or credential.
+      - path: train.py
+        message: Seed sample training script
+        content: |
+          def main():
+              metrics = {"accuracy": 0.91, "loss": 0.23}
+              for key, value in metrics.items():
+                  print(f"{key}: {value}")
+
+
+          if __name__ == "__main__":
+              main()
+      - path: metrics/sample-run.json
+        message: Seed sample metrics
+        content: |
+          {
+            "run_name": "demo-baseline-001",
+            "accuracy": 0.91,
+            "loss": 0.23,
+            "notes": "Synthetic demo metrics only"
+          }
+  - id: paper-template-demo
+    phase: seed
+    system_of_record: Gitea
+    owner_env: DEMO_GITEA_OWNER
+    name: paper-template-demo
+    description: Minimal paper template for the collaboration app wave demo.
+    visibility: public
+    default_branch: main
+    files:
+      - path: README.md
+        message: Seed paper template README
+        content: |
+          # Paper Template Demo
+
+          This repository is demo content for the future Overleaf/collaboration wave.
+      - path: main.tex
+        message: Seed paper template
+        content: |
+          \documentclass{article}
+          \title{Lab Platform Demo Paper}
+          \author{Demo Member}
+          \begin{document}
+          \maketitle
+          \section{Overview}
+          This is a synthetic paper template for the staging demo.
+          \end{document}
+
+lab_users:
+  - id: demo-member
+    phase: seed
+    system_of_record: Authentik
+    username: demo.member
+    email: demo.member@example.invalid
+    display_name: Demo Member
+    groups:
+      - lab-member
+
+plane:
+  workspaces:
+    - id: lab-demo
+      phase: seed
+      system_of_record: Plane
+      slug: lab-demo
+      name: Lab Demo Workspace
+      owner_ref: demo-member
+      auth_mode: authentik-oidc-primary
+      timezone: Asia/Seoul
+      organization_size: 1-10
+      states:
+        - name: Backlog
+          group: backlog
+          color: "#6B7280"
+          default: true
+        - name: Ready
+          group: unstarted
+          color: "#2563EB"
+          default: false
+        - name: In Progress
+          group: started
+          color: "#F59E0B"
+          default: false
+        - name: Done
+          group: completed
+          color: "#16A34A"
+          default: false
+      projects:
+        - id: platform-rollout
+          phase: seed
+          system_of_record: Plane
+          name: Platform Rollout
+          identifier: ROLL
+          description: Demo project for staging rollout tasks.
+          issues:
+            - name: Confirm Grist Authentik OIDC login
+              priority: high
+              state: Ready
+              due_date: "2026-05-12"
+              labels:
+                - sso
+                - grist
+              description: Confirm Authentik login reaches the Lab Research Hub Grist document.
+              collectives_page_ref: platform-rollout-page
+              grist_table_ref: Projects
+              grist_record_key: Platform Rollout
+              github_ref: grist-core
+            - name: Review user-scoped GitHub connected accounts policy
+              priority: medium
+              state: Done
+              due_date: "2026-05-09"
+              labels:
+                - policy
+                - github
+              description: Keep GitHub PATs out of server env, reports, history, and seed data.
+              collectives_page_ref: lab-home
+              grist_table_ref: GitHubRefs
+              grist_record_key: grist-core
+            - name: Prepare v0.4 integrated smoke
+              priority: medium
+              state: Backlog
+              due_date: "2026-05-14"
+              labels:
+                - smoke
+              description: Run 96-check-all.sh with core,edge,authentik,gitea,plane,mlflow,nextcloud,grist.
+        - id: research-workbench
+          phase: seed
+          system_of_record: Plane
+          name: Research Workbench
+          identifier: RND
+          description: Demo project for research workflow tasks.
+          issues:
+            - name: Seed Lab Research Hub tables
+              priority: high
+              state: In Progress
+              due_date: "2026-05-13"
+              labels:
+                - data-model
+                - workspace
+              description: Create Grist People, Teams, Projects, Resources, Papers, Datasets, Experiments, GitHubRefs, Events, and dashboard rows.
+              collectives_page_ref: research-workbench-page
+              grist_table_ref: DashboardPages
+              grist_record_key: Research Overview
+            - name: Upload sanitized sample dataset
+              priority: low
+              state: Backlog
+              due_date: "2026-05-17"
+              labels:
+                - dataset
+              description: Use synthetic data only for staging demos.
+            - name: Write reproducibility note
+              priority: medium
+              state: Done
+              due_date: "2026-05-11"
+              labels:
+                - docs
+              description: Document how the demo result can be reproduced and link the Grist experiment row.
+
+nextcloud:
+  group_folders:
+    - id: lab-demo-documents
+      phase: seed
+      system_of_record: Nextcloud
+      name: Lab Demo Documents
+      group_ref: lab-member
+      quota: unlimited
+      folders:
+        - 00-inbox
+        - 01-meeting-notes
+        - 02-literature
+        - 03-experiments
+        - 04-reports
+        - 05-sops
+        - 06-onboarding
+  collectives:
+    - id: lab-knowledge-base
+      phase: seed
+      system_of_record: Nextcloud Collectives
+      name: Lab Knowledge Base
+      owner_env: NEXTCLOUD_SEED_USER
+      pages:
+        - title: Home
+        - title: Teams
+        - title: Teams/Platform Team
+        - title: Projects
+        - title: Projects/Platform Rollout
+        - title: Projects/Research Workbench
+        - title: Meeting Notes
+        - title: Literature Notes
+        - title: Experiment Log
+        - title: SOPs
+        - title: Onboarding
+        - title: Templates/Meeting Note
+        - title: Templates/Literature Note
+        - title: Templates/Experiment Log
+        - title: Templates/SOP
+  tables:
+    - id: research-resources
+      phase: retained
+      system_of_record: Nextcloud Tables
+      name: Research Resources
+      status: installed-but-not-canonical
+      note: Retained for compatibility; Grist is the canonical structured database in v0.4.
+  deck_boards:
+    - id: research-ops
+      phase: seed
+      system_of_record: Nextcloud Deck
+      name: Research Ops
+      group_ref: lab-member
+      stacks:
+        - Backlog
+        - Doing
+        - Done
+      cards:
+        - title: Confirm Grist OIDC smoke
+          stack: Backlog
+          due: "2026-05-12"
+          description: Run 76-check-grist.sh and confirm the OIDC gate plus API seed.
+        - title: Review document hub entry points
+          stack: Doing
+          due: "2026-05-13"
+          description: Open Files, Collectives, Deck, Calendar, and Grist links after Authentik login.
+        - title: Keep GitHub integration user-scoped
+          stack: Done
+          due: "2026-05-09"
+          description: Install integration_github but keep PAT/OAuth setup in each user's Connected accounts.
+  calendars:
+    - id: research-demo-calendar
+      phase: seed
+      system_of_record: Nextcloud Calendar
+      uri: research-demo
+      name: Research Demo
+      owner_env: NEXTCLOUD_SEED_USER
+
+grist:
+  research_hub:
+    workspace_name: Lab Research Hub
+    document_name: Lab Research Hub
+    required_dashboard_kinds:
+      - Dashboard
+      - Card
+      - Calendar
+    tables:
+      - id: People
+        key_fields:
+          - Name
+        columns:
+          - {id: Name, label: Name, type: Text}
+          - {id: Email, label: Email, type: Text}
+          - {id: Role, label: Role, type: Text}
+          - {id: Team, label: Team, type: Text}
+          - {id: AuthentikUser, label: Authentik User, type: Text}
+        records:
+          - Name: Demo Member
+            Email: demo.member@example.invalid
+            Role: Research member
+            Team: Platform Team
+            AuthentikUser: demo.member
+      - id: Teams
+        key_fields:
+          - Name
+        columns:
+          - {id: Name, label: Name, type: Text}
+          - {id: Lead, label: Lead, type: Text}
+          - {id: CollectivePage, label: Collective Page, type: Text}
+        records:
+          - Name: Platform Team
+            Lead: Demo Member
+            CollectivePage: Teams/Platform Team
+      - id: Projects
+        key_fields:
+          - Name
+        columns:
+          - {id: Name, label: Name, type: Text}
+          - {id: Team, label: Team, type: Text}
+          - {id: Owner, label: Owner, type: Text}
+          - {id: Status, label: Status, type: Choice, choices: [Planned, Active, Paused, Done]}
+          - {id: PlaneProject, label: Plane Project, type: Text}
+          - {id: CollectivePage, label: Collective Page, type: Text}
+        records:
+          - Name: Platform Rollout
+            Team: Platform Team
+            Owner: Demo Member
+            Status: Active
+            PlaneProject: ROLL
+            CollectivePage: Projects/Platform Rollout
+          - Name: Research Workbench
+            Team: Platform Team
+            Owner: Demo Member
+            Status: Active
+            PlaneProject: RND
+            CollectivePage: Projects/Research Workbench
+      - id: Pages
+        key_fields:
+          - Title
+        columns:
+          - {id: Title, label: Title, type: Text}
+          - {id: Path, label: Path, type: Text}
+          - {id: Template, label: Template, type: Text}
+          - {id: SystemOfRecord, label: System Of Record, type: Text}
+        records:
+          - Title: Lab Home
+            Path: Home
+            Template: lab-home
+            SystemOfRecord: Nextcloud Collectives
+          - Title: Meeting Note Template
+            Path: Templates/Meeting Note
+            Template: meeting-note
+            SystemOfRecord: Nextcloud Collectives
+      - id: Tasks
+        key_fields:
+          - Title
+        columns:
+          - {id: Title, label: Title, type: Text}
+          - {id: Project, label: Project, type: Text}
+          - {id: Assignee, label: Assignee, type: Text}
+          - {id: Status, label: Status, type: Choice, choices: [Backlog, Ready, In Progress, Done]}
+          - {id: DueDate, label: Due Date, type: Date}
+          - {id: PlaneLink, label: Plane Link, type: Text}
+          - {id: PageRef, label: Page Ref, type: Text}
+        records:
+          - Title: Confirm Grist Authentik OIDC login
+            Project: Platform Rollout
+            Assignee: Demo Member
+            Status: Ready
+            DueDate: "2026-05-12"
+            PlaneLink: https://lab.snu.ac.kr/lab-demo
+            PageRef: Projects/Platform Rollout
+          - Title: Seed Lab Research Hub tables
+            Project: Research Workbench
+            Assignee: Demo Member
+            Status: In Progress
+            DueDate: "2026-05-13"
+            PlaneLink: https://lab.snu.ac.kr/lab-demo
+            PageRef: Projects/Research Workbench
+      - id: Resources
+        key_fields:
+          - Title
+        columns:
+          - {id: Title, label: Title, type: Text}
+          - {id: Type, label: Type, type: Choice, choices: [Paper, Dataset, Code, Note, Database]}
+          - {id: Owner, label: Owner, type: Text}
+          - {id: Status, label: Status, type: Choice, choices: [New, Active, Archived]}
+          - {id: Link, label: Link, type: Text}
+        records:
+          - Title: Reproducibility Note
+            Type: Note
+            Owner: Demo Member
+            Status: Active
+            Link: Lab Demo Documents/04-reports/reproducibility-note.md
+          - Title: Lab Research Hub
+            Type: Database
+            Owner: Demo Member
+            Status: Active
+            Link: https://data.lab.snu.ac.kr
+      - id: Papers
+        key_fields:
+          - Title
+        columns:
+          - {id: Title, label: Title, type: Text}
+          - {id: Owner, label: Owner, type: Text}
+          - {id: Status, label: Status, type: Choice, choices: [Idea, Draft, Submitted, Published]}
+          - {id: Repository, label: Repository, type: Text}
+        records:
+          - Title: Lab Platform Demo Paper
+            Owner: Demo Member
+            Status: Draft
+            Repository: paper-template-demo
+      - id: Datasets
+        key_fields:
+          - Name
+        columns:
+          - {id: Name, label: Name, type: Text}
+          - {id: Owner, label: Owner, type: Text}
+          - {id: Status, label: Status, type: Choice, choices: [Demo, Active, Frozen, Archived]}
+          - {id: Repository, label: Repository, type: Text}
+          - {id: License, label: License, type: Text}
+        records:
+          - Name: Synthetic Baseline Dataset
+            Owner: Demo Member
+            Status: Demo
+            Repository: vision-baseline-demo
+            License: synthetic-demo-only
+      - id: Experiments
+        key_fields:
+          - Name
+        columns:
+          - {id: Name, label: Name, type: Text}
+          - {id: Project, label: Project, type: Text}
+          - {id: Dataset, label: Dataset, type: Text}
+          - {id: Status, label: Status, type: Choice, choices: [Queued, Running, Complete, Failed]}
+          - {id: MLflowRun, label: MLflow Run, type: Text}
+          - {id: Accuracy, label: Accuracy, type: Numeric}
+          - {id: Loss, label: Loss, type: Numeric}
+        records:
+          - Name: Demo Baseline 001
+            Project: Research Workbench
+            Dataset: Synthetic Baseline Dataset
+            Status: Complete
+            MLflowRun: lab-platform-smoke
+            Accuracy: 0.91
+            Loss: 0.23
+      - id: GitHubRefs
+        key_fields:
+          - Title
+        columns:
+          - {id: Title, label: Title, type: Text}
+          - {id: URL, label: URL, type: Text}
+          - {id: Owner, label: Owner, type: Text}
+          - {id: Repo, label: Repo, type: Text}
+          - {id: Policy, label: Policy, type: Text}
+        records:
+          - Title: Grist Core
+            URL: https://github.com/gristlabs/grist-core
+            Owner: gristlabs
+            Repo: grist-core
+            Policy: URL reference only; no PAT or OAuth token is stored.
+      - id: Events
+        key_fields:
+          - Title
+        columns:
+          - {id: Title, label: Title, type: Text}
+          - {id: Date, label: Date, type: Date}
+          - {id: Owner, label: Owner, type: Text}
+          - {id: Project, label: Project, type: Text}
+          - {id: CalendarOwner, label: Calendar Owner, type: Text}
+        records:
+          - Title: Grist smoke review
+            Date: "2026-05-13"
+            Owner: Demo Member
+            Project: Platform Rollout
+            CalendarOwner: Nextcloud Calendar
+      - id: DashboardPages
+        key_fields:
+          - Title
+        columns:
+          - {id: Title, label: Title, type: Text}
+          - {id: Kind, label: Kind, type: Choice, choices: [Dashboard, Card, Calendar]}
+          - {id: SourceTable, label: Source Table, type: Text}
+          - {id: Description, label: Description, type: Text}
+        records:
+          - Title: Research Overview
+            Kind: Dashboard
+            SourceTable: Projects
+            Description: Overview dashboard row for project, task, experiment, and resource health.
+          - Title: Project Cards
+            Kind: Card
+            SourceTable: Projects
+            Description: Card-style project inspection entry point.
+          - Title: Milestones Calendar
+            Kind: Calendar
+            SourceTable: Events
+            Description: Calendar-style mirror of important project dates; Nextcloud Calendar remains canonical.

@@ -119,6 +119,7 @@ add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
 | `mlflow.lab.snu.ac.kr` | `mlflow:5000` | Authentik Forward Auth |
 | `files.lab.snu.ac.kr` | `nextcloud:80` | large upload, WebDAV |
 | `office.lab.snu.ac.kr` | `collabora:9980` | WebSocket, WOPI |
+| `data.lab.snu.ac.kr` | `grist:8484` | WebSocket, large document upload |
 | `papers.lab.snu.ac.kr` | `overleaf:80` | WebSocket/socket.io |
 | `storage.lab.snu.ac.kr` | `minio:9001` | Console only |
 

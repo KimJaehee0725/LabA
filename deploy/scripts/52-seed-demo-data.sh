@@ -18,8 +18,9 @@ require_cmd curl
 require_cmd jq
 require_cmd mktemp
 
-CATALOG_RUNTIME_PATH="${DEMO_DATA_CATALOG:-${LAB_PLATFORM_ROOT}/data-model/lab-domain.v0.3.yaml}"
-CATALOG_REPO_PATH="$SCRIPT_DIR/../data-model/lab-domain.v0.3.yaml"
+LAB_DOMAIN_CATALOG_VERSION="${LAB_DOMAIN_CATALOG_VERSION:-v0.3}"
+CATALOG_RUNTIME_PATH="${DEMO_DATA_CATALOG:-${LAB_PLATFORM_ROOT}/data-model/lab-domain.${LAB_DOMAIN_CATALOG_VERSION}.yaml}"
+CATALOG_REPO_PATH="$SCRIPT_DIR/../data-model/lab-domain.${LAB_DOMAIN_CATALOG_VERSION}.yaml"
 CATALOG_PATH=""
 if [[ -f "$CATALOG_RUNTIME_PATH" ]]; then
   CATALOG_PATH="$CATALOG_RUNTIME_PATH"
@@ -30,7 +31,7 @@ else
 fi
 
 CATALOG_TMP_DIR="$(mktemp -d)"
-CATALOG_JSON="$CATALOG_TMP_DIR/lab-domain.v0.3.json"
+CATALOG_JSON="$CATALOG_TMP_DIR/lab-domain.${LAB_DOMAIN_CATALOG_VERSION}.json"
 gitea_netrc=""
 gitea_tmp_dir=""
 
@@ -283,15 +284,21 @@ seed_plane_workspace() {
     -e "DEMO_DISPLAY_NAME=$DEMO_DISPLAY_NAME" \
     -e "DEMO_PLANE_WORKSPACE_SLUG=$DEMO_PLANE_WORKSPACE_SLUG" \
     -e "DEMO_PLANE_WORKSPACE_NAME=$DEMO_PLANE_WORKSPACE_NAME" \
+    -e "NEXTCLOUD_URL=https://${NEXTCLOUD_DOMAIN:-files.lab.snu.ac.kr}" \
+    -e "GRIST_URL=https://${GRIST_DOMAIN:-data.lab.snu.ac.kr}" \
     -e "DEMO_PASSWORD_FILE=$password_file" \
     -e "DEMO_PLANE_SEED_FILE=$seed_file" \
     "$PLANE_CONTAINER" python manage.py shell -c '
 import html
 import json
 import os
+from datetime import date
 from plane.db.models import (
     Issue,
     IssueAssignee,
+    IssueLabel,
+    IssueLink,
+    Label,
     Profile,
     Project,
     ProjectIdentifier,
@@ -323,6 +330,8 @@ username = os.environ["DEMO_USERNAME"]
 display_name = os.environ["DEMO_DISPLAY_NAME"]
 workspace_slug = os.environ["DEMO_PLANE_WORKSPACE_SLUG"]
 workspace_name = os.environ["DEMO_PLANE_WORKSPACE_NAME"]
+nextcloud_url = os.environ.get("NEXTCLOUD_URL", "https://files.lab.snu.ac.kr").rstrip("/")
+grist_url = os.environ.get("GRIST_URL", "https://data.lab.snu.ac.kr").rstrip("/")
 timezone = seed.get("timezone", "Asia/Seoul")
 organization_size = str(seed.get("organization_size", "1-10"))
 state_specs = seed.get("states", [])
@@ -430,9 +439,26 @@ for project_spec in projects:
             issue = Issue(workspace=workspace, project=project, name=issue_name)
         issue.priority = issue_spec.get("priority", "none")
         issue.state = states[state_name]
+        due_date = issue_spec.get("due_date")
+        issue.target_date = date.fromisoformat(due_date) if due_date else None
         issue.description = {}
-        description_text = html.escape(issue_spec.get("description", ""))
-        issue.description_html = f"<p>{description_text}</p>"
+        description_lines = [issue_spec.get("description", "")]
+        if issue_spec.get("labels"):
+            description_lines.append("Labels: " + ", ".join(issue_spec["labels"]))
+        if issue_spec.get("collectives_page_ref"):
+            description_lines.append("Collectives page: " + issue_spec["collectives_page_ref"])
+        if issue_spec.get("grist_table_ref"):
+            grist_ref = issue_spec["grist_table_ref"]
+            if issue_spec.get("grist_record_key"):
+                grist_ref += " / " + issue_spec["grist_record_key"]
+            description_lines.append("Grist reference: " + grist_ref)
+        if issue_spec.get("github_ref"):
+            description_lines.append("GitHub reference: " + issue_spec["github_ref"])
+        description_text = "\n".join(line for line in description_lines if line)
+        issue.description_stripped = description_text
+        issue.description_html = "".join(
+            f"<p>{html.escape(line)}</p>" for line in description_lines if line
+        ) or "<p></p>"
         issue.save()
         IssueAssignee.objects.update_or_create(
             workspace=workspace,
@@ -441,6 +467,38 @@ for project_spec in projects:
             assignee=user,
             defaults={},
         )
+        for label_name in issue_spec.get("labels", []):
+            label, _ = Label.objects.update_or_create(
+                workspace=workspace,
+                project=project,
+                name=label_name,
+                defaults={"color": "#6B7280"},
+            )
+            IssueLabel.objects.update_or_create(
+                workspace=workspace,
+                project=project,
+                issue=issue,
+                label=label,
+                defaults={},
+            )
+        link_specs = []
+        if issue_spec.get("collectives_page_ref"):
+            link_specs.append(("Collectives: " + issue_spec["collectives_page_ref"], f"{nextcloud_url}/apps/collectives"))
+        if issue_spec.get("grist_table_ref"):
+            link_title = "Grist: " + issue_spec["grist_table_ref"]
+            if issue_spec.get("grist_record_key"):
+                link_title += " / " + issue_spec["grist_record_key"]
+            link_specs.append((link_title, grist_url))
+        if issue_spec.get("github_ref") == "grist-core":
+            link_specs.append(("GitHub: grist-core", "https://github.com/gristlabs/grist-core"))
+        for link_title, link_url in link_specs:
+            IssueLink.objects.update_or_create(
+                workspace=workspace,
+                project=project,
+                issue=issue,
+                url=link_url,
+                defaults={"title": link_title, "metadata": {}},
+            )
 
 print(
     "plane demo workspace ready: "

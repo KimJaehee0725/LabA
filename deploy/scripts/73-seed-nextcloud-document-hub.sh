@@ -24,8 +24,9 @@ NEXTCLOUD_SEED_PASSWORD="${NEXTCLOUD_SEED_PASSWORD:-${NEXTCLOUD_SEED_APP_PASSWOR
 NEXTCLOUD_STRICT_APP_SEED="${NEXTCLOUD_STRICT_APP_SEED:-false}"
 NEXTCLOUD_CA_CERT="${NEXTCLOUD_CA_CERT:-$LAB_PLATFORM_ROOT/nginx/ssl/lab-internal-ca.crt}"
 
-CATALOG_RUNTIME_PATH="${DEMO_DATA_CATALOG:-${LAB_PLATFORM_ROOT}/data-model/lab-domain.v0.3.yaml}"
-CATALOG_REPO_PATH="$SCRIPT_DIR/../data-model/lab-domain.v0.3.yaml"
+LAB_DOMAIN_CATALOG_VERSION="${LAB_DOMAIN_CATALOG_VERSION:-v0.3}"
+CATALOG_RUNTIME_PATH="${DEMO_DATA_CATALOG:-${LAB_PLATFORM_ROOT}/data-model/lab-domain.${LAB_DOMAIN_CATALOG_VERSION}.yaml}"
+CATALOG_REPO_PATH="$SCRIPT_DIR/../data-model/lab-domain.${LAB_DOMAIN_CATALOG_VERSION}.yaml"
 CATALOG_PATH=""
 if [[ -f "$CATALOG_RUNTIME_PATH" ]]; then
   CATALOG_PATH="$CATALOG_RUNTIME_PATH"
@@ -36,7 +37,7 @@ else
 fi
 
 tmp_dir="$(mktemp -d)"
-CATALOG_JSON="$tmp_dir/lab-domain.v0.3.json"
+CATALOG_JSON="$tmp_dir/lab-domain.${LAB_DOMAIN_CATALOG_VERSION}.json"
 trap 'rm -rf "$tmp_dir"' EXIT
 
 python3 - "$CATALOG_PATH" "$CATALOG_JSON" <<'PY'
@@ -221,7 +222,7 @@ seed_group_folder_files() {
 
   webdav_put_text "$DOC_GROUP_FOLDER_NAME/README.md" "# Lab Demo Documents
 
-This group folder is seeded for the v0.3 document hub smoke.
+This group folder is seeded for the ${LAB_DOMAIN_CATALOG_VERSION} document hub smoke.
 
 - 00-inbox: incoming notes and uploads
 - 01-meeting-notes: recurring meeting records
@@ -249,7 +250,43 @@ This group folder is seeded for the v0.3 document hub smoke.
 
   webdav_put_text "$DOC_GROUP_FOLDER_NAME/04-reports/reproducibility-note.md" "# Reproducibility Note
 
-This placeholder links code, experiment metadata, artifacts, and documents without containing private data."
+This placeholder links code, experiment metadata, artifacts, structured workspace records, and documents without containing private data."
+
+  if [[ "$LAB_DOMAIN_CATALOG_VERSION" == "v0.4" ]]; then
+    webdav_put_text "$DOC_GROUP_FOLDER_NAME/03-experiments/experiment-log-template.md" "# Experiment Log
+
+## Question
+
+## Dataset
+
+## Code Reference
+
+## Grist Experiment Row
+
+## MLflow Run
+
+## Result"
+
+    webdav_put_text "$DOC_GROUP_FOLDER_NAME/05-sops/sop-template.md" "# SOP
+
+## Purpose
+
+## Scope
+
+## Steps
+
+## Review Cadence"
+
+    webdav_put_text "$DOC_GROUP_FOLDER_NAME/06-onboarding/onboarding.md" "# Onboarding
+
+## Accounts
+
+## Required Reading
+
+## First Week Tasks
+
+## Support Contacts"
+  fi
 }
 
 seed_collectives() {

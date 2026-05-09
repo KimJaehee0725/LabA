@@ -1,6 +1,6 @@
 # Lab Platform Deploy
 
-This directory contains the v0.2 deployment implementation files for the lab self-hosted platform.
+This directory contains the deployment implementation files for the lab self-hosted platform.
 
 The default server root is `/srv/lab-platform`. Repository files are intended to be copied or synced into that root, with real environment files created from `deploy/env/*.env.example` and stored outside git.
 
@@ -29,7 +29,7 @@ deploy/
 6. Start Authentik and apply blueprints through the Authentik UI/API.
 7. Create OIDC/proxy providers with module bootstrap scripts and write generated client secrets into server env files only.
 8. Start app modules.
-9. Seed demo/runtime baselines where applicable, such as Gitea/Plane demo data and the Nextcloud document hub.
+9. Seed demo/runtime baselines where applicable, such as Gitea/Plane demo data, the Nextcloud document hub, and the Grist research hub.
 10. Run module checks.
 11. Run backup dry-run and integrated smoke.
 
