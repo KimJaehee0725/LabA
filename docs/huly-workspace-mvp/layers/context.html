@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Context - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>1. 전환 배경</strong>
+            <span>archive 자료와 현재 기준점</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="roadmap.html">Roadmap</a>
+            <a href="../reference/backlog.html">Backlog</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Context</span>
+        </div>
+
+        <section class="hero">
+          <h1>이 계획이 출발하는 상태</h1>
+          <p>
+            기존 v0.3/v0.4 작업은 archive branch에 보존되었고, local main은 origin/main으로 되돌아갔다.
+            Huly 전환은 `huly/workspace-mvp` branch에서 새 runtime root를 기준으로 시작한다.
+          </p>
+          <div class="meta">
+            <span class="pill">archive/v0.4-grist-plane-nextcloud-2026-05-09</span>
+            <span class="pill">archive commit 7331fd5</span>
+            <span class="pill">base commit 8f608e1</span>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>입력 자료</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>자료</th>
+                  <th>현재 반영 방식</th>
+                  <th>비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>`laba-huly-hf-overleaf-workspace-plan.md`</td>
+                  <td>도메인, SSL, Authentik, Huly, MinIO, HF-like UI, Overleaf, 백업, 모니터링 단계의 기준 자료로 사용</td>
+                  <td>원문은 archive branch의 `docs/archive/`에 보존</td>
+                </tr>
+                <tr>
+                  <td>`laba-v0.4-progress-summary.md`</td>
+                  <td>Plane/Nextcloud/Grist 역할 분리와 Grist structured DB 실험 결과를 후속 판단 자료로 반영</td>
+                  <td>기본 활성 서비스로는 재도입하지 않음</td>
+                </tr>
+                <tr>
+                  <td>v0.1/v0.3 repo docs</td>
+                  <td>기존 운영 원칙, secret policy, module-scoped compose, smoke gate 관점을 유지</td>
+                  <td>runtime path는 새로 잡음</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>보존된 학습</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>유지할 원칙</h3>
+              <ul>
+                <li>secret과 실제 인증서는 repo에 두지 않는다.</li>
+                <li>service별 compose와 runbook, check script를 함께 만든다.</li>
+                <li>외부 노출은 Nginx 경유 HTTPS로 통일한다.</li>
+                <li>모든 서비스는 독립 smoke gate와 통합 smoke gate를 가진다.</li>
+                <li>백업은 구현 후 붙이는 항목이 아니라 service DoD에 포함한다.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>버릴 방향</h3>
+              <ul>
+                <li>Plane을 canonical work/task system으로 고정하지 않는다.</li>
+                <li>Nextcloud Collectives를 page/wiki canonical로 고정하지 않는다.</li>
+                <li>Grist를 기본 structured DB layer로 먼저 올리지 않는다.</li>
+                <li>Gitea를 GitHub 대체제로 다시 구성하지 않는다.</li>
+                <li>이전 `/srv/lab-platform` compose copy와 data layout을 재사용하지 않는다.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>새 기준</h2>
+          <div class="flow">
+            <div>
+              <strong>Branch</strong>
+              `huly/workspace-mvp`에서 계획과 구현을 진행한다.
+            </div>
+            <div>
+              <strong>Runtime root</strong>
+              새 서버 root는 `/opt/lab-stack`로 둔다.
+            </div>
+            <div>
+              <strong>Data root</strong>
+              대용량 객체 데이터는 `/mnt/hdd/minio`에 둔다.
+            </div>
+            <div>
+              <strong>Backup root</strong>
+              백업은 `/mnt/backup/lab`에 30일 daily와 12주 weekly로 보관한다.
+            </div>
+            <div>
+              <strong>Identity</strong>
+              Authentik 그룹과 OIDC provider를 모든 서비스의 기준으로 둔다.
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>역할 재정의</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>기능</th>
+                  <th>이전 후보</th>
+                  <th>이번 계획의 1차 선택</th>
+                  <th>보완 판단</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>위키/문서</td>
+                  <td>Nextcloud Collectives, Plane pages</td>
+                  <td>Huly docs/wiki</td>
+                  <td>Notion export import 품질을 pilot에서 확인</td>
+                </tr>
+                <tr>
+                  <td>작업/프로젝트</td>
+                  <td>Plane</td>
+                  <td>Huly issues, Kanban, Calendar, Gantt</td>
+                  <td>Gantt 미동작 시 Plane 보완 배포를 별도 결정</td>
+                </tr>
+                <tr>
+                  <td>구조화 DB</td>
+                  <td>Grist</td>
+                  <td>Huly custom fields + HF metadata DB</td>
+                  <td>리뷰 queue, 실험 registry가 부족하면 Grist 재도입 검토</td>
+                </tr>
+                <tr>
+                  <td>코드 연동</td>
+                  <td>Gitea</td>
+                  <td>GitHub App through Huly</td>
+                  <td>GitHub가 canonical source로 유지</td>
+                </tr>
+                <tr>
+                  <td>파일/모델</td>
+                  <td>Nextcloud, MinIO</td>
+                  <td>MinIO + HF-like UI</td>
+                  <td>일반 문서 파일 공유는 Huly 첨부와 MinIO 정책으로 시작</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Next: <a href="architecture.html">target architecture</a>.
+      </footer>
+    </div>
+  </body>
+</html>

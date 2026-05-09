@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Huly Workspace MVP Plan</title>
+    <link rel="stylesheet" href="assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>LabA Huly Workspace MVP</strong>
+            <span>self-hosted research workspace transition plan</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="layers/context.html">Context</a>
+            <a href="layers/architecture.html">Architecture</a>
+            <a href="layers/roadmap.html">Roadmap</a>
+            <a href="reference/backlog.html">Backlog</a>
+            <a href="reference/validation.html">Validation</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="hero">
+          <h1>Huly 중심 연구실 통합 워크스페이스 구체 계획안</h1>
+          <p>
+            기존 Grist/Plane/Nextcloud 방향은 archive branch에 보존하고, 이 계획은
+            새 runtime root와 새 branch에서 Huly를 중심 서비스로 검증한다. Huly는
+            연구실 위키, 채팅, 작업 관리, 일정, GitHub 연동의 1차 허브이며,
+            MinIO와 HF-like UI는 모델/데이터셋 허브를, Overleaf CE는 논문 협업을 담당한다.
+          </p>
+          <div class="meta">
+            <span class="pill">작성일 2026-05-09</span>
+            <span class="pill">작업 branch huly/workspace-mvp</span>
+            <span class="pill">runtime root /opt/lab-stack</span>
+            <span class="pill">source archive 7331fd5</span>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>결론</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>이번 MVP에서 한다</h3>
+              <ul>
+                <li>학교 도메인, 학교 SSL, 80/443 방화벽, 학교 SMTP를 운영 전제 조건으로 둔다.</li>
+                <li>Authentik을 단일 SSO 게이트웨이로 두고 2FA와 초대 링크 가입을 기본 정책으로 삼는다.</li>
+                <li>Huly self-host를 먼저 올려 문서, 채팅, 이슈, 캘린더, Gantt, GitHub App 연동을 검증한다.</li>
+                <li>MinIO를 자체 HDD 위 S3 호환 저장소로 구성하고, HF-like UI MVP를 별도 앱으로 만든다.</li>
+                <li>Overleaf CE는 초기에는 별도 계정 방식으로 시작하고 템플릿과 컴파일 검증을 우선한다.</li>
+                <li>백업, 모니터링, 온보딩 문서까지 정식 pilot의 완료 조건에 포함한다.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>이번 MVP에서 하지 않는다</h3>
+              <ul>
+                <li>이전 `/srv/lab-platform` runtime 구조를 이어 쓰지 않는다.</li>
+                <li>Gitea를 재도입하지 않는다. GitHub 연동은 Huly GitHub App을 기준으로 한다.</li>
+                <li>Plane, Nextcloud, Grist를 기본 활성 서비스로 두지 않는다.</li>
+                <li>Overleaf CE OIDC/LDAP SSO를 첫 구현의 필수 조건으로 잡지 않는다.</li>
+                <li>HF Hub API 완전 호환, 대형 업로드 UI, public community 기능은 MVP 이후로 분리한다.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>문서 계층</h2>
+          <div class="toc">
+            <a href="layers/context.html">1. 전환 배경</a>
+            <a href="layers/architecture.html">2. 목표 아키텍처</a>
+            <a href="layers/roadmap.html">3. 단계별 로드맵</a>
+            <a href="layers/operations.html">4. 운영 모델</a>
+            <a href="workstreams/edge-auth.html">5. Edge/Auth</a>
+            <a href="workstreams/huly.html">6. Huly</a>
+            <a href="workstreams/storage-hf.html">7. Storage/HF UI</a>
+            <a href="workstreams/overleaf.html">8. Overleaf</a>
+            <a href="reference/backlog.html">9. 구현 Backlog</a>
+            <a href="reference/decisions-risks.html">10. 결정과 리스크</a>
+            <a href="reference/validation.html">11. 검증 기준</a>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>상위 목표</h2>
+          <div class="grid three">
+            <article class="panel nav-card">
+              <a class="title" href="workstreams/huly.html">Notion 대체 허브</a>
+              <p>
+                Huly에서 위키, 문서, 채팅, 이슈, Kanban, Calendar, Gantt, GitHub sync를
+                실제 연구실 pilot 데이터로 검증한다.
+              </p>
+              <span class="tagline">MVP 핵심</span>
+            </article>
+            <article class="panel nav-card">
+              <a class="title" href="workstreams/storage-hf.html">모델/데이터셋 허브</a>
+              <p>
+                MinIO bucket 정책과 자체 HF-like UI를 결합해 모델 card, 파일 트리,
+                dataset card, 검색, 다운로드 흐름을 제공한다.
+              </p>
+              <span class="tagline">MVP + v1 확장</span>
+            </article>
+            <article class="panel nav-card">
+              <a class="title" href="workstreams/overleaf.html">논문 협업</a>
+              <p>
+                Overleaf CE를 별도 서비스로 두고 NeurIPS, ICML, ICLR, ACL/EMNLP,
+                AAAI 템플릿과 다중 편집을 검증한다.
+              </p>
+              <span class="tagline">논문 생산성</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>최소 성공 기준</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>영역</th>
+                  <th>성공 기준</th>
+                  <th>검증 위치</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>접속</td>
+                  <td>학교 도메인 전체가 HTTPS로 접속되고 HTTP는 301 redirect된다.</td>
+                  <td><a href="reference/validation.html#edge-gate">Edge Gate</a></td>
+                </tr>
+                <tr>
+                  <td>인증</td>
+                  <td>Authentik 2FA, 초대 링크 가입, OIDC client 생성, 관리자 알림이 동작한다.</td>
+                  <td><a href="reference/validation.html#auth-gate">Auth Gate</a></td>
+                </tr>
+                <tr>
+                  <td>Huly</td>
+                  <td>문서, 채팅, 이슈, 일정, Gantt, GitHub 양방향 sync 중 핵심 flow가 통과한다.</td>
+                  <td><a href="reference/validation.html#huly-gate">Huly Gate</a></td>
+                </tr>
+                <tr>
+                  <td>HF-like UI</td>
+                  <td>로그인, 모델/데이터셋 리스트, 상세, README 렌더링, presigned download가 완성된다.</td>
+                  <td><a href="reference/validation.html#hf-gate">HF Gate</a></td>
+                </tr>
+                <tr>
+                  <td>운영</td>
+                  <td>백업 1회, 복구 리허설 1회, 모니터 알림 1회, 온보딩 1회가 기록된다.</td>
+                  <td><a href="reference/validation.html#ops-gate">Ops Gate</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Linked HTML plan set. No runtime secrets, passwords, client secrets, tokens, or private keys belong in these files.
+      </footer>
+    </div>
+  </body>
+</html>

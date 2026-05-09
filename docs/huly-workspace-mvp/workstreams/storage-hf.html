@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Storage and HF UI - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>7. Storage/HF Workstream</strong>
+            <span>MinIO object storage and HuggingFace-like model catalog</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="huly.html">Huly</a>
+            <a href="overleaf.html">Overleaf</a>
+            <a href="../reference/backlog.html">Backlog</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Workstreams</span>
+          <span>/</span>
+          <span>Storage/HF</span>
+        </div>
+
+        <section class="hero">
+          <h1>MinIO는 데이터의 source of truth, HF-like UI는 연구자가 보는 catalog</h1>
+          <p>
+            대형 모델 weight와 dataset은 MinIO에 저장하고, HF-like UI는 metadata,
+            README, file tree, search, presigned download를 제공한다. MVP는 조회와
+            다운로드를 먼저 완성하고, 업로드와 HF API 호환은 v1로 확장한다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Bucket structure</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bucket</th>
+                  <th>내용</th>
+                  <th>Path pattern</th>
+                  <th>기본 정책</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>`lab-models`</td>
+                  <td>학습된 모델 weight, config, tokenizer, card</td>
+                  <td>`{owner}/{model}/{version}/...`</td>
+                  <td>members read/write, guests none</td>
+                </tr>
+                <tr>
+                  <td>`lab-datasets`</td>
+                  <td>dataset raw/processed split, metadata, license note</td>
+                  <td>`{dataset}/{version}/...`</td>
+                  <td>members read/write, guests none by default</td>
+                </tr>
+                <tr>
+                  <td>`lab-artifacts`</td>
+                  <td>실험 산출물, evaluation reports, checkpoints</td>
+                  <td>`{project}/{experiment-id}/...`</td>
+                  <td>members read/write</td>
+                </tr>
+                <tr>
+                  <td>`lab-public`</td>
+                  <td>외부 공유 가능한 공개 자료</td>
+                  <td>`{collection}/{name}/...`</td>
+                  <td>public read, admin/member controlled write</td>
+                </tr>
+                <tr>
+                  <td>`lab-backups`</td>
+                  <td>서비스 백업의 optional object mirror</td>
+                  <td>`{service}/{date}/...`</td>
+                  <td>admins only</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>MinIO implementation</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>Service requirements</h3>
+              <ul>
+                <li>Data volume mounted at `/mnt/hdd/minio`.</li>
+                <li>Console host and API host are separated.</li>
+                <li>Console uses Authentik OIDC.</li>
+                <li>S3 API uses service/user credentials and bucket policies.</li>
+                <li>Versioning enabled for models and datasets.</li>
+                <li>Backup mirror is tested before pilot opens.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Validation commands</h3>
+              <pre><code>mc alias set lab https://s3.lab.example.ac.kr ACCESS SECRET
+mc mb lab/lab-models
+mc version enable lab/lab-models
+mc cp model.safetensors lab/lab-models/demo/qwen/v1/
+mc stat lab/lab-models/demo/qwen/v1/model.safetensors</code></pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>HF-like UI scope</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Release</th>
+                  <th>기능</th>
+                  <th>제외</th>
+                  <th>완료 기준</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>MVP</td>
+                  <td>OIDC login, model/dataset list, detail page, README render, file tree, presigned download, tag search</td>
+                  <td>browser upload, HF API full compatibility</td>
+                  <td>sample model and dataset을 UI에서 찾아 다운로드</td>
+                </tr>
+                <tr>
+                  <td>v1</td>
+                  <td>multipart upload, folder upload, progress, metadata edit, visibility edit, version entry</td>
+                  <td>community discussion, likes</td>
+                  <td>10GB class file upload without proxy buffering failure</td>
+                </tr>
+                <tr>
+                  <td>v2</td>
+                  <td>partial HF Hub API compatibility, `huggingface_hub` helper, card auto-generation</td>
+                  <td>full HuggingFace clone</td>
+                  <td>`from_pretrained` or internal helper가 lab endpoint에서 작동</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Metadata model</h2>
+          <pre><code>models
+  id, owner, name, visibility, summary, tags, base_model, license,
+  storage_prefix, created_at, updated_at
+
+model_versions
+  id, model_id, version, commit_message, files_json, created_by, created_at
+
+datasets
+  id, owner, name, visibility, summary, tags, license,
+  storage_prefix, created_at, updated_at
+
+dataset_versions
+  id, dataset_id, version, split_info_json, files_json, created_by, created_at</code></pre>
+          <div class="note">
+            HF-like UI의 metadata DB는 MinIO를 대체하지 않는다. object의 canonical bytes는
+            MinIO에 있고, metadata DB는 검색과 화면 표시를 위한 index다.
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>API surface for MVP</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Endpoint</th>
+                  <th>Method</th>
+                  <th>Purpose</th>
+                  <th>Auth</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>`/api/health`</td>
+                  <td>GET</td>
+                  <td>uptime check</td>
+                  <td>public or internal</td>
+                </tr>
+                <tr>
+                  <td>`/api/models`</td>
+                  <td>GET</td>
+                  <td>list and search models</td>
+                  <td>OIDC session</td>
+                </tr>
+                <tr>
+                  <td>`/api/models/{owner}/{name}`</td>
+                  <td>GET</td>
+                  <td>model detail and latest metadata</td>
+                  <td>visibility-aware</td>
+                </tr>
+                <tr>
+                  <td>`/api/models/{owner}/{name}/files`</td>
+                  <td>GET</td>
+                  <td>file tree from MinIO prefix</td>
+                  <td>visibility-aware</td>
+                </tr>
+                <tr>
+                  <td>`/api/files/presign`</td>
+                  <td>POST</td>
+                  <td>short-lived download URL</td>
+                  <td>visibility-aware</td>
+                </tr>
+                <tr>
+                  <td>`/api/datasets`</td>
+                  <td>GET</td>
+                  <td>list and search datasets</td>
+                  <td>OIDC session</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Security notes</h2>
+          <div class="warning">
+            Public model/data sharing must be explicit. Default visibility is private or group-only,
+            and `lab-public` write access is restricted. Do not expose raw MinIO console to guests.
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Related: <a href="../reference/validation.html#hf-gate">HF validation gate</a>.
+      </footer>
+    </div>
+  </body>
+</html>

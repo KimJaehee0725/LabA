@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edge and Auth - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>5. Edge/Auth Workstream</strong>
+            <span>Nginx, school SSL, Authentik, invitation-only identity</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="../layers/architecture.html">Architecture</a>
+            <a href="huly.html">Huly</a>
+            <a href="../reference/validation.html">Validation</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Workstreams</span>
+          <span>/</span>
+          <span>Edge/Auth</span>
+        </div>
+
+        <section class="hero">
+          <h1>외부 공개면은 작고, 인증 정책은 엄격하게</h1>
+          <p>
+            학교 SSL 인증서와 Nginx가 모든 traffic의 입구가 된다. Authentik은
+            2FA, 초대 링크 가입, 그룹 기반 OIDC claim, 관리자 알림을 제공한다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Prerequisites</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th>요청 내용</th>
+                  <th>완료 증거</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>도메인</td>
+                  <td>`lab.example.ac.kr`와 wildcard subdomain 또는 필요한 A records</td>
+                  <td>`dig` 결과가 서버 IP로 resolve</td>
+                </tr>
+                <tr>
+                  <td>SSL</td>
+                  <td>`*.lab.example.ac.kr`와 apex host를 포함하는 학교 인증서</td>
+                  <td>crt, key, ca bundle 수령 및 fingerprint 기록</td>
+                </tr>
+                <tr>
+                  <td>방화벽</td>
+                  <td>Inbound TCP 80, 443 허용</td>
+                  <td>외부 network에서 curl 가능</td>
+                </tr>
+                <tr>
+                  <td>SMTP</td>
+                  <td>학교 SMTP host, port, auth 방식, from address 승인</td>
+                  <td>test mail 수신</td>
+                </tr>
+                <tr>
+                  <td>서버</td>
+                  <td>Ubuntu 24.04 LTS, Docker, compose plugin, fail2ban, ufw</td>
+                  <td>`docker run hello-world`, `ufw status`, `fail2ban-client status`</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Nginx baseline</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>Common snippets</h3>
+              <ul>
+                <li>`ssl-school.conf`: certificate and private key path.</li>
+                <li>`security-headers.conf`: HSTS, no sniff, frame policy, referrer policy.</li>
+                <li>`proxy-params.conf`: Host, real IP, forwarded headers.</li>
+                <li>`websocket.conf`: upgrade headers for Huly and Overleaf.</li>
+                <li>`upload-large.conf`: large object upload limits for HF and S3 surfaces.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Security defaults</h3>
+              <ul>
+                <li>HTTP always redirects to HTTPS.</li>
+                <li>`server_tokens off`.</li>
+                <li>login/API rate limits.</li>
+                <li>service upstreams bind to `127.0.0.1` or private Docker network only.</li>
+                <li>no service publishes an unexpected public port.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Authentik baseline</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>영역</th>
+                  <th>구체 작업</th>
+                  <th>DoD</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Groups</td>
+                  <td>`lab-admins`, `lab-members`, `lab-guests` 생성</td>
+                  <td>테스트 사용자 3명에 group claim 확인</td>
+                </tr>
+                <tr>
+                  <td>2FA</td>
+                  <td>TOTP stage를 기본 login flow에 binding</td>
+                  <td>신규 사용자 첫 로그인에서 2FA 등록 강제</td>
+                </tr>
+                <tr>
+                  <td>Enrollment</td>
+                  <td>self-signup off, invitation-only enrollment flow 구성</td>
+                  <td>초대 링크 없이 가입 불가, 초대 링크로 가입 가능</td>
+                </tr>
+                <tr>
+                  <td>Email</td>
+                  <td>SMTP 설정, 가입/실패/백업 알림 발신 계정 확정</td>
+                  <td>테스트 메일과 가입 알림 수신</td>
+                </tr>
+                <tr>
+                  <td>OIDC providers</td>
+                  <td>Huly, MinIO, HF UI, optional portal/status client 생성</td>
+                  <td>client id/secret은 server-only env에 저장</td>
+                </tr>
+                <tr>
+                  <td>Forward-auth fallback</td>
+                  <td>Huly OIDC가 부족할 경우 Nginx forward-auth route 준비</td>
+                  <td>로그인 없이 Huly 접근 차단</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Implementation order</h2>
+          <ol>
+            <li>Repo에 `deploy/compose/authentik`, `deploy/nginx`, `deploy/env` skeleton을 Huly branch 기준으로 정리한다.</li>
+            <li>서버에 `/opt/lab-stack/certs`를 만들고 학교 인증서 파일을 배치한다.</li>
+            <li>Nginx를 최소 redirect + auth host만으로 먼저 올린다.</li>
+            <li>Authentik compose를 올리고 initial admin을 만든다.</li>
+            <li>2FA, groups, invitation flow, SMTP, notification을 설정한다.</li>
+            <li>Huly, MinIO, HF UI용 OIDC provider를 생성하고 redirect URI를 고정한다.</li>
+            <li>Edge/Auth gate를 통과한 뒤 Huly workstream으로 넘어간다.</li>
+          </ol>
+        </section>
+
+        <section class="section">
+          <h2>Open details</h2>
+          <div class="warning">
+            <strong>실제 redirect URI는 배포하는 Huly self-host 버전의 문서를 확인한 뒤 고정한다.</strong>
+            버전별로 OIDC endpoint 지원 상태가 달라질 수 있으므로, Huly OIDC가 불안정하면
+            MVP에서는 Authentik forward-auth로 외부 접근을 보호한다.
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Next: <a href="huly.html">Huly workstream</a>.
+      </footer>
+    </div>
+  </body>
+</html>
