@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phase 0 Templates - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>Phase 0 Templates</strong>
+            <span>public-safe request and readiness templates</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="phase0-readiness.html">Readiness</a>
+            <a href="backlog.html">Backlog</a>
+            <a href="validation.html">Validation</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Reference</span>
+          <span>/</span>
+          <span>Phase 0 Templates</span>
+        </div>
+
+        <section class="hero">
+          <h1>신청과 검증 기록을 빠르게 남기기 위한 템플릿</h1>
+          <p>
+            이 페이지의 템플릿은 repo에 남겨도 안전한 형태다. 실제 도메인, IP,
+            담당자 연락처, 인증서 파일명, SMTP credential, token은 private ticket,
+            password manager, 또는 server-only 기록에만 채운다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Usage rules</h2>
+          <div class="warning">
+            템플릿을 복사해 실제 값으로 채운 파일은 commit하지 않는다. 공개 repo에는
+            placeholder와 절차만 남기고, 운영 값은 private readiness record로 관리한다.
+          </div>
+        </section>
+
+        <section class="section" id="request-template">
+          <h2>학교 인프라 신청 템플릿</h2>
+          <pre><code>제목: 연구실 self-hosted workspace 도메인/DNS/방화벽/SSL/SMTP 신청
+
+목적:
+- 연구실 내부 협업 도구 Huly, Authentik, MinIO, HF-like UI, Overleaf CE를 학교 도메인과 HTTPS로 운영
+- 외부 학생 접속을 위해 TCP 80/443 inbound 허용 필요
+
+요청 항목:
+- 도메인: &lt;LAB_DOMAIN_PLACEHOLDER&gt;
+- DNS:
+  - &lt;LAB_DOMAIN_PLACEHOLDER&gt; -> &lt;SERVER_PUBLIC_IP_PLACEHOLDER&gt;
+  - auth.&lt;LAB_DOMAIN_PLACEHOLDER&gt; -> &lt;SERVER_PUBLIC_IP_PLACEHOLDER&gt;
+  - huly.&lt;LAB_DOMAIN_PLACEHOLDER&gt; -> &lt;SERVER_PUBLIC_IP_PLACEHOLDER&gt;
+  - files.&lt;LAB_DOMAIN_PLACEHOLDER&gt; -> &lt;SERVER_PUBLIC_IP_PLACEHOLDER&gt;
+  - s3.&lt;LAB_DOMAIN_PLACEHOLDER&gt; -> &lt;SERVER_PUBLIC_IP_PLACEHOLDER&gt;
+  - hf.&lt;LAB_DOMAIN_PLACEHOLDER&gt; -> &lt;SERVER_PUBLIC_IP_PLACEHOLDER&gt;
+  - overleaf.&lt;LAB_DOMAIN_PLACEHOLDER&gt; -> &lt;SERVER_PUBLIC_IP_PLACEHOLDER&gt;
+- SSL 인증서:
+  - SAN 또는 wildcard: *.&lt;LAB_DOMAIN_PLACEHOLDER&gt;, &lt;LAB_DOMAIN_PLACEHOLDER&gt;
+  - server software: Nginx
+- 방화벽:
+  - inbound TCP 80, 443 to &lt;SERVER_PUBLIC_IP_PLACEHOLDER&gt;
+- SMTP:
+  - 발신 주소: &lt;SMTP_FROM_PLACEHOLDER&gt;
+  - 사용 목적: account invitation, backup failure, security summary, certificate expiry alert
+
+운영 담당:
+- primary admin: &lt;PRIVATE_CONTACT_PLACEHOLDER&gt;
+- backup admin: &lt;PRIVATE_CONTACT_PLACEHOLDER&gt;</code></pre>
+        </section>
+
+        <section class="section" id="certificate-intake">
+          <h2>SSL 인증서 수령 기록 템플릿</h2>
+          <pre><code>SSL certificate intake record
+
+Do not commit this filled record.
+
+Domain/SAN:
+- &lt;LAB_DOMAIN_PLACEHOLDER&gt;
+- *.&lt;LAB_DOMAIN_PLACEHOLDER&gt;
+
+Received files:
+- certificate: &lt;CERT_FILE_PLACEHOLDER&gt;
+- private key: stored in private path only
+- CA bundle: &lt;CA_BUNDLE_PLACEHOLDER&gt;
+
+Validation:
+- fingerprint: &lt;FINGERPRINT_PLACEHOLDER&gt;
+- not before: &lt;DATE_PLACEHOLDER&gt;
+- not after: &lt;DATE_PLACEHOLDER&gt;
+- fullchain generated: yes/no
+- private key permission: 0600
+
+Install target:
+- certificate: /opt/lab-stack/certs/fullchain.crt
+- private key: /opt/lab-stack/certs/&lt;LAB_DOMAIN_PLACEHOLDER&gt;.key
+
+Renewal alert:
+- 30 days: configured/not configured
+- 15 days: configured/not configured
+- 7 days: configured/not configured</code></pre>
+        </section>
+
+        <section class="section" id="server-record">
+          <h2>서버 readiness 기록 템플릿</h2>
+          <pre><code>Phase 0 server readiness record
+
+Do not commit this filled record if it contains IPs, contacts, or secrets.
+
+Server:
+- hostname: &lt;HOSTNAME_PLACEHOLDER&gt;
+- OS: &lt;OS_VERSION_PLACEHOLDER&gt;
+- deploy user: &lt;DEPLOY_USER_PLACEHOLDER&gt;
+- public IP: &lt;PRIVATE_RECORD_ONLY&gt;
+
+Access:
+- SSH key login works: yes/no
+- password login disabled: yes/no
+- root login disabled: yes/no
+
+Docker:
+- docker version: &lt;OUTPUT_PLACEHOLDER&gt;
+- docker compose version: &lt;OUTPUT_PLACEHOLDER&gt;
+- hello-world passed: yes/no
+
+Paths:
+- /opt/lab-stack exists: yes/no
+- /opt/lab-stack writable by deploy user: yes/no
+- /mnt/hdd/minio mounted: yes/no
+- /mnt/hdd/minio write test: yes/no
+- /mnt/backup/lab mounted: yes/no
+- /mnt/backup/lab write test: yes/no
+
+Network:
+- GitHub reachable: yes/no
+- Docker Hub reachable: yes/no
+- GHCR reachable: yes/no
+- OS package mirrors reachable: yes/no
+
+Security:
+- ufw enabled: yes/no
+- inbound 22/80/443 policy confirmed: yes/no
+- fail2ban sshd jail enabled: yes/no
+- unattended-upgrades configured: yes/no</code></pre>
+        </section>
+
+        <section class="section" id="phase0-exit">
+          <h2>Phase 0 exit report 템플릿</h2>
+          <pre><code>Phase 0 exit report
+
+Date:
+Owner:
+Branch:
+Last commit:
+
+External readiness:
+- Domain approved: pass/pending/blocker
+- DNS configured: pass/pending/blocker
+- SSL certificate received: pass/pending/blocker
+- Firewall 80/443 approved: pass/pending/blocker
+- SMTP approved/tested: pass/pending/blocker
+
+Server readiness:
+- SSH key-only access: pass/pending/blocker
+- Docker and compose: pass/pending/blocker
+- Runtime root /opt/lab-stack: pass/pending/blocker
+- Primary disk /mnt/hdd/minio: pass/pending/blocker
+- Backup disk /mnt/backup/lab: pass/pending/blocker
+
+Security readiness:
+- ufw/fail2ban/unattended upgrades: pass/pending/blocker
+- secret policy acknowledged: pass/pending/blocker
+- emergency admin policy: pass/pending/blocker
+
+Operations readiness:
+- admin mailbox: pass/pending/blocker
+- backup retention policy: pass/pending/blocker
+- monitoring notification target: pass/pending/blocker
+
+Blockers:
+- &lt;BLOCKER_OR_NONE&gt;
+
+Decision:
+- proceed to Phase 1: yes/no
+- conditions:
+  - &lt;CONDITION_OR_NONE&gt;</code></pre>
+        </section>
+
+        <section class="section" id="commit-template">
+          <h2>작은 커밋 운용 템플릿</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Commit</th>
+                  <th>Scope</th>
+                  <th>Message</th>
+                  <th>Required checks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Baseline plan</td>
+                  <td>현재 linked HTML planning set</td>
+                  <td>`docs: add Huly workspace MVP plan`</td>
+                  <td>link check, `git diff --check`, secret scan</td>
+                </tr>
+                <tr>
+                  <td>Phase 0 docs</td>
+                  <td>readiness checklist and templates</td>
+                  <td>`docs: add phase 0 readiness checklist`</td>
+                  <td>link check, `git diff --check`, secret scan</td>
+                </tr>
+                <tr>
+                  <td>Host skeleton</td>
+                  <td>runtime directories, env examples, scripts</td>
+                  <td>`deploy: add Huly workspace host skeleton`</td>
+                  <td>shell syntax, no real secrets, dry-run where possible</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Related: <a href="phase0-readiness.html">Phase 0 readiness checklist</a>.
+      </footer>
+    </div>
+  </body>
+</html>

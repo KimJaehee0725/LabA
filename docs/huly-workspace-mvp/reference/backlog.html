@@ -17,6 +17,7 @@
           <nav class="topnav" aria-label="Primary navigation">
             <a href="../index.html">Home</a>
             <a href="../layers/roadmap.html">Roadmap</a>
+            <a href="phase0-readiness.html">Phase 0</a>
             <a href="decisions-risks.html">Decisions/Risks</a>
             <a href="validation.html">Validation</a>
           </nav>
@@ -42,6 +43,25 @@
         </section>
 
         <section class="section">
+          <h2>Phase 0 quick links</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3><a href="phase0-readiness.html">Readiness checklist</a></h3>
+              <p>
+                학교 도메인, DNS, SSL, 방화벽, SMTP, 서버 접근, 디스크, 보안,
+                운영 연락망을 Phase 1 전에 확인한다.
+              </p>
+            </article>
+            <article class="panel">
+              <h3><a href="phase0-templates.html">Request and evidence templates</a></h3>
+              <p>
+                공개 가능한 신청/검증 양식만 repo에 두고 실제 값은 private readiness record에 남긴다.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
           <h2>Backlog table</h2>
           <div class="table-wrap">
             <table>
@@ -57,13 +77,13 @@
                 <tr>
                   <td>EXT-01</td>
                   <td>External readiness</td>
-                  <td>학교 도메인, wildcard SSL, firewall 80/443, SMTP 신청 상태를 추적한다.</td>
-                  <td>실제 도메인, 신청 번호, 승인 상태, 담당자 contact가 기록됨</td>
+                  <td><a href="phase0-readiness.html#external-readiness">학교 도메인, wildcard SSL, firewall 80/443, SMTP 신청 상태</a>를 추적한다.</td>
+                  <td>실제 값은 private record에 있고 repo에는 placeholder와 상태만 남음</td>
                 </tr>
                 <tr>
                   <td>HOST-01</td>
                   <td>Host skeleton</td>
-                  <td>`/opt/lab-stack` 디렉토리, 권한, Docker compose plugin, fail2ban, ufw 기준을 만든다.</td>
+                  <td><a href="phase0-readiness.html#server-readiness">`/opt/lab-stack` 디렉토리, 권한, Docker compose plugin, fail2ban, ufw 기준</a>을 만든다.</td>
                   <td>Docker hello-world, directory write test, SSH key-only 정책 확인</td>
                 </tr>
                 <tr>
