@@ -9,8 +9,8 @@ Run the active Huly workspace MVP phases in this order:
 3. `phase3-huly.md`
 4. `phase4-minio-storage.md`
 5. `phase5-hf-ui.md`
-6. `full-pass-readiness.md` and the supporting full-pass checklists
-7. Overleaf runbook refresh to be written before Overleaf CE deployment
+6. `overleaf.md` when Phase 6 Overleaf is enabled
+7. `full-pass-readiness.md` and the supporting full-pass checklists
 8. Backup/monitoring runbooks to be refreshed before pilot opening
 
 Common Phase 1 dry-run:
@@ -39,8 +39,12 @@ Phase 5 starts the HF-like UI MVP on top of the Phase 4 buckets, validates a
 model/dataset catalog, file tree, and download flow, and records evidence in
 `../reports/phase5-hf-ui.md`.
 
+Phase 6 starts Overleaf CE as a separate manual-account paper collaboration
+module, validates Mongo replica set, Redis auth, LaTeX/Korean package presence,
+public edge routing, and records evidence in `../reports/phase6-overleaf.md`.
+
 After Phase 2-5 staging conditional-pass, use the full-pass readiness runbooks
-before promoting the environment or starting Overleaf:
+before promoting the environment:
 
 - `full-pass-readiness.md`
 - `full-pass-security-edge-auth.md`
@@ -59,7 +63,6 @@ The following runbooks document the archived Plane/Gitea/MLflow/Nextcloud direct
 - `plane.md`
 - `mlflow.md`
 - `nextcloud-collabora.md`
-- `overleaf.md`
 - `backup-restore.md`
 - `v0.3-smoke.md`
 - `demo-data.md`

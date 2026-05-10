@@ -3,7 +3,9 @@ FROM ${OVERLEAF_IMAGE}
 
 USER root
 
-RUN tlmgr update --self || true; \
-    tlmgr install latexmk biber biblatex chemfig pgfplots tikz-cd kotex-utf kotex-utils kotex-plain hcr-lvt unfonts-core || true
+ARG TEXLIVE_EXTRA_PACKAGES="latexmk biber biblatex chemfig pgfplots tikz-cd kotex-utf kotex-utils kotex-plain hcr-lvt unfonts-core"
 
-USER sharelatex
+RUN if command -v tlmgr >/dev/null 2>&1; then \
+      tlmgr update --self || true; \
+      tlmgr install ${TEXLIVE_EXTRA_PACKAGES} || true; \
+    fi

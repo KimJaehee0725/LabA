@@ -33,6 +33,10 @@ Last updated: 2026-05-10
 - Phase 5.3 adds single-file direct upload for catalog model/dataset prefixes
   using `POST /api/files/presign?action=upload`, presigned S3 PUT URLs, default
   overwrite blocking, and MinIO CORS for `HF_UI_PUBLIC_URL`.
+- Phase 6 Overleaf work is isolated on branch/worktree `huly/overleaf-mvp`
+  at `/workspace/LargeProject/LabA-overleaf`; it is a direct Compose module
+  with manual accounts, dedicated Mongo/Redis, shared Nginx routing, and no
+  Authentik SSO in this phase.
 
 ## Active Ideas
 
@@ -45,6 +49,8 @@ Last updated: 2026-05-10
   disable it before strict/browser OIDC validation.
 - Keep HF UI upload v1 limited to single-file direct PUT; multipart, folder, and
   resumable uploads are later phases.
+- Keep Overleaf Phase 6 conditional-pass separate from Phase 2-5 full-pass:
+  `LABSTACK_INCLUDE_OVERLEAF=true` opt-in is required for integrated checks.
 - Commit at module checkpoints and use feature branches/worktrees when v0.2 work becomes parallel or risky.
 
 ## Open Questions And Risks
@@ -58,6 +64,9 @@ Last updated: 2026-05-10
 - Phase 5.3 upload staging smoke passed on `/opt/lab-stack` with
   `STAGING_IP=127.0.0.1`: presigned PUT, CORS preflight, file-list refresh,
   uploaded JSONL preview, and duplicate HTTP 409 were confirmed.
+- Phase 6 Overleaf runtime is not yet validated on `/opt/lab-stack`; local
+  static checks passed, but image build, container startup, admin activation,
+  SMTP delivery, and browser compile smoke remain pending.
 - Authentik provider secrets must not be recorded in docs/history/git.
 
 ## Next Steps

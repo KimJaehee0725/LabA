@@ -30,6 +30,12 @@ if [[ "${LABSTACK_INCLUDE_HF_UI:-false}" == "true" || "${LABSTACK_INCLUDE_HF_UI:
   )
 fi
 
+if [[ "${LABSTACK_INCLUDE_OVERLEAF:-false}" == "true" || "${LABSTACK_INCLUDE_OVERLEAF:-false}" == "1" ]]; then
+  checks+=(
+    80-check-overleaf.sh
+  )
+fi
+
 for check in "${checks[@]}"; do
   echo "== $check =="
   "$SCRIPT_DIR/$check"
