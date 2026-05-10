@@ -67,15 +67,15 @@
                 </tr>
                 <tr>
                   <td>2. Edge/Auth</td>
-                  <td>Nginx TLS와 Authentik 기준선 완성</td>
-                  <td>Nginx snippets, Authentik compose, groups, 2FA, invitation flow</td>
-                  <td>SSO, 2FA, email notification, OIDC clients 검증</td>
+                  <td>staging-first로 Nginx TLS와 Authentik 기준선 완성</td>
+                  <td><a href="../../../deploy/runbooks/phase2-edge-auth.md">Phase 2 runbook</a>, <a href="../../../deploy/reports/phase2-edge-auth-staging.md">staging report</a>, groups, 2FA, invitation flow</td>
+                  <td>HTTPS auth host, 2FA, invitation-only 가입, email notification, OIDC clients 검증</td>
                 </tr>
                 <tr>
                   <td>3. Huly pilot</td>
                   <td>Notion 대체 가능성을 빠르게 판단</td>
-                  <td>Huly compose, workspace, channels, projects, GitHub App, migration sample</td>
-                  <td>Gantt, GitHub sync, document import, chat/task/calendar smoke</td>
+                  <td>Huly compose/env/Nginx, workspace seed, GitHub App, Google Calendar, migration sample, pilot report</td>
+                  <td>OIDC login, no direct host ports, Gantt, GitHub sync, document import, chat/task/calendar smoke</td>
                 </tr>
                 <tr>
                   <td>4. MinIO storage</td>
@@ -133,9 +133,9 @@
                 </tr>
                 <tr>
                   <td>Week 1-2</td>
-                  <td>Nginx TLS, Authentik bootstrap</td>
-                  <td>auth host HTTPS + admin 2FA + SMTP test</td>
-                  <td>forward-auth fallback 채택 기준</td>
+                  <td>Phase 2 Edge/Auth staging run</td>
+                  <td>auth host HTTPS + admin 2FA + SMTP test + invitation-only enrollment</td>
+                  <td>Huly OIDC 또는 forward-auth fallback 채택 기준</td>
                 </tr>
                 <tr>
                   <td>Week 2</td>
@@ -199,8 +199,10 @@
      - inactive in Phase 1: Plane, Gitea, Nextcloud, MLflow
   -> school TLS and Nginx
   -> Authentik identity baseline
+     - staging report: deploy/reports/phase2-edge-auth-staging.md
+     - historical only: edge-nginx.md, authentik.md
     -> Huly pilot
-      -> Huly GitHub and migration smoke
+      -> Huly GitHub, Google Calendar, and migration smoke
     -> MinIO OIDC console
       -> HF-like UI MVP
     -> Overleaf account policy
@@ -209,10 +211,12 @@
         </section>
 
         <section class="section">
-          <h2>Phase 1 boundaries</h2>
+          <h2>Phase 1 and 2 boundaries</h2>
           <ul>
             <li>Phase 1 produces repo documentation, placeholder env examples, compose layout notes, and dry-run evidence only.</li>
             <li>No live Huly, Authentik, MinIO, Overleaf, or HF-like UI service is started as a Phase 1 completion requirement.</li>
+            <li>Phase 2 may start Nginx and Authentik on staging only after `/opt/lab-stack`, `labstack_*`, TLS, SMTP, and secret preflight pass.</li>
+            <li>Phase 2 does not start Huly, MinIO app flows, HF UI, Overleaf, Plane, Gitea, Nextcloud, or MLflow.</li>
             <li>No real secret, TLS private key, token, generated client secret, or service account credential is written to git.</li>
             <li>Legacy Plane, Gitea, Nextcloud, and MLflow files are not deleted here, but they are excluded from the active Phase 1 order.</li>
           </ul>

@@ -5,11 +5,12 @@
 Run the active Huly workspace MVP phases in this order:
 
 1. `phase1-host-skeleton.md`
-2. Edge/Auth runbook to be written in Phase 2
-3. Huly pilot runbook to be written in Phase 3
-4. Storage/HF UI runbooks to be written in later phases
-5. Overleaf runbook refresh to be written before Overleaf CE deployment
-6. Backup/monitoring runbooks to be refreshed before pilot opening
+2. `phase2-edge-auth.md`
+3. `phase3-huly.md`
+4. `phase4-minio-storage.md`
+5. `phase5-hf-ui.md`
+6. Overleaf runbook refresh to be written before Overleaf CE deployment
+7. Backup/monitoring runbooks to be refreshed before pilot opening
 
 Common Phase 1 dry-run:
 
@@ -21,14 +22,30 @@ DRY_RUN=true deploy/scripts/09-check-host-readiness.sh
 
 Phase 1 does not start live services and does not create real secrets.
 
+Phase 2 is staging-first and may start only the minimal Edge/Auth surface after
+the root, network, domain, certificate, SMTP, and secret preflight passes. Record
+staging evidence in `../reports/phase2-edge-auth-staging.md`.
+
+Phase 3 starts Huly after Phase 2 OIDC metadata exists. For staging without real
+external credentials, run the Phase 3 preflight with explicit relaxed flags and
+record the result in `../reports/phase3-huly-pilot.md`.
+
+Phase 4 starts the shared core MinIO profile, bootstraps lab storage buckets and
+policies, checks public/private S3 behavior, and records backup smoke evidence in
+`../reports/phase4-minio-storage.md`.
+
+Phase 5 starts the HF-like UI MVP on top of the Phase 4 buckets, validates a
+model/dataset catalog, file tree, and download flow, and records evidence in
+`../reports/phase5-hf-ui.md`.
+
 ## Historical v0.x Runbooks
 
 The following runbooks document the archived Plane/Gitea/MLflow/Nextcloud direction and remain reference material only unless a later decision explicitly reactivates them:
 
 - `v0.2-runtime-gate-1.md`
 - `core.md`
-- `edge-nginx.md`
-- `authentik.md`
+- `edge-nginx.md` - historical v0.x Nginx reference, not the active Phase 2 procedure
+- `authentik.md` - historical v0.x Authentik reference, not the active Phase 2 procedure
 - `gitea.md`
 - `plane.md`
 - `mlflow.md`

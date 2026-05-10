@@ -37,7 +37,18 @@
           <p>
             학교 SSL 인증서와 Nginx가 모든 traffic의 입구가 된다. Authentik은
             2FA, 초대 링크 가입, 그룹 기반 OIDC claim, 관리자 알림을 제공한다.
+            Active 절차는 staging-first <a href="../../../deploy/runbooks/phase2-edge-auth.md">Phase 2 runbook</a>과
+            <a href="../../../deploy/reports/phase2-edge-auth-staging.md">staging report</a>에 기록한다.
           </p>
+        </section>
+
+        <section class="section">
+          <h2>Active Phase 2 gate</h2>
+          <div class="warning">
+            `deploy/runbooks/edge-nginx.md`와 `deploy/runbooks/authentik.md`는 v0.x historical reference다.
+            Phase 2 실행자는 `/opt/lab-stack`, `labstack_public/backend/data`, public ports 80/443,
+            server-only secrets 정책을 기준으로 staging에서 먼저 검증한다.
+          </div>
         </section>
 
         <section class="section">
@@ -158,14 +169,34 @@
         <section class="section">
           <h2>Implementation order</h2>
           <ol>
-            <li>Repo에 `deploy/compose/authentik`, `deploy/nginx`, `deploy/env` skeleton을 Huly branch 기준으로 정리한다.</li>
-            <li>서버에 `/opt/lab-stack/certs`를 만들고 학교 인증서 파일을 배치한다.</li>
-            <li>Nginx를 최소 redirect + auth host만으로 먼저 올린다.</li>
-            <li>Authentik compose를 올리고 initial admin을 만든다.</li>
-            <li>2FA, groups, invitation flow, SMTP, notification을 설정한다.</li>
-            <li>Huly, MinIO, HF UI용 OIDC provider를 생성하고 redirect URI를 고정한다.</li>
-            <li>Edge/Auth gate를 통과한 뒤 Huly workstream으로 넘어간다.</li>
+            <li>P2-A: Phase 0/1 evidence, `/opt/lab-stack`, `labstack_*`, domain, certificate, SMTP, secret policy를 확인한다.</li>
+            <li>P2-B: Nginx를 최소 redirect + auth host만으로 staging에 올리고 TLS, redirect, public ports 80/443을 검증한다.</li>
+            <li>P2-C: Authentik을 올리고 initial admin, admin 2FA, groups, invitation-only enrollment, SMTP를 검증한다.</li>
+            <li>P2-D: Huly, MinIO, HF UI용 OIDC metadata와 redirect URI를 고정하고 generated secrets는 server env에만 저장한다.</li>
+            <li>P2-E: `deploy/reports/phase2-edge-auth-staging.md`에 validation, rollback state, Phase 3 handoff를 남긴 뒤 Huly workstream으로 넘어간다.</li>
           </ol>
+        </section>
+
+        <section class="section">
+          <h2>Validation commands</h2>
+          <pre><code>bash -n deploy/scripts/10-check-edge.sh deploy/scripts/20-check-authentik.sh deploy/scripts/lib/common.sh
+git diff --check
+sudo docker exec nginx nginx -t
+sudo /opt/lab-stack/scripts/10-check-edge.sh
+sudo /opt/lab-stack/scripts/20-check-authentik.sh
+curl -Ik http://$AUTH_DOMAIN/
+curl -ksSfL https://$AUTH_DOMAIN/api/v3/root/config/ &gt;/dev/null
+ss -tulpn | awk 'NR &gt; 1 {print $5}' | sed 's/.*://' | sort -n | uniq</code></pre>
+        </section>
+
+        <section class="section">
+          <h2>Rollback and secrets</h2>
+          <ul>
+            <li>문제가 생기면 삭제보다 stop을 우선한다: Authentik stop, Edge stop 순서로 중단한다.</li>
+            <li>`/opt/lab-stack/env`, `/opt/lab-stack/certs/private/staging.key`, Authentik data, Nginx/Auth logs는 incident owner가 분류할 때까지 보존한다.</li>
+            <li>real env, TLS private key, bootstrap token, generated OIDC client secret은 repo, report, issue, chat에 쓰지 않는다.</li>
+            <li>route 하나만 문제면 해당 `nginx/conf.d` 파일을 빼고 `nginx -t` 후 reload한다.</li>
+          </ul>
         </section>
 
         <section class="section">

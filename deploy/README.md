@@ -27,6 +27,7 @@ deploy/
   authentik/blueprints/       Authentik group, scope, app, and policy skeletons
   compose/                    Module-scoped Docker Compose projects
   env/                        Tracked example env files only
+  huly/                       Phase 3 upstream notes and pilot seed artifacts
   gitea/                      Legacy Gitea app.ini template, inactive in Phase 1
   minio/policies/             Service bucket policy templates
   nginx/                      Edge Nginx config, snippets, and route skeletons
@@ -44,7 +45,7 @@ deploy/
 5. Verify tracked env files contain placeholders only.
 6. Record dry-run evidence in a report without including host secrets, private keys, tokens, or generated credentials.
 
-Edge/Auth, Huly, MinIO, HF-like UI, Overleaf, backup, and monitoring deployment happen in later phases. Plane, Gitea, Nextcloud, and MLflow are excluded from the active Phase 1 order.
+Edge/Auth, Huly, shared MinIO storage, HF-like UI, Overleaf, backup, and monitoring deployment happen in later phases. Plane, Gitea, Nextcloud, and MLflow are excluded from the active Phase 1 order.
 
 ## Phase 1 Validation Commands
 
@@ -69,3 +70,8 @@ DRY_RUN=true \
 Only example files are tracked here. Do not commit real `.env`, TLS private keys, client secrets, tokens, activation URLs, or generated service-account credentials.
 
 Use placeholders such as `change-me-generate-on-server` in tracked files. Store actual values under `/opt/lab-stack/env/` with restricted permissions when a later phase performs real host deployment.
+
+Phase 4 promotes the shared core `minio` service as the active storage layer.
+Use `deploy/runbooks/phase4-minio-storage.md` after Phase 2 Edge/Auth and the
+conditional Phase 3 Huly runtime are in place. Huly's internal `huly-minio`
+container remains Huly-only and is not the shared storage endpoint.

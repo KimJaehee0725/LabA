@@ -4,14 +4,31 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 checks=(
   04-check-core.sh
+  19-check-phase2-preflight.sh
   10-check-edge.sh
   20-check-authentik.sh
-  41-check-gitea.sh
-  51-check-plane.sh
-  60-check-mlflow.sh
-  72-check-nextcloud.sh
-  80-check-overleaf.sh
 )
+
+if [[ "${LABSTACK_INCLUDE_HULY:-false}" == "true" || "${LABSTACK_INCLUDE_HULY:-false}" == "1" ]]; then
+  checks+=(
+    23-check-phase3-huly-preflight.sh
+    30-check-huly.sh
+    32-check-huly-pilot.sh
+  )
+fi
+
+if [[ "${LABSTACK_INCLUDE_MINIO:-false}" == "true" || "${LABSTACK_INCLUDE_MINIO:-false}" == "1" ]]; then
+  checks+=(
+    34-check-minio-storage.sh
+    35-check-minio-backup-smoke.sh
+  )
+fi
+
+if [[ "${LABSTACK_INCLUDE_HF_UI:-false}" == "true" || "${LABSTACK_INCLUDE_HF_UI:-false}" == "1" ]]; then
+  checks+=(
+    44-check-hf-ui.sh
+  )
+fi
 
 for check in "${checks[@]}"; do
   echo "== $check =="

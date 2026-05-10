@@ -87,9 +87,9 @@ Persistent data
                 <tr>
                   <td>`huly.lab.example.ac.kr`</td>
                   <td>Huly</td>
-                  <td>`127.0.0.1:8087`</td>
-                  <td>OIDC if supported, otherwise forward-auth gate</td>
-                  <td>WebSocket and long polling required</td>
+                  <td>`huly-front:8080` plus path routes to Huly backend services</td>
+                  <td>app-native OIDC first, explicit forward-auth fallback only if blocked</td>
+                  <td>`/_transactor` and `/_collaborator` require WebSocket proxying</td>
                 </tr>
                 <tr>
                   <td>`files.lab.example.ac.kr`</td>

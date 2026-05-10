@@ -142,6 +142,16 @@
               </thead>
               <tbody>
                 <tr>
+                  <td>Automated preflight</td>
+                  <td>`23-check-phase3-huly-preflight.sh`</td>
+                  <td>env, compose, OIDC callback, Nginx route, required integration values 통과</td>
+                </tr>
+                <tr>
+                  <td>Runtime smoke</td>
+                  <td>`30-check-huly.sh`</td>
+                  <td>Huly containers healthy, no direct host ports, edge route and OIDC discovery reachable</td>
+                </tr>
+                <tr>
                   <td>Login protection</td>
                   <td>private browser에서 Huly URL 접근</td>
                   <td>OIDC 또는 forward-auth login이 요구됨</td>
@@ -172,6 +182,11 @@
                   <td>양방향 상태 변화가 기록됨</td>
                 </tr>
                 <tr>
+                  <td>Google Calendar</td>
+                  <td>OAuth 연결 후 event create/update</td>
+                  <td>Huly calendar와 Google Calendar 사이 동기화 evidence가 있음</td>
+                </tr>
+                <tr>
                   <td>Pilot usage</td>
                   <td>2명 이상이 1주일 사용</td>
                   <td>막힌 점과 채택/보완 decision이 남음</td>
@@ -195,18 +210,18 @@
               <tbody>
                 <tr>
                   <td>Console SSO</td>
-                  <td>MinIO console 접근</td>
-                  <td>Authentik login 후 console 접근</td>
+                  <td>`22-bootstrap-authentik-oidc.sh`, private browser에서 `https://files.lab.example.ac.kr` 접근</td>
+                  <td>`policy` claim으로 Authentik login이 보이고 `lab-guest`는 app 접근 차단</td>
                 </tr>
                 <tr>
                   <td>S3 API</td>
-                  <td>`mc alias`, `mc mb`, `mc cp`, `mc stat`</td>
-                  <td>upload/download 성공</td>
+                  <td>`33-bootstrap-minio-storage.sh`, `34-check-minio-storage.sh`</td>
+                  <td>bucket 생성, versioning, upload/stat/download, public download 성공</td>
                 </tr>
                 <tr>
                   <td>Policy</td>
-                  <td>member와 guest credential 또는 session으로 접근 비교</td>
-                  <td>private bucket guest 접근 차단</td>
+                  <td>`lab-public` anonymous download와 private bucket anonymous curl 비교</td>
+                  <td>public object는 200, private object는 401 또는 403</td>
                 </tr>
                 <tr>
                   <td>Persistence</td>
@@ -215,7 +230,7 @@
                 </tr>
                 <tr>
                   <td>Backup mirror</td>
-                  <td>sample bucket mirror to backup disk</td>
+                  <td>`35-check-minio-backup-smoke.sh`</td>
                   <td>checksum 일치</td>
                 </tr>
               </tbody>
@@ -237,17 +252,17 @@
               <tbody>
                 <tr>
                   <td>Health</td>
-                  <td>`curl https://hf.lab.example.ac.kr/api/health`</td>
+                  <td>`44-check-hf-ui.sh`, `curl https://hf.lab.example.ac.kr/api/health`</td>
                   <td>200 and version payload</td>
                 </tr>
                 <tr>
                   <td>Login</td>
                   <td>member account로 UI 접근</td>
-                  <td>Authentik OIDC session 생성</td>
+                  <td>Authentik OIDC session 생성; staging smoke는 explicit bypass token 사용</td>
                 </tr>
                 <tr>
                   <td>List/detail</td>
-                  <td>sample model and dataset metadata 생성</td>
+                  <td>`43-bootstrap-hf-ui-storage.sh`로 sample model and dataset metadata/object 생성</td>
                   <td>list와 detail page에 표시</td>
                 </tr>
                 <tr>
@@ -257,7 +272,7 @@
                 </tr>
                 <tr>
                   <td>File tree</td>
-                  <td>MinIO prefix scan</td>
+                  <td>Phase 4 MinIO prefix scan</td>
                   <td>파일명, size, modified time 표시</td>
                 </tr>
                 <tr>
