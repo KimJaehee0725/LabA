@@ -42,6 +42,30 @@
         </section>
 
         <section class="section">
+          <h2>Phase 3 deployment artifacts</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>Runtime</h3>
+              <ul>
+                <li>`deploy/compose/huly/docker-compose.yml`: Huly v0.7 self-host services without upstream nested Nginx.</li>
+                <li>`deploy/env/30-huly.env.example`: Huly server-only settings and integration placeholders.</li>
+                <li>`deploy/nginx/conf.d/20-huly.conf`: edge routes for `/_accounts`, `/_transactor`, `/_collaborator`, `/_github`, `/_calendar`, and `/files`.</li>
+                <li>`deploy/runbooks/phase3-huly.md`: server execution, fallback, rollback, and full-pass criteria.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Validation</h3>
+              <ul>
+                <li>`23-check-phase3-huly-preflight.sh`: env, OIDC callback, compose, and integration readiness.</li>
+                <li>`30-check-huly.sh`: container health, no direct host ports, edge reachability, OIDC discovery.</li>
+                <li>`31-bootstrap-huly-workspace.sh`: deterministic manual seed checklist.</li>
+                <li>`32-check-huly-pilot.sh`: report gate for full-pass or documented conditional-pass.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
           <h2>Workspace seed</h2>
           <div class="grid two">
             <article class="panel">
@@ -125,6 +149,16 @@
             <li>연결 repo를 하나만 선택해 issue create/update/close와 PR merge event를 테스트한다.</li>
             <li>성공 후 연구실 주요 repo를 단계적으로 추가한다.</li>
           </ol>
+        </section>
+
+        <section class="section">
+          <h2>Calendar setup</h2>
+          <ul>
+            <li>Google OAuth web application redirect URI는 `https://huly.lab.example.ac.kr/_calendar/signin/code`이다.</li>
+            <li>Calendar service는 Huly `calendar` profile과 `huly-mongodb`를 함께 사용한다.</li>
+            <li>credential JSON은 `/opt/lab-stack/env/30-huly.env`의 `HULY_GOOGLE_CALENDAR_CREDENTIALS`에만 저장한다.</li>
+            <li>event create/update sync가 확인되어야 Phase 3 full-pass로 본다.</li>
+          </ul>
         </section>
 
         <section class="section">

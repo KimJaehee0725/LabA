@@ -1,0 +1,9 @@
+Source: https://github.com/hcengineering/huly-selfhost
+Observed date: 2026-05-10
+Default branch commit: 767fd47adcd0d521a02958e09da057635082d55a
+Pinned Huly image tag: v0.7.423
+Desktop channel: 0.7.423
+
+Notes:
+- The pinned tag follows the current upstream self-host template and Helm chart values.
+- Re-check MIGRATION.md before changing HULY_VERSION; v0.7.423 requires an extra FRONT_URL only for the optional print service, which this Phase 3 stack does not enable.

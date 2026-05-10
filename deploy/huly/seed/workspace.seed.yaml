@@ -1,0 +1,230 @@
+catalog_version: phase3-huly-pilot-v1
+kind: huly-pilot-seed
+metadata:
+  name: lab-huly-pilot-seed
+  workspace_name: LabA Huly Pilot
+  owner: lab-platform
+  phase: phase-3-huly-pilot
+  description: Non-secret placeholder seed content for the Huly workspace pilot.
+  secret_policy: Secrets, credentials, webhook secrets, client secrets, and private keys must remain server-only and must not be added to this catalog.
+  personal_data_policy: Use sample roles only. Do not add real names, emails, student IDs, or private meeting content.
+
+import_notes:
+  - Create the workspace before importing channels, projects, documents, and issues.
+  - Replace PILOT_DAY_* placeholders with real dates only in the deployed Huly workspace or a private operator copy.
+  - Keep GitHub repository names as placeholders until a single pilot repository is approved.
+  - Import failures should be logged as Huly pilot notes without attaching raw private exports.
+
+workspace:
+  id: lab-huly-pilot
+  name: LabA Huly Pilot
+  visibility: invitation-only
+  timezone: Etc/UTC
+  default_language: en
+
+channels:
+  - id: general
+    name: "#general"
+    purpose: Workspace-wide announcements, pilot schedule notes, and operating notices.
+    starter_message: |
+      Welcome to the LabA Huly pilot workspace.
+
+      Use this channel for pilot-wide announcements, planned maintenance notes,
+      and links to the current handbook. Do not post credentials or private data.
+  - id: research
+    name: "#research"
+    purpose: Research discussion, experiment updates, and reproducibility notes.
+    starter_message: |
+      Share experiment plans, result summaries, and reproducibility blockers here.
+      Use sample or sanitized artifacts only during the pilot seed.
+  - id: paper
+    name: "#paper"
+    purpose: Paper drafting, review planning, submission milestones, and rebuttal tracking.
+    starter_message: |
+      Use this channel for manuscript milestones, review notes, and template issues.
+  - id: infra
+    name: "#infra"
+    purpose: Self-hosted stack operations, incidents, GitHub sync, and access checks.
+    starter_message: |
+      Track Huly service health, authentication boundary checks, and integration issues here.
+      Keep secrets in server-only environment files.
+  - id: random
+    name: "#random"
+    purpose: Informal pilot conversation that does not need to become a task or decision.
+    starter_message: |
+      Informal pilot conversation goes here. Move decisions and action items to docs or issues.
+
+project_statuses:
+  - name: Backlog
+    category: backlog
+  - name: Ready
+    category: unstarted
+  - name: In Progress
+    category: started
+  - name: Review
+    category: started
+  - name: Done
+    category: completed
+
+projects:
+  - id: experiments
+    name: Experiments
+    key: EXP
+    purpose: Experiment plans, runs, evaluation reports, and reproducibility issues.
+    default_channel_ref: research
+    sample_issue_refs:
+      - experiment-task-demo
+  - id: papers
+    name: Papers
+    key: PAP
+    purpose: Manuscript milestones, reviewer response work, and paper template tasks.
+    default_channel_ref: paper
+    sample_issue_refs:
+      - paper-milestone-demo
+  - id: infrastructure
+    name: Infrastructure
+    key: INF
+    purpose: Huly operations, self-hosted stack checks, incidents, and integration work.
+    default_channel_ref: infra
+    sample_issue_refs:
+      - github-sync-demo
+  - id: datasets
+    name: Datasets
+    key: DATA
+    purpose: Dataset preparation, permissions, upload checks, documentation, and QA.
+    default_channel_ref: research
+    sample_issue_refs: []
+  - id: onboarding
+    name: Onboarding
+    key: ONB
+    purpose: Member and guest invitation checklist, first-login flow, and pilot readiness.
+    default_channel_ref: general
+    sample_issue_refs:
+      - onboarding-checklist-demo
+
+documents:
+  - id: lab-handbook
+    title: Lab Handbook
+    kind: handbook
+    path: docs/lab-handbook.md
+    target_location: Huly docs/wiki root
+    validation:
+      - Headings render as a navigable outline.
+      - Relative links can be preserved or converted to Huly links.
+      - Code blocks and checklists remain readable.
+  - id: meeting-notes
+    title: Meeting Notes
+    kind: recurring-notes
+    path: docs/meeting-notes.md
+    target_location: Lab Handbook / Meeting Notes
+    validation:
+      - Action items can be converted into Huly issues.
+      - Linked sample issue IDs can be found in the project view.
+
+notion_sample:
+  checklist_path: ../notion-sample/scrub-import-checklist.md
+  target_location: Lab Handbook / Imported Samples
+  scope:
+    max_pages: 5
+    allowed_content: Approved sample pages only.
+    disallowed_content: Raw exports, private notes, personal data, credentials, private datasets, and unpublished research details.
+  validation:
+    - Export scope is reviewed before import.
+    - Scrub review is completed before import.
+    - Formatting issues are recorded as summary evidence only.
+
+issues:
+  - id: experiment-task-demo
+    title: Run sample baseline experiment lifecycle
+    kind: task
+    project_ref: experiments
+    source_path: issues/experiment-task.md
+    status: Ready
+    priority: medium
+    channel_refs:
+      - research
+    labels:
+      - pilot
+      - experiment
+      - reproducibility
+    timeline:
+      start: PILOT_DAY_02
+      due: PILOT_DAY_07
+    acceptance_criteria:
+      - Plan, train, evaluate, and report checklist items are represented.
+      - Status, assignee role, and due date are visible in Huly project/calendar views.
+  - id: paper-milestone-demo
+    title: Track sample paper milestone to draft freeze
+    kind: milestone
+    project_ref: papers
+    source_path: issues/paper-milestone.md
+    status: Backlog
+    priority: high
+    channel_refs:
+      - paper
+    labels:
+      - pilot
+      - paper
+      - gantt
+    timeline:
+      start: PILOT_DAY_03
+      due: PILOT_DAY_14
+    acceptance_criteria:
+      - Abstract, experiment table, draft, and rebuttal tasks can be grouped.
+      - Timeline or Gantt view renders the milestone with start and due dates.
+  - id: github-sync-demo
+    title: Validate Huly and GitHub issue sync with one placeholder repository
+    kind: integration-check
+    project_ref: infrastructure
+    source_path: issues/github-sync-issue.md
+    status: Ready
+    priority: high
+    channel_refs:
+      - infra
+    labels:
+      - pilot
+      - github-sync
+      - integration
+    repository_placeholder: example-org/example-repo
+    acceptance_criteria:
+      - Huly-created issue appears in the approved pilot GitHub repository.
+      - GitHub label or status update appears back in Huly.
+      - A PR close or merge event is visible in the Huly issue activity.
+  - id: onboarding-checklist-demo
+    title: Complete first pilot member onboarding checklist
+    kind: checklist
+    project_ref: onboarding
+    source_path: checklists/onboarding-checklist.md
+    status: Backlog
+    priority: medium
+    channel_refs:
+      - general
+    labels:
+      - pilot
+      - onboarding
+    acceptance_criteria:
+      - A pilot member can reach Huly with the written guide only.
+      - The member can find channels, projects, docs, and one assigned task.
+
+huly_gate_checks:
+  - id: login-protection
+    action: Open the Huly URL in a private browser session.
+    pass_condition: OIDC or forward-auth login is required before workspace access.
+  - id: workspace-seed
+    action: Verify all five channels, all five projects, sample docs, and sample issues exist.
+    pass_condition: Two pilot users see the same workspace state.
+  - id: docs-wiki
+    action: Import or copy the Lab Handbook and Meeting Notes pages.
+    pass_condition: Headings, links, code blocks, tables, and checklists remain usable.
+  - id: task-flow
+    action: Update issue assignee role, due date, and status.
+    pass_condition: Calendar or project view reflects the change.
+  - id: gantt-timeline
+    action: Add start and due dates to the paper milestone issue and child tasks.
+    pass_condition: Timeline or Gantt renders in the self-hosted deployment.
+  - id: github-sync
+    action: Create one Huly issue, update it in GitHub, and observe a PR close or merge event.
+    pass_condition: Bidirectional state changes are visible in Huly and GitHub.
+  - id: pilot-usage
+    action: Run the pilot with at least two members for one week.
+    pass_condition: Blockers and adoption decision notes are recorded without private raw content.
