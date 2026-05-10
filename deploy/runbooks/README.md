@@ -9,8 +9,9 @@ Run the active Huly workspace MVP phases in this order:
 3. `phase3-huly.md`
 4. `phase4-minio-storage.md`
 5. `phase5-hf-ui.md`
-6. Overleaf runbook refresh to be written before Overleaf CE deployment
-7. Backup/monitoring runbooks to be refreshed before pilot opening
+6. `full-pass-readiness.md` and the supporting full-pass checklists
+7. Overleaf runbook refresh to be written before Overleaf CE deployment
+8. Backup/monitoring runbooks to be refreshed before pilot opening
 
 Common Phase 1 dry-run:
 
@@ -37,6 +38,14 @@ policies, checks public/private S3 behavior, and records backup smoke evidence i
 Phase 5 starts the HF-like UI MVP on top of the Phase 4 buckets, validates a
 model/dataset catalog, file tree, and download flow, and records evidence in
 `../reports/phase5-hf-ui.md`.
+
+After Phase 2-5 staging conditional-pass, use the full-pass readiness runbooks
+before promoting the environment or starting Overleaf:
+
+- `full-pass-readiness.md`
+- `full-pass-security-edge-auth.md`
+- `full-pass-huly-ops.md`
+- `full-pass-storage-hf.md`
 
 ## Historical v0.x Runbooks
 

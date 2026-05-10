@@ -1,6 +1,6 @@
 # History Index
 
-Generated: 2026-05-10 19:25 +0000
+Generated: 2026-05-10 19:45 +0000
 
 ## Current Context
 
@@ -17,6 +17,7 @@ Generated: 2026-05-10 19:25 +0000
 
 ### changes
 
+- `history/changes/2026-05-10-194505-add-full-pass-readiness-runbooks.md` - Change - Add full-pass readiness runbooks
 - `history/changes/2026-05-10-191410-implement-phase-5-3-hf-ui-presigned-upload.md` - Change - Implement Phase 5.3 HF UI presigned upload
 - `history/changes/2026-05-10-185244-implement-phase-5-2-parquet-dataset-preview.md` - Change - Implement Phase 5.2 Parquet dataset preview
 - `history/changes/2026-05-10-182523-implement-phase-5-1-dataset-preview-viewer.md` - Change - Implement Phase 5.1 dataset preview viewer
@@ -28,7 +29,6 @@ Generated: 2026-05-10 19:25 +0000
 - `history/changes/2026-05-09-205004-implement-phase-2-edge-auth-staging-baseline.md` - Change - Implement Phase 2 Edge/Auth staging baseline
 - `history/changes/2026-05-08-180602-add-plane-authentik-oidc-custom-images.md` - Change - Plane Authentik OIDC custom image 추가
 - `history/changes/2026-05-08-154331-add-staging-demo-data-seed-scripts.md` - Change - Add staging demo data seed scripts
-- `history/changes/2026-05-08-143446-validate-v0-2-1-staging-current-wave.md` - Change - Validate v0.2.1 staging current wave
 
 ### decisions
 
@@ -42,6 +42,7 @@ Generated: 2026-05-10 19:25 +0000
 
 ### experiments
 
+- `history/experiments/0013-validate-full-pass-readiness-runbook-surface.md` - Experiment 0013 - Validate full-pass readiness runbook surface
 - `history/experiments/0012-validate-phase-5-3-upload-staging-runtime.md` - Experiment 0012 - Validate Phase 5.3 upload staging runtime
 - `history/experiments/0011-validate-phase-5-3-upload-static-surface.md` - Experiment 0011 - Validate Phase 5.3 upload static surface
 - `history/experiments/0010-validate-phase-5-2-parquet-preview-local-surface.md` - Experiment 0010 - Validate Phase 5.2 Parquet preview local surface
@@ -53,7 +54,6 @@ Generated: 2026-05-10 19:25 +0000
 - `history/experiments/0004-run-phase-2-gate-on-opt-lab-stack.md` - Experiment 0004 - Run Phase 2 gate on /opt lab stack
 - `history/experiments/0003-phase-2-edge-auth-local-staging-validation.md` - Experiment 0003 - Phase 2 Edge/Auth local staging validation
 - `history/experiments/0002-run-phase-2-edge-auth-local-fallback-staging-gate.md` - Experiment 0002 - Run Phase 2 Edge/Auth local fallback staging gate
-- `history/experiments/0001-validate-plane-authentik-oidc-on-staging.md` - Experiment 0001 - Validate Plane Authentik OIDC on staging
 
 ### handoffs
 
@@ -67,6 +67,7 @@ Generated: 2026-05-10 19:25 +0000
 
 ### sessions
 
+- `history/sessions/2026-05-10-194157-codex-implement-full-pass-readiness-sub-agent-wave.md` - Session - Implement full-pass readiness sub-agent wave
 - `history/sessions/2026-05-10-184228-codex-implement-phase-5-2-parquet-dataset-preview.md` - Session - Implement Phase 5.2 Parquet dataset preview
 - `history/sessions/2026-05-10-173823-codex-implement-phase-5-hf-like-ui-mvp.md` - Session - Implement Phase 5 HF-like UI MVP
 - `history/sessions/2026-05-10-132512-codex-implement-phase-4-minio-storage-conditional-pass.md` - Session - Implement Phase 4 MinIO storage conditional pass
