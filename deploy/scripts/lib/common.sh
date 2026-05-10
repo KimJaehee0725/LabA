@@ -6,6 +6,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LAB_STACK_ROOT="${LAB_STACK_ROOT:-/opt/lab-stack}"
 ENV_DIR="${ENV_DIR:-${LAB_STACK_ROOT}/env}"
 DRY_RUN="${DRY_RUN:-false}"
+LABSTACK_PUBLIC_NETWORK="${LABSTACK_PUBLIC_NETWORK:-labstack_public}"
+LABSTACK_BACKEND_NETWORK="${LABSTACK_BACKEND_NETWORK:-labstack_backend}"
+LABSTACK_DATA_NETWORK="${LABSTACK_DATA_NETWORK:-labstack_data}"
+
+export LAB_STACK_ROOT ENV_DIR
+export LABSTACK_PUBLIC_NETWORK LABSTACK_BACKEND_NETWORK LABSTACK_DATA_NETWORK
 
 log() {
   printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >&2

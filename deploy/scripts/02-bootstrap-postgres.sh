@@ -8,16 +8,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 load_envs \
   "$ENV_DIR/00-global.env" \
   "$ENV_DIR/10-core.env" \
-  "$ENV_DIR/20-authentik.env" \
-  "$ENV_DIR/30-gitea.env" \
-  "$ENV_DIR/40-plane.env" \
-  "$ENV_DIR/50-mlflow.env" \
-  "$ENV_DIR/60-nextcloud.env"
+  "$ENV_DIR/20-authentik.env"
 
 require_cmd docker
 
 if [[ "${DRY_RUN:-false}" == "true" ]]; then
-  log "would create/update service roles and databases in postgres container"
+  log "would create/update authentik role and database in postgres container"
   exit 0
 fi
 
@@ -48,7 +44,3 @@ SQL
 }
 
 bootstrap_database "authentik" "${AUTHENTIK_POSTGRES_DB:-authentik}" "${AUTHENTIK_POSTGRES_USER:-authentik_user}" "${AUTHENTIK_POSTGRES_PASSWORD:-}"
-bootstrap_database "gitea" "${GITEA_DB_NAME:-gitea}" "${GITEA_DB_USER:-gitea_user}" "${GITEA_DB_PASSWORD:-}"
-bootstrap_database "plane" "${PLANE_DB_NAME:-plane}" "${PLANE_DB_USER:-plane_user}" "${PLANE_DB_PASSWORD:-}"
-bootstrap_database "mlflow" "${MLFLOW_DB_NAME:-mlflow}" "${MLFLOW_DB_USER:-mlflow_user}" "${MLFLOW_DB_PASSWORD:-}"
-bootstrap_database "nextcloud" "${NEXTCLOUD_DB_NAME:-nextcloud}" "${NEXTCLOUD_DB_USER:-nextcloud_user}" "${NEXTCLOUD_DB_PASSWORD:-}"

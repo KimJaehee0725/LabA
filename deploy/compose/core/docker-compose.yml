@@ -11,9 +11,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ${LAB_PLATFORM_ROOT}/data/postgres:/var/lib/postgresql/data
+      - ${LAB_STACK_ROOT}/data/postgres:/var/lib/postgresql/data
     networks:
-      - lab_data
+      - labstack_data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 15s
@@ -29,9 +29,9 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$${REDIS_PASSWORD}\""]
     volumes:
-      - ${LAB_PLATFORM_ROOT}/data/redis:/data
+      - ${LAB_STACK_ROOT}/data/redis:/data
     networks:
-      - lab_data
+      - labstack_data
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
       interval: 15s
@@ -41,17 +41,28 @@ services:
   minio:
     image: ${MINIO_IMAGE}
     container_name: minio
+    profiles: ["minio"]
     restart: unless-stopped
     environment:
       TZ: ${TZ}
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_BROWSER_REDIRECT_URL: https://${MINIO_CONSOLE_DOMAIN}
+      MINIO_BROWSER_REDIRECT_URL: https://${FILES_DOMAIN}
+      MINIO_SERVER_URL: https://${S3_DOMAIN}
+      MINIO_IDENTITY_OPENID_CONFIG_URL: ${MINIO_IDENTITY_OPENID_CONFIG_URL}
+      MINIO_IDENTITY_OPENID_CLIENT_ID: ${MINIO_OIDC_CLIENT_ID}
+      MINIO_IDENTITY_OPENID_CLIENT_SECRET: ${MINIO_OIDC_CLIENT_SECRET}
+      MINIO_IDENTITY_OPENID_DISPLAY_NAME: ${MINIO_IDENTITY_OPENID_DISPLAY_NAME}
+      MINIO_IDENTITY_OPENID_SCOPES: ${MINIO_IDENTITY_OPENID_SCOPES}
+      MINIO_IDENTITY_OPENID_CLAIM_NAME: ${MINIO_IDENTITY_OPENID_CLAIM_NAME}
     command: ["server", "/data", "--console-address", ":9001"]
+    extra_hosts:
+      - "${AUTH_DOMAIN}:host-gateway"
     volumes:
-      - ${LAB_PLATFORM_ROOT}/data/minio:/data
+      - ${LAB_STACK_ROOT}/certs/staging.crt:/root/.minio/certs/CAs/lab-stack-staging.crt:ro
+      - ${LAB_MINIO_DATA_ROOT}:/data
     networks:
-      - lab_data
+      - labstack_data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 15s
@@ -59,5 +70,6 @@ services:
       retries: 10
 
 networks:
-  lab_data:
+  labstack_data:
     external: true
+    name: ${LABSTACK_DATA_NETWORK}
