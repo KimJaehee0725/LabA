@@ -1,6 +1,6 @@
 # History Index
 
-Generated: 2026-05-10 20:00 +0000
+Generated: 2026-05-10 20:26 +0000
 
 ## Current Context
 
@@ -17,6 +17,7 @@ Generated: 2026-05-10 20:00 +0000
 
 ### changes
 
+- `history/changes/2026-05-10-202551-stabilize-phase-6-overleaf-staging-runtime.md` - Change - Stabilize Phase 6 Overleaf staging runtime
 - `history/changes/2026-05-10-200008-implement-phase-6-overleaf-staging-mvp.md` - Change - Implement Phase 6 Overleaf staging MVP
 - `history/changes/2026-05-10-133457-implement-phase-4-minio-storage-conditional-pass.md` - Change - Implement Phase 4 MinIO storage conditional pass
 - `history/changes/2026-05-09-205004-implement-phase-2-edge-auth-staging-baseline.md` - Change - Implement Phase 2 Edge/Auth staging baseline
@@ -28,7 +29,6 @@ Generated: 2026-05-10 20:00 +0000
 - `history/changes/2026-05-10-191410-implement-phase-5-3-hf-ui-presigned-upload.md` - Change - Implement Phase 5.3 HF UI presigned upload
 - `history/changes/2026-05-10-175234-implement-phase-5-hf-like-ui-mvp.md` - Change - Implement Phase 5 HF-like UI MVP
 - `history/changes/2026-05-10-140100-stabilize-phase-4-minio-staging-runtime.md` - Change - Stabilize Phase 4 MinIO staging runtime
-- `history/changes/2026-05-08-154331-add-staging-demo-data-seed-scripts.md` - Change - Add staging demo data seed scripts
 
 ### decisions
 
@@ -42,6 +42,7 @@ Generated: 2026-05-10 20:00 +0000
 
 ### experiments
 
+- `history/experiments/0015-validate-phase-6-overleaf-staging-checks.md` - Experiment 0015 - Validate Phase 6 Overleaf staging checks
 - `history/experiments/0014-validate-phase-6-overleaf-static-surface.md` - Experiment 0014 - Validate Phase 6 Overleaf static surface
 - `history/experiments/0009-validate-phase-5-1-dataset-preview-static-surface.md` - Experiment 0009 - Validate Phase 5.1 dataset preview static surface
 - `history/experiments/0008-validate-phase-5-hf-like-ui-staging-runtime.md` - Experiment 0008 - Validate Phase 5 HF-like UI staging runtime
@@ -53,7 +54,6 @@ Generated: 2026-05-10 20:00 +0000
 - `history/experiments/0011-validate-phase-5-3-upload-static-surface.md` - Experiment 0011 - Validate Phase 5.3 upload static surface
 - `history/experiments/0010-validate-phase-5-2-parquet-preview-local-surface.md` - Experiment 0010 - Validate Phase 5.2 Parquet preview local surface
 - `history/experiments/0013-validate-full-pass-readiness-runbook-surface.md` - Experiment 0013 - Validate full-pass readiness runbook surface
-- `history/experiments/0001-validate-plane-authentik-oidc-on-staging.md` - Experiment 0001 - Validate Plane Authentik OIDC on staging
 
 ### handoffs
 
@@ -67,6 +67,7 @@ Generated: 2026-05-10 20:00 +0000
 
 ### sessions
 
+- `history/sessions/2026-05-10-200900-codex-validate-phase-6-overleaf-staging-runtime.md` - Session - Validate Phase 6 Overleaf staging runtime
 - `history/sessions/2026-05-10-195252-codex-implement-phase-6-overleaf-staging-mvp.md` - Session - Implement Phase 6 Overleaf staging MVP
 - `history/sessions/2026-05-10-173823-codex-implement-phase-5-hf-like-ui-mvp.md` - Session - Implement Phase 5 HF-like UI MVP
 - `history/sessions/2026-05-08-100051-codex-create-v0-1-detailed-planning-for-lab-self-hosted-platform.md` - Session - Create v0.1 detailed planning for lab self-hosted platform

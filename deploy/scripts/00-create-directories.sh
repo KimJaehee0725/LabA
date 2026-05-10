@@ -93,6 +93,14 @@ else
   log "skipping Huly data ownership fix because the script is not running as root"
 fi
 
+OVERLEAF_DATA_UID="${OVERLEAF_DATA_UID:-33}"
+OVERLEAF_DATA_GID="${OVERLEAF_DATA_GID:-33}"
+if is_dry_run || [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+  run_cmd chown -R "${OVERLEAF_DATA_UID}:${OVERLEAF_DATA_GID}" "$LAB_STACK_ROOT/data/overleaf/overleaf"
+else
+  log "skipping Overleaf data ownership fix because the script is not running as root"
+fi
+
 if compgen -G "$LAB_STACK_ROOT/env/*.env" >/dev/null; then
   env_files=("$LAB_STACK_ROOT"/env/*.env)
   run_cmd chmod 0640 "${env_files[@]}"
