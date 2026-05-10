@@ -1,0 +1,64 @@
+name: lab_hf_ui
+
+services:
+  hf-ui:
+    build:
+      context: ${LAB_STACK_ROOT}/hf-ui/app
+    image: ${HF_UI_IMAGE}
+    container_name: ${HF_UI_CONTAINER:-hf-ui}
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      HF_UI_VERSION: ${HF_UI_VERSION}
+      HF_UI_PORT: ${HF_UI_PORT}
+      HF_UI_PUBLIC_URL: ${HF_UI_PUBLIC_URL}
+      HF_UI_SESSION_SECRET: ${HF_UI_SESSION_SECRET}
+      HF_UI_AUTH_REQUIRED: ${HF_UI_AUTH_REQUIRED}
+      HF_UI_ALLOW_STAGING_BYPASS: ${HF_UI_ALLOW_STAGING_BYPASS}
+      HF_UI_STAGING_BYPASS_TOKEN: ${HF_UI_STAGING_BYPASS_TOKEN}
+      HF_UI_OIDC_ISSUER: ${HF_UI_OIDC_ISSUER}
+      HF_UI_OIDC_CLIENT_ID: ${HF_UI_OIDC_CLIENT_ID}
+      HF_UI_OIDC_CLIENT_SECRET: ${HF_UI_OIDC_CLIENT_SECRET}
+      HF_UI_OIDC_REDIRECT_URI: ${HF_UI_OIDC_REDIRECT_URI}
+      HF_UI_OIDC_SCOPES: ${HF_UI_OIDC_SCOPES}
+      HF_UI_CATALOG_FILE: ${HF_UI_CATALOG_FILE}
+      HF_UI_DEFAULT_VISIBILITY: ${HF_UI_DEFAULT_VISIBILITY}
+      HF_UI_REQUIRE_GROUPS: ${HF_UI_REQUIRE_GROUPS}
+      HF_UI_S3_ENDPOINT: ${HF_UI_S3_ENDPOINT}
+      HF_UI_S3_SECURE: ${HF_UI_S3_SECURE}
+      HF_UI_S3_PUBLIC_ENDPOINT: ${HF_UI_S3_PUBLIC_ENDPOINT}
+      HF_UI_S3_PUBLIC_SECURE: ${HF_UI_S3_PUBLIC_SECURE}
+      HF_UI_S3_REGION: ${HF_UI_S3_REGION}
+      HF_UI_S3_ACCESS_KEY: ${HF_UI_S3_ACCESS_KEY}
+      HF_UI_S3_SECRET_KEY: ${HF_UI_S3_SECRET_KEY}
+      HF_UI_MODELS_BUCKET: ${HF_UI_MODELS_BUCKET}
+      HF_UI_DATASETS_BUCKET: ${HF_UI_DATASETS_BUCKET}
+      HF_UI_ARTIFACTS_BUCKET: ${HF_UI_ARTIFACTS_BUCKET}
+      HF_UI_PUBLIC_BUCKET: ${HF_UI_PUBLIC_BUCKET}
+      HF_UI_PRESIGN_EXPIRY_SECONDS: ${HF_UI_PRESIGN_EXPIRY_SECONDS}
+      HF_UI_PREVIEW_MAX_ROWS: ${HF_UI_PREVIEW_MAX_ROWS}
+      HF_UI_PREVIEW_MAX_BYTES: ${HF_UI_PREVIEW_MAX_BYTES}
+      HF_UI_PREVIEW_PARQUET_MAX_BYTES: ${HF_UI_PREVIEW_PARQUET_MAX_BYTES}
+      HF_UI_PREVIEW_RETURN_ROWS: ${HF_UI_PREVIEW_RETURN_ROWS}
+      SSL_CERT_FILE: /app/certs/lab-stack-staging.crt
+    extra_hosts:
+      - "${AUTH_DOMAIN}:host-gateway"
+    volumes:
+      - ${LAB_STACK_ROOT}/hf-ui/catalog/seed.catalog.yaml:/app/catalog/seed.catalog.yaml:ro
+      - ${LAB_STACK_ROOT}/certs/staging.crt:/app/certs/lab-stack-staging.crt:ro
+    networks:
+      - labstack_backend
+      - labstack_data
+    healthcheck:
+      test: ["CMD-SHELL", "python - <<'PY'\nimport json, urllib.request\nwith urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=5) as r:\n    data = json.load(r)\nassert data.get('status') == 'ok'\nPY"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+networks:
+  labstack_backend:
+    external: true
+    name: ${LABSTACK_BACKEND_NETWORK}
+  labstack_data:
+    external: true
+    name: ${LABSTACK_DATA_NETWORK}

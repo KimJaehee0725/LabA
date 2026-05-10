@@ -1,0 +1,28 @@
+models:
+  - id: demo-tiny-transformer
+    owner: demo
+    name: tiny-transformer
+    title: Tiny Transformer Demo
+    summary: Minimal model bundle used to validate the lab HF-like UI.
+    visibility: lab
+    tags: [demo, transformer, smoke]
+    license: internal-demo
+    bucket: lab-models
+    prefix: demo/tiny-transformer/v1/
+    readme: README.md
+    version: v1
+    base_model: synthetic
+datasets:
+  - id: demo-sentiment-mini
+    owner: demo
+    name: sentiment-mini
+    title: Sentiment Mini Dataset
+    summary: Small JSONL, CSV, JSON, and Parquet dataset used for catalog, file tree, download, and preview smoke.
+    visibility: lab
+    tags: [demo, dataset, jsonl, csv, json, parquet]
+    license: internal-demo
+    bucket: lab-datasets
+    prefix: demo/sentiment-mini/v1/
+    readme: README.md
+    version: v1
+    task: text-classification
