@@ -31,6 +31,18 @@ Status: automated staging validation passed with manual browser smoke pending.
 - `/opt/lab-stack/scripts/81-bootstrap-overleaf.sh`: passed; Mongo replica set ready.
 - `STAGING_IP=127.0.0.1 PHASE6_REQUIRE_REAL_DOMAINS=false PHASE6_REQUIRE_SMTP=false /opt/lab-stack/scripts/80-check-overleaf.sh`: passed at `2026-05-10T20:22:41Z`.
 - `STAGING_IP=127.0.0.1 PHASE2_REQUIRE_REAL_DOMAINS=false PHASE2_REQUIRE_SMTP=false PHASE3_REQUIRE_REAL_DOMAINS=false PHASE3_REQUIRE_GITHUB=false PHASE3_REQUIRE_CALENDAR=false PHASE3_REQUIRE_PILOT_FULL_PASS=false PHASE4_REQUIRE_REAL_DOMAINS=false PHASE5_REQUIRE_REAL_DOMAINS=false PHASE6_REQUIRE_REAL_DOMAINS=false PHASE6_REQUIRE_SMTP=false LABSTACK_INCLUDE_HULY=true LABSTACK_INCLUDE_MINIO=true LABSTACK_INCLUDE_HF_UI=true LABSTACK_INCLUDE_OVERLEAF=true /opt/lab-stack/scripts/96-check-all.sh`: passed at `2026-05-10T20:24:42Z`.
+- Revalidated on `2026-05-11`: `STAGING_IP=127.0.0.1 PHASE6_REQUIRE_REAL_DOMAINS=false PHASE6_REQUIRE_SMTP=false /opt/lab-stack/scripts/80-check-overleaf.sh` passed at `2026-05-11T07:27:53Z`.
+- Revalidated on `2026-05-11`: the relaxed integrated `96-check-all.sh` with Huly, MinIO, HF UI, and Overleaf enabled passed through Overleaf at `2026-05-11T07:28:44Z`.
+
+## Strict Validation Caveats
+
+- `80-check-overleaf.sh` confirms runtime health and route reachability, but it
+  does not by itself prove browser-trusted TLS or SMTP delivery.
+- Full pass requires separate evidence for real DNS, trusted TLS without a
+  staging resolver override, admin activation, invite/password mail delivery,
+  English/Korean compile, collaboration/logout, and backup restore rehearsal.
+- PR #2 remains draft while exposed credential rotation is deferred and full-pass
+  browser evidence is incomplete.
 
 ## Runtime Fixes Applied During Staging
 

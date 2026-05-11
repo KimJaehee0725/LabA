@@ -1,10 +1,10 @@
 # Full-Pass Readiness Overview
 
-Status: Phase 2-5 staging conditional-pass; operational full-pass pending.
+Status: Phase 2-6 staging conditional-pass; operational full-pass pending.
 
 This overview coordinates the evidence required before the Huly workspace MVP is
 promoted from staging conditional-pass to operational full-pass. Use it after
-the Phase 2-5 staging reports pass and before starting Phase 6 Overleaf.
+the Phase 2-6 staging reports pass and before marking the draft PR ready.
 
 ## Read First
 
@@ -21,9 +21,33 @@ the Phase 2-5 staging reports pass and before starting Phase 6 Overleaf.
 - Real DNS and trusted TLS evidence are not available yet.
 - SMTP is still placeholder-only in the staging environment.
 - Browser OIDC evidence is missing for Authentik, Huly, MinIO, and HF UI.
-- The exposed GitHub token and sudo password must be rotated outside this repo.
+- The exposed GitHub token and sudo password are intentionally deferred by the
+  current operator policy, so strict full-pass and PR-ready promotion remain
+  blocked until that policy changes or an explicit waiver is recorded.
 - `HF_UI_ALLOW_STAGING_BYPASS=true` is acceptable only for staging automation
   and must be disabled before strict HF UI browser validation.
+- Phase 6 Overleaf automated staging checks pass, but admin activation, invite
+  mail, compile, collaboration/logout, trusted TLS, real SMTP, and
+  backup/restore evidence remain pending.
+
+## 2026-05-11 Verification Snapshot
+
+- Security/Edge/Auth remains `conditional-pass`: strict Phase 2 still needs real
+  DNS, trusted TLS, real SMTP, Authentik browser evidence, and credential
+  rotation or a documented waiver.
+- Huly/Pilot/Ops remains `conditional-pass`: browser OIDC, workspace seed,
+  GitHub/Calendar roundtrips, Notion/timeline evidence, one-week pilot, and
+  minimal ops evidence are pending.
+- Storage/HF UI remains `conditional-pass`: strict real-domain checks, MinIO
+  role evidence, HF UI browser OIDC/upload evidence, CORS evidence, and smoke
+  retention/cleanup decision are pending.
+- Overleaf remains `automated staging passed / manual full-pass pending`:
+  `80-check-overleaf.sh` and integrated relaxed `96-check-all.sh` passed on
+  `2026-05-11`, but browser/admin/SMTP/compile/collaboration/backup restore
+  evidence is not complete.
+- PR #2 should stay draft under the current credential policy. It may be
+  reviewed as a staging-only Overleaf PR, but must not be represented as
+  operational full-pass.
 
 ## Full-Pass Order
 
@@ -37,7 +61,8 @@ the Phase 2-5 staging reports pass and before starting Phase 6 Overleaf.
 6. Complete the minimal ops gate: backup, restore, cert expiry, disk usage, and
    uptime alert evidence.
 7. Update phase reports from conditional-pass to pass only when every blocker is
-   resolved without relaxed flags.
+   resolved without relaxed flags, or explicitly record a scoped waiver with
+   owner, date, and accepted risk.
 
 ## PR Gate
 

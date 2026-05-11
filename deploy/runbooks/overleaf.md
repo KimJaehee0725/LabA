@@ -1,6 +1,6 @@
 # Phase 6 Overleaf Runbook
 
-Status: implementation-ready; staging runtime validation pending.
+Status: automated staging validation passed; manual full-pass evidence pending.
 
 Overleaf CE is deployed as a separate Compose module behind the shared Nginx
 edge. It uses manual accounts for Phase 6. Authentik SSO, Server Pro features,
@@ -120,6 +120,10 @@ Integrated conditional check with existing phases:
 STAGING_IP=127.0.0.1 \
   PHASE2_REQUIRE_REAL_DOMAINS=false \
   PHASE2_REQUIRE_SMTP=false \
+  PHASE3_REQUIRE_REAL_DOMAINS=false \
+  PHASE3_REQUIRE_GITHUB=false \
+  PHASE3_REQUIRE_CALENDAR=false \
+  PHASE3_REQUIRE_PILOT_FULL_PASS=false \
   PHASE4_REQUIRE_REAL_DOMAINS=false \
   PHASE5_REQUIRE_REAL_DOMAINS=false \
   PHASE6_REQUIRE_REAL_DOMAINS=false \
@@ -137,6 +141,12 @@ SMTP:
 ```bash
 PHASE6_REQUIRE_SMTP=true sudo -E /opt/lab-stack/scripts/80-check-overleaf.sh
 ```
+
+`80-check-overleaf.sh` proves container health, Nginx routing, Mongo/Redis,
+`latexmk`, `kotex`, and HTTP reachability. It does not prove browser-trusted TLS
+because the public probe uses curl with the staging-compatible TLS option, and
+it does not prove SMTP delivery beyond env presence. Record separate browser or
+non-`-k` curl evidence for trusted TLS and real invite/password mail delivery.
 
 ## Manual Browser Smoke
 

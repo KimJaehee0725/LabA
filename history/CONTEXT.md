@@ -1,6 +1,6 @@
 # Project Context
 
-Last updated: 2026-05-10
+Last updated: 2026-05-11
 
 ## Research Goal
 
@@ -51,6 +51,8 @@ Last updated: 2026-05-10
   resumable uploads are later phases.
 - Keep Overleaf Phase 6 conditional-pass separate from Phase 2-5 full-pass:
   `LABSTACK_INCLUDE_OVERLEAF=true` opt-in is required for integrated checks.
+- PR #2 for `huly/overleaf-mvp` stays draft while full-pass browser evidence and
+  credential rotation/waiver are incomplete.
 - Commit at module checkpoints and use feature branches/worktrees when v0.2 work becomes parallel or risky.
 
 ## Open Questions And Risks
@@ -64,9 +66,13 @@ Last updated: 2026-05-10
 - Phase 5.3 upload staging smoke passed on `/opt/lab-stack` with
   `STAGING_IP=127.0.0.1`: presigned PUT, CORS preflight, file-list refresh,
   uploaded JSONL preview, and duplicate HTTP 409 were confirmed.
-- Phase 6 Overleaf runtime is not yet validated on `/opt/lab-stack`; local
-  static checks passed, but image build, container startup, admin activation,
-  SMTP delivery, and browser compile smoke remain pending.
+- Phase 6 Overleaf automated staging validation passed on `/opt/lab-stack` and
+  was revalidated on 2026-05-11 with relaxed staging flags; admin activation,
+  SMTP delivery, browser compile/collaboration smoke, real DNS/TLS, and backup
+  restore evidence remain pending.
+- Exposed GitHub token and sudo password rotation are intentionally deferred by
+  current operator policy, which blocks strict full-pass/PR-ready promotion until
+  that policy changes or a scoped waiver is recorded.
 - Authentik provider secrets must not be recorded in docs/history/git.
 
 ## Next Steps
