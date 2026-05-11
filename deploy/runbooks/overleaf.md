@@ -1,6 +1,7 @@
 # Phase 6 Overleaf Runbook
 
-Status: automated staging validation passed; manual full-pass evidence pending.
+Status: conditional smoke automation passed; strict manual full-pass evidence
+pending.
 
 Overleaf CE is deployed as a separate Compose module behind the shared Nginx
 edge. It uses manual accounts for Phase 6. Authentik SSO, Server Pro features,
@@ -53,8 +54,10 @@ Set at least:
 - `OVERLEAF_ADMIN_EMAIL`
 - `OVERLEAF_SITE_URL=https://$OVERLEAF_DOMAIN`
 
-For conditional staging without real SMTP, keep SMTP placeholders and run checks
-with `PHASE6_REQUIRE_SMTP=false`. For full pass, SMTP must be real and tested.
+For conditional smoke without real DNS or real SMTP, keep SMTP placeholders and
+run checks with the relaxed flags shown below. This is staging evidence only.
+For full pass, remove the relaxed flags and prove real DNS, trusted TLS, and
+real SMTP delivery.
 
 ## Build And Start
 
@@ -97,7 +100,7 @@ set -a
 . /opt/lab-stack/env/70-overleaf.env
 set +a
 sudo docker exec overleaf /bin/bash -lc \
-  "cd /var/www/sharelatex && grunt user:create-admin --email='${OVERLEAF_ADMIN_EMAIL}'"
+  "cd /overleaf && grunt user:create-admin --email='${OVERLEAF_ADMIN_EMAIL}'"
 ```
 
 Open the activation URL privately, set a strong password, then delete any shell
@@ -105,7 +108,7 @@ scrollback or private note that stored the URL.
 
 ## Automated Checks
 
-Conditional staging check:
+Conditional smoke check for Overleaf only:
 
 ```bash
 STAGING_IP=127.0.0.1 \
@@ -114,7 +117,7 @@ STAGING_IP=127.0.0.1 \
   sudo -E /opt/lab-stack/scripts/80-check-overleaf.sh
 ```
 
-Integrated conditional check with existing phases:
+Integrated conditional smoke check with existing phases:
 
 ```bash
 STAGING_IP=127.0.0.1 \
@@ -135,6 +138,9 @@ STAGING_IP=127.0.0.1 \
   sudo -E /opt/lab-stack/scripts/96-check-all.sh
 ```
 
+These conditional smoke commands deliberately allow staging DNS/TLS and SMTP
+placeholders. They are not strict full-pass evidence.
+
 Full pass must remove relaxed flags and use real DNS, trusted TLS, and real
 SMTP:
 
@@ -143,10 +149,11 @@ PHASE6_REQUIRE_SMTP=true sudo -E /opt/lab-stack/scripts/80-check-overleaf.sh
 ```
 
 `80-check-overleaf.sh` proves container health, Nginx routing, Mongo/Redis,
-`latexmk`, `kotex`, and HTTP reachability. It does not prove browser-trusted TLS
-because the public probe uses curl with the staging-compatible TLS option, and
-it does not prove SMTP delivery beyond env presence. Record separate browser or
-non-`-k` curl evidence for trusted TLS and real invite/password mail delivery.
+`latexmk`, `kotex`, and HTTP reachability. In conditional smoke mode it does
+not prove browser-trusted TLS because the public probe uses staging-compatible
+TLS handling, and it does not prove SMTP delivery beyond placeholder/env
+presence. Record separate browser or non-`-k` curl evidence for trusted TLS and
+real invite/password mail delivery.
 
 ## Manual Browser Smoke
 
@@ -155,13 +162,18 @@ Use a private browser session and a private evidence folder.
 | Check | Expected result | Evidence ref | Notes |
 | --- | --- | --- | --- |
 | Public route | `https://overleaf.lab.example.ac.kr` loads with trusted TLS | | |
-| Admin activation | Admin password is set through the private activation URL | | |
+| Admin activation | Admin password is set through the private activation URL | 2026-05-11 conditional smoke | Activation URL and password stayed in local `0600` files only |
 | Login/logout | Admin login works and logout clears access | | |
 | User invite | Invite email is delivered through SMTP | | |
-| English compile | A small article compiles to PDF | | |
-| Korean compile | A small `kotex` document compiles to PDF | | |
-| Collaboration | Two browser sessions see edits without WebSocket errors | | |
+| English compile | A small article compiles to PDF | 2026-05-11 conditional smoke | HTTP session compile returned `success` with `output.pdf` |
+| Korean compile | A small `kotex` document compiles to PDF | 2026-05-11 conditional smoke | HTTP session `xelatex` compile returned `success` with `output.pdf` |
+| Collaboration | Two browser sessions see edits without WebSocket errors | Partial: 2026-05-11 socket route smoke | `/socket.io/` returned HTTP 200; two-browser edit evidence still pending |
 | Git clone | Project Git clone works if enabled for the project | | |
+
+Strict full-pass blockers remain open until all rows above have private evidence
+and the runbook has a backup artifact checksum plus restore rehearsal note. Do
+not paste activation URLs, passwords, tokens, private project content, SMTP
+headers with secrets, or raw private evidence values into this file.
 
 Korean compile sample:
 
@@ -172,6 +184,10 @@ Korean compile sample:
 안녕하세요. Overleaf 한국어 컴파일 확인입니다.
 \end{document}
 ```
+
+The custom image must include `fontspec`, `xetexko`, and `luatexko` in addition
+to the base `kotex` packages. Without these packages, XeLaTeX Korean compile
+fails after loading `kotex.sty`.
 
 ## Backup
 

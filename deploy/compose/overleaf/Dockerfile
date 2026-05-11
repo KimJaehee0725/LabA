@@ -3,7 +3,7 @@ FROM ${OVERLEAF_IMAGE}
 
 USER root
 
-ARG TEXLIVE_EXTRA_PACKAGES="latexmk biber biblatex chemfig pgfplots tikz-cd kotex-utf kotex-utils kotex-plain unfonts-core"
+ARG TEXLIVE_EXTRA_PACKAGES="latexmk biber biblatex chemfig pgfplots tikz-cd fontspec kotex-utf kotex-utils kotex-plain xetexko luatexko unfonts-core"
 ARG TEXLIVE_REPOSITORY="https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2025/tlnet-final"
 
 RUN if command -v tlmgr >/dev/null 2>&1; then \

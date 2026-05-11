@@ -170,6 +170,12 @@ else
   fail "Korean LaTeX package kotex is missing"
 fi
 
+if docker exec "$OVERLEAF_CONTAINER" bash -lc 'command -v kpsewhich >/dev/null && kpsewhich fontspec.sty >/dev/null && kpsewhich xetexko.sty >/dev/null && kpsewhich luatexko.sty >/dev/null'; then
+  ok "XeLaTeX/LuaLaTeX Korean dependencies are available"
+else
+  fail "XeLaTeX/LuaLaTeX Korean dependencies are missing"
+fi
+
 if docker exec "$OVERLEAF_REDIS_CONTAINER" redis-cli -a "${OVERLEAF_REDIS_PASSWORD:-}" --no-auth-warning ping | grep -q PONG; then
   ok "Overleaf Redis auth ping succeeded"
 else

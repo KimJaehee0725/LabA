@@ -1,6 +1,6 @@
 # Full-Pass Readiness Overview
 
-Status: Phase 2-6 staging conditional-pass; operational full-pass pending.
+Status: Phase 2-6 conditional smoke/staging pass; operational full-pass pending.
 
 This overview coordinates the evidence required before the Huly workspace MVP is
 promoted from staging conditional-pass to operational full-pass. Use it after
@@ -26,9 +26,11 @@ the Phase 2-6 staging reports pass and before marking the draft PR ready.
   blocked until that policy changes or an explicit waiver is recorded.
 - `HF_UI_ALLOW_STAGING_BYPASS=true` is acceptable only for staging automation
   and must be disabled before strict HF UI browser validation.
-- Phase 6 Overleaf automated staging checks pass, but admin activation, invite
-  mail, compile, collaboration/logout, trusted TLS, real SMTP, and
-  backup/restore evidence remain pending.
+- Phase 6 Overleaf conditional smoke checks pass with relaxed real-domain and
+  SMTP gates, including private admin activation, HTTP-session English/Korean
+  compile, socket route smoke, and backup checksums. Invite mail,
+  browser login/logout, browser collaboration, trusted TLS, real SMTP, and
+  restore rehearsal evidence remain pending.
 
 ## 2026-05-11 Verification Snapshot
 
@@ -41,10 +43,14 @@ the Phase 2-6 staging reports pass and before marking the draft PR ready.
 - Storage/HF UI remains `conditional-pass`: strict real-domain checks, MinIO
   role evidence, HF UI browser OIDC/upload evidence, CORS evidence, and smoke
   retention/cleanup decision are pending.
-- Overleaf remains `automated staging passed / manual full-pass pending`:
+- Overleaf remains `conditional smoke passed / strict full-pass pending`:
   `80-check-overleaf.sh` and integrated relaxed `96-check-all.sh` passed on
-  `2026-05-11`, but browser/admin/SMTP/compile/collaboration/backup restore
-  evidence is not complete.
+  `2026-05-11` with relaxed real-domain and SMTP gates. Conditional admin
+  activation, English/Korean compile, socket route, and backup checksum evidence
+  were added later on `2026-05-11`, but browser login/logout, invite delivery,
+  real SMTP, trusted TLS, two-browser collaboration, and restore rehearsal
+  evidence remain incomplete. Admin creation must use `/overleaf`, and
+  activation output must stay out of reports.
 - PR #2 should stay draft under the current credential policy. It may be
   reviewed as a staging-only Overleaf PR, but must not be represented as
   operational full-pass.
@@ -74,6 +80,9 @@ staging-only. Do not mark it ready for review until:
 - Local static checks pass.
 - Staging `96-check-all.sh` still passes.
 - Full-pass blockers are either resolved or explicitly scoped to a later PR.
+- Phase 6 Overleaf conditional smoke is not enough for PR-ready full-pass
+  claims until real DNS/TLS, real SMTP delivery, browser login/logout and
+  collaboration smoke, and restore evidence are recorded without secrets.
 
 ## Evidence Rules
 
@@ -85,3 +94,6 @@ staging-only. Do not mark it ready for review until:
   and explicitly approved for publication.
 - Reports may name server-only paths such as `/opt/lab-stack/env/*.env`, but not
   the values inside them.
+- Overleaf reports must not include admin activation URLs, passwords, tokens,
+  project Git credentials, private paper content, or raw private evidence
+  values.
