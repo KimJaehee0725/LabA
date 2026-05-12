@@ -45,7 +45,9 @@ deploy/
 5. Verify tracked env files contain placeholders only.
 6. Record dry-run evidence in a report without including host secrets, private keys, tokens, or generated credentials.
 
-Edge/Auth, Huly, shared MinIO storage, HF-like UI, Overleaf, backup, and monitoring deployment happen in later phases. Plane, Gitea, Nextcloud, and MLflow are excluded from the active Phase 1 order.
+Edge/Auth, Huly, shared MinIO storage, HF-like UI, Overleaf, backup, restore,
+and monitoring deployment happen in later phases. Plane, Gitea, Nextcloud, and
+MLflow are excluded from the active Phase 1 order.
 
 ## Phase 1 Validation Commands
 
@@ -75,3 +77,8 @@ Phase 4 promotes the shared core `minio` service as the active storage layer.
 Use `deploy/runbooks/phase4-minio-storage.md` after Phase 2 Edge/Auth and the
 conditional Phase 3 Huly runtime are in place. Huly's internal `huly-minio`
 container remains Huly-only and is not the shared storage endpoint.
+
+Phase 7 uses `deploy/runbooks/phase7-operational-baseline.md` to close internal
+backup, restore rehearsal, disk/cert, permission, service exposure, and
+repo-facing secret hygiene checks that do not require new external credentials
+or real DNS/TLS/SMTP inputs.

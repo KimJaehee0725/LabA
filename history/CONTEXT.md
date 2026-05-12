@@ -37,6 +37,9 @@ Last updated: 2026-05-11
   at `/workspace/LargeProject/LabA-overleaf`; it is a direct Compose module
   with manual accounts, dedicated Mongo/Redis, shared Nginx routing, and no
   Authentik SSO in this phase.
+- Phase 7 internal operational baseline is implemented on the Overleaf branch:
+  active-stack backups, isolated restore rehearsal, ops baseline checks, and
+  evidence report live under the deploy scripts/runbooks/reports.
 
 ## Active Ideas
 
@@ -70,6 +73,12 @@ Last updated: 2026-05-11
   was revalidated on 2026-05-11 with relaxed staging flags; admin activation,
   SMTP delivery, browser compile/collaboration smoke, real DNS/TLS, and backup
   restore evidence remain pending.
+- Phase 7 internal operational baseline passed on 2026-05-12 with backup root
+  `/mnt/backup/lab/archive/phase7/2026-05-12/20260512T054224Z`; strict
+  full-pass remains blocked by external DNS/TLS/SMTP, browser evidence,
+  credential policy, and browser/external evidence. An unrelated
+  `/workspace/LLM-API-Watcher` process was moved from port 3000 to 3010, after
+  which relaxed integrated `96-check-all.sh` with Phase 7 opt-in passed.
 - Exposed GitHub token and sudo password rotation are intentionally deferred by
   current operator policy, which blocks strict full-pass/PR-ready promotion until
   that policy changes or a scoped waiver is recorded.

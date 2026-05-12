@@ -1,6 +1,7 @@
 # Full-Pass Readiness Overview
 
-Status: Phase 2-6 conditional smoke/staging pass; operational full-pass pending.
+Status: Phase 2-6 conditional smoke/staging pass; Phase 7 internal operational
+baseline pass; operational full-pass pending.
 
 This overview coordinates the evidence required before the Huly workspace MVP is
 promoted from staging conditional-pass to operational full-pass. Use it after
@@ -15,6 +16,9 @@ the Phase 2-6 staging reports pass and before marking the draft PR ready.
   gate.
 - `full-pass-storage-hf.md`: MinIO role evidence, HF UI browser smoke,
   upload/download/preview checks, CORS fallback and smoke object cleanup.
+- `phase7-operational-baseline.md`: internal active-stack backup, isolated
+  restore rehearsal, disk/cert/permission checks, service exposure checks, and
+  repo-facing secret scan hygiene.
 
 ## Current Blockers
 
@@ -31,6 +35,9 @@ the Phase 2-6 staging reports pass and before marking the draft PR ready.
   compile, socket route smoke, and backup checksums. Invite mail,
   browser login/logout, browser collaboration, trusted TLS, real SMTP, and
   restore rehearsal evidence remain pending.
+- Phase 7 internal operational baseline automation exists to close non-external
+  ops evidence, and passed on `2026-05-12` with backup/restore evidence. It is
+  not a substitute for strict full-pass.
 
 ## 2026-05-11 Verification Snapshot
 
@@ -54,6 +61,12 @@ the Phase 2-6 staging reports pass and before marking the draft PR ready.
 - PR #2 should stay draft under the current credential policy. It may be
   reviewed as a staging-only Overleaf PR, but must not be represented as
   operational full-pass.
+- Phase 7 internal ops baseline passed on `2026-05-12`: active backup,
+  isolated restore rehearsal, disk/cert/permission checks, active service
+  exposure checks, and repo-facing high-risk secret scan completed. The
+  unrelated `/workspace/LLM-API-Watcher` host process was moved from port `3000`
+  to `3010`; the relaxed integrated `96-check-all.sh` with Phase 7 opt-in then
+  passed on `2026-05-12T05:54:25Z`.
 
 ## Full-Pass Order
 
@@ -64,8 +77,9 @@ the Phase 2-6 staging reports pass and before marking the draft PR ready.
    timeline/Gantt, and one-week pilot evidence.
 5. Run Phase 4/5 strict MinIO and HF UI checks, then capture role/browser
    evidence for `lab-admin`, `lab-member`, `lab-collab`, and `lab-guest`.
-6. Complete the minimal ops gate: backup, restore, cert expiry, disk usage, and
-   uptime alert evidence.
+6. Complete the Phase 7 internal ops gate: active backup, restore rehearsal,
+   cert expiry, disk usage, permissions, service exposure, and secret scan
+   evidence.
 7. Update phase reports from conditional-pass to pass only when every blocker is
    resolved without relaxed flags, or explicitly record a scoped waiver with
    owner, date, and accepted risk.
@@ -79,6 +93,8 @@ staging-only. Do not mark it ready for review until:
 - Credential rotation is confirmed without recording replacement values.
 - Local static checks pass.
 - Staging `96-check-all.sh` still passes.
+- Phase 7 internal operational baseline passes if PR text claims operational
+  readiness below strict full-pass.
 - Full-pass blockers are either resolved or explicitly scoped to a later PR.
 - Phase 6 Overleaf conditional smoke is not enough for PR-ready full-pass
   claims until real DNS/TLS, real SMTP delivery, browser login/logout and

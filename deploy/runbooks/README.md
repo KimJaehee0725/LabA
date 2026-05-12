@@ -10,8 +10,8 @@ Run the active Huly workspace MVP phases in this order:
 4. `phase4-minio-storage.md`
 5. `phase5-hf-ui.md`
 6. `overleaf.md` when Phase 6 Overleaf is enabled
-7. `full-pass-readiness.md` and the supporting full-pass checklists
-8. Backup/monitoring runbooks to be refreshed before pilot opening
+7. `phase7-operational-baseline.md` for internal backup, restore, and ops gate
+8. `full-pass-readiness.md` and the supporting full-pass checklists
 
 Common Phase 1 dry-run:
 
@@ -42,6 +42,12 @@ model/dataset catalog, file tree, and download flow, and records evidence in
 Phase 6 starts Overleaf CE as a separate manual-account paper collaboration
 module, validates Mongo replica set, Redis auth, LaTeX/Korean package presence,
 public edge routing, and records evidence in `../reports/phase6-overleaf.md`.
+
+Phase 7 records the internal operational baseline that can be completed before
+external full-pass inputs are available: active backups, isolated restore
+rehearsal, disk/cert/permission checks, active service exposure checks, and
+repo-facing secret scan hygiene. Record evidence in
+`../reports/phase7-operational-baseline.md`.
 
 After Phase 2-5 staging conditional-pass, use the full-pass readiness runbooks
 before promoting the environment:

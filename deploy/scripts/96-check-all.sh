@@ -36,6 +36,12 @@ if [[ "${LABSTACK_INCLUDE_OVERLEAF:-false}" == "true" || "${LABSTACK_INCLUDE_OVE
   )
 fi
 
+if [[ "${LABSTACK_INCLUDE_OPS_BASELINE:-false}" == "true" || "${LABSTACK_INCLUDE_OPS_BASELINE:-false}" == "1" ]]; then
+  checks+=(
+    99-check-ops-baseline.sh
+  )
+fi
+
 for check in "${checks[@]}"; do
   echo "== $check =="
   "$SCRIPT_DIR/$check"

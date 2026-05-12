@@ -56,6 +56,11 @@ pending.
   relaxed `80-check-overleaf.sh` passed at `2026-05-11T09:05:24Z`, and the
   relaxed integrated `96-check-all.sh` with Huly, MinIO, HF UI, and Overleaf
   enabled passed through Overleaf at `2026-05-11T09:05:55Z`.
+- Phase 7 restore evidence on `2026-05-12`: Overleaf Mongo archive
+  `overleaf/mongo/overleaf.archive` under
+  `/mnt/backup/lab/archive/phase7/2026-05-12/20260512T054224Z` passed
+  `mongorestore --dryRun`; Overleaf file and Redis archives were listed in the
+  Phase 7 manifest.
 
 These runs are conditional smoke evidence. They intentionally use relaxed
 real-domain and SMTP gates for staging and must not be treated as operational
@@ -99,6 +104,7 @@ full-pass evidence.
 - Real SMTP delivery for admin/user invite and password flows.
 - Browser evidence for login/logout, user invite, trusted TLS, real SMTP
   delivery, and two-session live collaboration.
-- Destructive or isolated restore rehearsal note.
+- Browser evidence remains pending; isolated restore rehearsal is now covered
+  by Phase 7 evidence.
 - No secrets, activation URLs, passwords, tokens, private paper content, or raw
   private evidence values may be recorded in the report.
