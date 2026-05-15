@@ -5,45 +5,61 @@ services:
     build:
       context: .
       args:
-        MLFLOW_VERSION: ${MLFLOW_VERSION}
-    image: ${MLFLOW_IMAGE}
-    container_name: mlflow
+        MLFLOW_VERSION: ${MLFLOW_VERSION:-2.20.3}
+    image: ${MLFLOW_IMAGE:-lab/mlflow-server:phase8}
+    container_name: ${MLFLOW_CONTAINER:-mlflow}
     restart: unless-stopped
     environment:
-      TZ: ${TZ}
-      MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_S3_ENDPOINT}
+      TZ: ${TZ:-Etc/UTC}
+      MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_S3_ENDPOINT_URL:-http://minio:9000}
       AWS_ACCESS_KEY_ID: ${MLFLOW_S3_ACCESS_KEY}
       AWS_SECRET_ACCESS_KEY: ${MLFLOW_S3_SECRET_KEY}
+      AWS_DEFAULT_REGION: ${MLFLOW_S3_REGION:-us-east-1}
+      AWS_EC2_METADATA_DISABLED: "true"
     command:
       - mlflow
       - server
       - --host
       - 0.0.0.0
       - --port
-      - "5000"
+      - "${MLFLOW_PORT:-5000}"
       - --backend-store-uri
-      - postgresql://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@postgres:5432/${MLFLOW_DB_NAME}
+      - postgresql://${MLFLOW_DB_USER:-mlflow_user}:${MLFLOW_DB_PASSWORD}@postgres:5432/${MLFLOW_DB_NAME:-mlflow}
       - --default-artifact-root
-      - s3://${MLFLOW_S3_BUCKET}
+      - s3://${MLFLOW_S3_BUCKET:-lab-artifacts}/${MLFLOW_S3_ARTIFACT_PREFIX:-mlflow}
       - --serve-artifacts
     networks:
-      - lab_backend
-      - lab_data
+      - labstack_backend
+      - labstack_data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          python - <<'PY'
+          import urllib.request
+          urllib.request.urlopen("http://127.0.0.1:${MLFLOW_PORT:-5000}", timeout=5).read(1)
+          PY
+      interval: 20s
+      timeout: 10s
+      retries: 10
 
   authentik-outpost-mlflow:
-    image: ${AUTHENTIK_OUTPOST_IMAGE}
+    image: ${AUTHENTIK_OUTPOST_IMAGE:-ghcr.io/goauthentik/proxy:2025.2.4}
     container_name: authentik-outpost-mlflow
+    profiles: ["auth"]
     restart: unless-stopped
     environment:
-      TZ: ${TZ}
+      TZ: ${TZ:-Etc/UTC}
       AUTHENTIK_HOST: https://${AUTH_DOMAIN}
       AUTHENTIK_INSECURE: "false"
       AUTHENTIK_TOKEN: ${AUTHENTIK_OUTPOST_MLFLOW_TOKEN}
     networks:
-      - lab_backend
+      - labstack_backend
 
 networks:
-  lab_backend:
+  labstack_backend:
     external: true
-  lab_data:
+    name: ${LABSTACK_BACKEND_NETWORK:-labstack_backend}
+  labstack_data:
     external: true
+    name: ${LABSTACK_DATA_NETWORK:-labstack_data}

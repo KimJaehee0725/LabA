@@ -248,7 +248,7 @@ artifacts:
     system_of_record: MLflow
     experiment_ref: demo-baseline-001
     type: metrics-json
-    storage_ref: mlflow-artifacts
+    storage_ref: lab-artifacts/mlflow
     path: demo-baseline-001/metrics/sample-run.json
     source_repository_ref: vision-baseline-demo
 

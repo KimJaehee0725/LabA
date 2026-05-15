@@ -34,6 +34,7 @@ load_envs \
   "$ENV_DIR/00-global.env" \
   "$ENV_DIR/10-core.env" \
   "$ENV_DIR/35-minio-storage.env" \
+  "$ENV_DIR/50-mlflow.env" \
   "$ENV_DIR/70-overleaf.env" \
   "$ENV_DIR/90-backup.env"
 
@@ -41,6 +42,7 @@ LAB_BACKUP_ROOT="${LAB_BACKUP_ROOT:-/mnt/backup/lab}"
 BACKUP_ARCHIVE_ROOT="${BACKUP_ROOT:-${LAB_BACKUP_ROOT}/archive}"
 MINIO_ALIAS="${MINIO_ALIAS:-labminio}"
 MINIO_MC_IMAGE="${MINIO_MC_IMAGE:-minio/mc:latest}"
+LABSTACK_BACKUP_MLFLOW="${LABSTACK_BACKUP_MLFLOW:-false}"
 PHASE7_RESTORE_MINIO_WRITE="${PHASE7_RESTORE_MINIO_WRITE:-true}"
 [[ -n "$INCOMING_PHASE7_RESTORE_MINIO_WRITE" ]] && PHASE7_RESTORE_MINIO_WRITE="$INCOMING_PHASE7_RESTORE_MINIO_WRITE"
 
@@ -84,6 +86,8 @@ find_artifact() {
       minio:buckets-archive) printf 'minio/shared-minio-buckets.tar.gz\n' ;;
       huly:cold-data-archive) printf 'huly/huly-data-cold.tar.gz\n' ;;
       overleaf:mongo-archive) printf 'overleaf/mongo/overleaf.archive\n' ;;
+      mlflow:postgres-dump) printf 'mlflow/mlflow.dump\n' ;;
+      mlflow:artifacts-archive) printf 'mlflow/mlflow-artifacts.tar.gz\n' ;;
     esac
     return 0
   fi
@@ -238,6 +242,46 @@ restore_overleaf_rehearsal() {
   fi
 }
 
+restore_mlflow_rehearsal() {
+  is_true "$LABSTACK_BACKUP_MLFLOW" || return 0
+  local db_rel db_artifact artifacts_rel artifacts_artifact
+  db_rel="$(find_artifact mlflow postgres-dump || true)"
+  artifacts_rel="$(find_artifact mlflow artifacts-archive || true)"
+  [[ -n "$db_rel" ]] || { record_failure "missing MLflow Postgres dump artifact"; record_result mlflow-postgres fail "" "missing artifact"; return; }
+  [[ -n "$artifacts_rel" ]] || { record_failure "missing MLflow artifact archive"; record_result mlflow-artifacts fail "" "missing artifact"; return; }
+  db_artifact="$(artifact_path "$db_rel")"
+  artifacts_artifact="$(artifact_path "$artifacts_rel")"
+  if is_dry_run; then
+    printf '+ createdb temporary MLflow restore DB and pg_restore from %q\n' "$db_artifact"
+    printf '+ tar -tzf %q\n' "$artifacts_artifact"
+    record_result mlflow-postgres dry-run "$db_rel" "temporary DB restore"
+    record_result mlflow-artifacts dry-run "$artifacts_rel" "archive listing"
+    return
+  fi
+  if [[ -s "$db_artifact" ]]; then
+    temp_db="phase7_mlflow_restore_$(date -u +%Y%m%d%H%M%S)"
+    if docker exec postgres createdb -U "${POSTGRES_USER:-postgres}" "$temp_db" &&
+      docker exec -i postgres pg_restore -U "${POSTGRES_USER:-postgres}" -d "$temp_db" --no-owner <"$db_artifact" >/dev/null &&
+      docker exec postgres dropdb -U "${POSTGRES_USER:-postgres}" "$temp_db"; then
+      temp_db=""
+      record_result mlflow-postgres pass "$db_rel" "temporary DB restore succeeded"
+    else
+      record_failure "MLflow Postgres restore rehearsal failed"
+      record_result mlflow-postgres fail "$db_rel" "temporary DB restore failed"
+    fi
+  else
+    record_failure "MLflow Postgres artifact is empty: $db_artifact"
+    record_result mlflow-postgres fail "$db_rel" "empty artifact"
+  fi
+
+  if [[ -s "$artifacts_artifact" ]] && tar -tzf "$artifacts_artifact" >/dev/null; then
+    record_result mlflow-artifacts pass "$artifacts_rel" "artifact archive listing succeeded"
+  else
+    record_failure "MLflow artifact archive listing failed"
+    record_result mlflow-artifacts fail "$artifacts_rel" "archive listing failed"
+  fi
+}
+
 if ! is_dry_run; then
   [[ -f "$MANIFEST_FILE" ]] || die "missing manifest: $MANIFEST_FILE"
   {
@@ -254,6 +298,7 @@ restore_postgres_rehearsal
 restore_minio_rehearsal
 restore_huly_rehearsal
 restore_overleaf_rehearsal
+restore_mlflow_rehearsal
 
 if [[ "$status" -eq 0 ]]; then
   log "restore rehearsal passed for $BACKUP_RUN_ROOT"

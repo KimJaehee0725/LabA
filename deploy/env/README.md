@@ -2,7 +2,7 @@
 
 Phase 1 is repo + dry-run only. Keep tracked files as examples with placeholders, and do not add real secrets, generated client secrets, access keys, tokens, private keys, activation URLs, or production SMTP credentials.
 
-For a later real host deployment, copy each active `*.env.example` file to `/opt/lab-stack/env/*.env` and replace placeholders on the server. The active Huly workspace MVP env files are `00-global.env`, `10-core.env`, `20-authentik.env`, `30-huly.env`, `35-minio-storage.env`, `45-hf-ui.env`, and `70-overleaf.env` when Phase 6 Overleaf is enabled. Plane, Gitea, Nextcloud, and MLflow env examples are historical reference only for Phase 1 and are not part of the active Huly workspace MVP env surface.
+For a later real host deployment, copy each active `*.env.example` file to `/opt/lab-stack/env/*.env` and replace placeholders on the server. The active Huly workspace MVP env files are `00-global.env`, `10-core.env`, `20-authentik.env`, `30-huly.env`, `35-minio-storage.env`, `45-hf-ui.env`, `70-overleaf.env` when Phase 6 Overleaf is enabled, and `50-mlflow.env` when Phase 8 MLflow is enabled. Plane, Gitea, and Nextcloud env examples are historical reference only for Phase 1 and are not part of the active Huly workspace MVP env surface.
 
 Recommended permissions:
 
@@ -40,6 +40,11 @@ For Phase 6, `70-overleaf.env` stores only Overleaf runtime settings. Use
 generated values for `OVERLEAF_SESSION_SECRET` and `OVERLEAF_REDIS_PASSWORD`.
 Keep SMTP credentials server-only and never record admin activation URLs in git,
 history, reports, or shared chat.
+
+For Phase 8, `50-mlflow.env` stores the MLflow Postgres password and MinIO
+service credentials. MLflow artifacts default to the shared
+`lab-artifacts/mlflow` prefix. Keep the public MLflow route disabled unless the
+Authentik proxy/outpost values are configured and strict edge checks pass.
 
 For Phase 3, `30-huly.env` must use URL-safe generated values for CockroachDB,
 Redpanda, MinIO, and `HULY_SERVER_SECRET`. GitHub App private keys and Google

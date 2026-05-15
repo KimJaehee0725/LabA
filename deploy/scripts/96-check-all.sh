@@ -36,6 +36,12 @@ if [[ "${LABSTACK_INCLUDE_OVERLEAF:-false}" == "true" || "${LABSTACK_INCLUDE_OVE
   )
 fi
 
+if [[ "${LABSTACK_INCLUDE_MLFLOW:-false}" == "true" || "${LABSTACK_INCLUDE_MLFLOW:-false}" == "1" ]]; then
+  checks+=(
+    60-check-mlflow.sh
+  )
+fi
+
 if [[ "${LABSTACK_INCLUDE_OPS_BASELINE:-false}" == "true" || "${LABSTACK_INCLUDE_OPS_BASELINE:-false}" == "1" ]]; then
   checks+=(
     99-check-ops-baseline.sh

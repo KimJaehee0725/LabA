@@ -11,7 +11,8 @@ Run the active Huly workspace MVP phases in this order:
 5. `phase5-hf-ui.md`
 6. `overleaf.md` when Phase 6 Overleaf is enabled
 7. `phase7-operational-baseline.md` for internal backup, restore, and ops gate
-8. `full-pass-readiness.md` and the supporting full-pass checklists
+8. `mlflow.md` when Phase 8 MLflow tracking is enabled
+9. `full-pass-readiness.md` and the supporting full-pass checklists
 
 Common Phase 1 dry-run:
 
@@ -49,6 +50,11 @@ rehearsal, disk/cert/permission checks, active service exposure checks, and
 repo-facing secret scan hygiene. Record evidence in
 `../reports/phase7-operational-baseline.md`.
 
+Phase 8 starts MLflow Tracking as an internal active-stack service on shared
+Postgres and shared MinIO `lab-artifacts/mlflow`. The public MLflow route
+remains disabled unless Authentik gate evidence is available. Record evidence in
+`../reports/phase8-mlflow.md`.
+
 After Phase 2-5 staging conditional-pass, use the full-pass readiness runbooks
 before promoting the environment:
 
@@ -59,7 +65,7 @@ before promoting the environment:
 
 ## Historical v0.x Runbooks
 
-The following runbooks document the archived Plane/Gitea/MLflow/Nextcloud direction and remain reference material only unless a later decision explicitly reactivates them:
+The following runbooks document the archived Plane/Gitea/Nextcloud direction and remain reference material only unless a later decision explicitly reactivates them:
 
 - `v0.2-runtime-gate-1.md`
 - `core.md`
@@ -67,7 +73,6 @@ The following runbooks document the archived Plane/Gitea/MLflow/Nextcloud direct
 - `authentik.md` - historical v0.x Authentik reference, not the active Phase 2 procedure
 - `gitea.md`
 - `plane.md`
-- `mlflow.md`
 - `nextcloud-collabora.md`
 - `backup-restore.md`
 - `v0.3-smoke.md`

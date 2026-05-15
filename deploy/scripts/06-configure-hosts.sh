@@ -14,14 +14,14 @@ DRY_RUN="${DRY_RUN:-false}"
 [[ -n "$STAGING_IP" ]] || die "STAGING_IP is required"
 
 domains=(
-  "${AUTH_DOMAIN:-auth.lab.snu.ac.kr}"
-  "${GITEA_DOMAIN:-hub.lab.snu.ac.kr}"
-  "${PLANE_DOMAIN:-lab.snu.ac.kr}"
-  "${MLFLOW_DOMAIN:-mlflow.lab.snu.ac.kr}"
-  "${NEXTCLOUD_DOMAIN:-files.lab.snu.ac.kr}"
-  "${COLLABORA_DOMAIN:-office.lab.snu.ac.kr}"
-  "${OVERLEAF_DOMAIN:-papers.lab.snu.ac.kr}"
-  "${MINIO_CONSOLE_DOMAIN:-storage.lab.snu.ac.kr}"
+  "${PORTAL_DOMAIN:-lab.example.ac.kr}"
+  "${AUTH_DOMAIN:-auth.lab.example.ac.kr}"
+  "${HULY_DOMAIN:-huly.lab.example.ac.kr}"
+  "${FILES_DOMAIN:-files.lab.example.ac.kr}"
+  "${S3_DOMAIN:-s3.lab.example.ac.kr}"
+  "${HF_DOMAIN:-hf.lab.example.ac.kr}"
+  "${MLFLOW_DOMAIN:-mlflow.lab.example.ac.kr}"
+  "${OVERLEAF_DOMAIN:-overleaf.lab.example.ac.kr}"
 )
 
 begin="# lab-platform staging hosts BEGIN"

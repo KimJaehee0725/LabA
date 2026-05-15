@@ -1,6 +1,6 @@
 # History Index
 
-Generated: 2026-05-12 05:55 +0000
+Generated: 2026-05-15 05:38 +0000
 
 ## Current Context
 
@@ -11,6 +11,7 @@ Generated: 2026-05-12 05:55 +0000
 
 ### daily
 
+- `history/daily/2026-05-15.md` - Daily Log - 2026-05-15
 - `history/daily/2026-05-12.md` - Daily Log - 2026-05-12
 - `history/daily/2026-05-11.md` - Daily Log - 2026-05-11
 - `history/daily/2026-05-10.md` - Daily Log - 2026-05-10
@@ -19,6 +20,7 @@ Generated: 2026-05-12 05:55 +0000
 
 ### changes
 
+- `history/changes/2026-05-15-053836-implement-phase-8-mlflow-tracking-mvp.md` - Change - Implement Phase 8 MLflow tracking MVP
 - `history/changes/2026-05-12-055501-move-llm-api-watcher-off-port-3000.md` - Change - Move LLM API watcher off port 3000
 - `history/changes/2026-05-12-054624-implement-phase-7-internal-operational-baseline.md` - Change - Implement Phase 7 internal operational baseline
 - `history/changes/2026-05-11-090444-tighten-overleaf-korean-tex-smoke-check.md` - Change - Tighten Overleaf Korean TeX smoke check
@@ -30,7 +32,6 @@ Generated: 2026-05-12 05:55 +0000
 - `history/changes/2026-05-09-205004-implement-phase-2-edge-auth-staging-baseline.md` - Change - Implement Phase 2 Edge/Auth staging baseline
 - `history/changes/2026-05-10-012047-operationalize-phase-2-full-pass-preflight-and-oidc-bootstrap.md` - Change - Operationalize Phase 2 full-pass preflight and OIDC bootstrap
 - `history/changes/2026-05-10-125915-implement-phase-3-huly-workspace-staging.md` - Change - Implement Phase 3 Huly workspace staging
-- `history/changes/2026-05-10-194505-add-full-pass-readiness-runbooks.md` - Change - Add full-pass readiness runbooks
 
 ### decisions
 
@@ -44,6 +45,7 @@ Generated: 2026-05-12 05:55 +0000
 
 ### experiments
 
+- `history/experiments/0019-validate-phase-8-mlflow-runtime.md` - Experiment 0019 - Validate Phase 8 MLflow runtime
 - `history/experiments/0018-validate-phase-7-operational-baseline-runtime.md` - Experiment 0018 - Validate Phase 7 operational baseline runtime
 - `history/experiments/0017-complete-overleaf-conditional-smoke.md` - Experiment 0017 - Complete Overleaf conditional smoke
 - `history/experiments/0016-revalidate-phase-2-6-staging-readiness-after-pr-2.md` - Experiment 0016 - Revalidate Phase 2-6 staging readiness after PR #2
@@ -55,7 +57,6 @@ Generated: 2026-05-12 05:55 +0000
 - `history/experiments/0005-validate-phase-3-huly-staging-runtime.md` - Experiment 0005 - Validate Phase 3 Huly staging runtime
 - `history/experiments/0006-validate-phase-4-minio-storage-static-surface.md` - Experiment 0006 - Validate Phase 4 MinIO storage static surface
 - `history/experiments/0004-run-phase-2-gate-on-opt-lab-stack.md` - Experiment 0004 - Run Phase 2 gate on /opt lab stack
-- `history/experiments/0007-validate-phase-4-minio-staging-runtime.md` - Experiment 0007 - Validate Phase 4 MinIO staging runtime
 
 ### handoffs
 

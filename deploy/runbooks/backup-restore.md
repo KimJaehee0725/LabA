@@ -20,6 +20,8 @@ DRY_RUN=true sudo -E /opt/lab-stack/scripts/90-backup-all.sh --dry-run
 - Shared MinIO/HF storage: Phase 4/5 buckets.
 - Huly: cold data archive under a maintenance stop.
 - Overleaf: Mongo archive, Redis archive, project files.
+- MLflow: Postgres dump and `lab-artifacts/mlflow` artifact archive when
+  `LABSTACK_BACKUP_MLFLOW=true`.
 - Edge metadata: Nginx config archive plus redacted env/cert metadata.
 
 ## Active Restore Drill
@@ -33,7 +35,9 @@ sudo -E /opt/lab-stack/scripts/89-restore-rehearsal.sh \
 
 The rehearsal restores one Postgres dump into a temporary DB, mirrors shared
 MinIO backup data into a temporary bucket, lists the Huly cold archive, and runs
-Overleaf Mongo `mongorestore --dryRun`.
+Overleaf Mongo `mongorestore --dryRun`. When `LABSTACK_BACKUP_MLFLOW=true`, it
+also restores the MLflow dump into a temporary DB and lists the MLflow artifact
+archive.
 
 ## Historical Restore Drill
 

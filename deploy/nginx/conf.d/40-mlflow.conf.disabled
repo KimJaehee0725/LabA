@@ -1,6 +1,8 @@
+# Phase 8 template. Keep disabled unless the Authentik MLflow proxy/outpost is
+# configured and running; do not expose the MLflow UI directly.
 server {
     listen 443 ssl;
-    server_name mlflow.lab.snu.ac.kr;
+    server_name mlflow.lab.example.ac.kr;
 
     include /etc/nginx/snippets/ssl-params.conf;
     include /etc/nginx/snippets/security-headers.conf;

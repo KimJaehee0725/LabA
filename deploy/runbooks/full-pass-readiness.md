@@ -1,7 +1,8 @@
 # Full-Pass Readiness Overview
 
 Status: Phase 2-6 conditional smoke/staging pass; Phase 7 internal operational
-baseline pass; operational full-pass pending.
+baseline pass; Phase 8 MLflow internal MVP pending runtime evidence;
+operational full-pass pending.
 
 This overview coordinates the evidence required before the Huly workspace MVP is
 promoted from staging conditional-pass to operational full-pass. Use it after
@@ -19,6 +20,8 @@ the Phase 2-6 staging reports pass and before marking the draft PR ready.
 - `phase7-operational-baseline.md`: internal active-stack backup, isolated
   restore rehearsal, disk/cert/permission checks, service exposure checks, and
   repo-facing secret scan hygiene.
+- `mlflow.md`: Phase 8 internal MLflow Tracking checks and Authentik-gated
+  public route requirements.
 
 ## Current Blockers
 
@@ -38,6 +41,8 @@ the Phase 2-6 staging reports pass and before marking the draft PR ready.
 - Phase 7 internal operational baseline automation exists to close non-external
   ops evidence, and passed on `2026-05-12` with backup/restore evidence. It is
   not a substitute for strict full-pass.
+- Phase 8 MLflow can pass internal service/API/artifact checks before public UI
+  exposure. Public MLflow UI must remain disabled or Authentik-gated.
 
 ## 2026-05-11 Verification Snapshot
 
@@ -77,10 +82,12 @@ the Phase 2-6 staging reports pass and before marking the draft PR ready.
    timeline/Gantt, and one-week pilot evidence.
 5. Run Phase 4/5 strict MinIO and HF UI checks, then capture role/browser
    evidence for `lab-admin`, `lab-member`, `lab-collab`, and `lab-guest`.
-6. Complete the Phase 7 internal ops gate: active backup, restore rehearsal,
+6. Run Phase 8 MLflow internal checks if MLflow is in scope, and keep the public
+   route disabled unless Authentik gate evidence is available.
+7. Complete the Phase 7 internal ops gate: active backup, restore rehearsal,
    cert expiry, disk usage, permissions, service exposure, and secret scan
    evidence.
-7. Update phase reports from conditional-pass to pass only when every blocker is
+8. Update phase reports from conditional-pass to pass only when every blocker is
    resolved without relaxed flags, or explicitly record a scoped waiver with
    owner, date, and accepted risk.
 

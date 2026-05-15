@@ -1,6 +1,6 @@
 # Project Context
 
-Last updated: 2026-05-11
+Last updated: 2026-05-15
 
 ## Research Goal
 
@@ -40,6 +40,9 @@ Last updated: 2026-05-11
 - Phase 7 internal operational baseline is implemented on the Overleaf branch:
   active-stack backups, isolated restore rehearsal, ops baseline checks, and
   evidence report live under the deploy scripts/runbooks/reports.
+- Phase 8 MLflow Tracking MVP is implemented on branch `huly/phase8-mlflow-mvp`:
+  it runs on shared Postgres and shared MinIO `lab-artifacts/mlflow`, with the
+  public route kept as an Authentik-gated disabled Nginx template.
 
 ## Active Ideas
 
@@ -56,6 +59,10 @@ Last updated: 2026-05-11
   `LABSTACK_INCLUDE_OVERLEAF=true` opt-in is required for integrated checks.
 - PR #2 for `huly/overleaf-mvp` stays draft while full-pass browser evidence and
   credential rotation/waiver are incomplete.
+- Phase 8 MLflow uses `LABSTACK_INCLUDE_MLFLOW=true` and
+  `LABSTACK_BACKUP_MLFLOW=true` opt-ins. Internal checks pass with
+  `PHASE8_REQUIRE_AUTH_GATE=false`; strict public UI checks require Authentik
+  outpost/forward-auth evidence.
 - Commit at module checkpoints and use feature branches/worktrees when v0.2 work becomes parallel or risky.
 
 ## Open Questions And Risks
@@ -79,6 +86,10 @@ Last updated: 2026-05-11
   credential policy, and browser/external evidence. An unrelated
   `/workspace/LLM-API-Watcher` process was moved from port 3000 to 3010, after
   which relaxed integrated `96-check-all.sh` with Phase 7 opt-in passed.
+- Phase 8 MLflow internal runtime validation passed on 2026-05-15. The relaxed
+  integrated `96-check-all.sh` with MLflow opt-in passed, and backup/restore
+  rehearsal with MLflow evidence passed under
+  `/mnt/backup/lab/archive/phase7/2026-05-15/20260515T053501Z`.
 - Exposed GitHub token and sudo password rotation are intentionally deferred by
   current operator policy, which blocks strict full-pass/PR-ready promotion until
   that policy changes or a scoped waiver is recorded.

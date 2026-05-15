@@ -13,7 +13,7 @@ Internal operational baseline means:
 
 - Active services are running behind Nginx with no direct host ports.
 - Active backup artifacts exist for core/Auth, shared MinIO/HF storage, Huly,
-  Overleaf, and edge metadata.
+  Overleaf, optional Phase 8 MLflow, and edge metadata.
 - A non-destructive or isolated restore rehearsal has passed.
 - Disk usage, certificate expiry, env/cert permissions, and repo-facing secret
   scans are checked.
@@ -73,6 +73,10 @@ The rehearsal performs:
 
 The script writes `restore-rehearsal.tsv` next to the backup manifest.
 
+If Phase 8 MLflow has been bootstrapped, add `LABSTACK_BACKUP_MLFLOW=true` to
+the backup and restore commands. The backup will include an MLflow Postgres dump
+and the shared MinIO `lab-artifacts/mlflow` artifact archive.
+
 Current evidence root:
 
 ```text
@@ -83,11 +87,15 @@ Current evidence root:
 
 Run after backup and restore rehearsal:
 
+Set `LABSTACK_INCLUDE_MLFLOW=false` or omit it if Phase 8 has not been
+bootstrapped on the host.
+
 ```bash
 LABSTACK_INCLUDE_HULY=true \
 LABSTACK_INCLUDE_MINIO=true \
 LABSTACK_INCLUDE_HF_UI=true \
 LABSTACK_INCLUDE_OVERLEAF=true \
+LABSTACK_INCLUDE_MLFLOW=true \
   sudo -E /opt/lab-stack/scripts/99-check-ops-baseline.sh \
   --backup-root /mnt/backup/lab/archive/phase7/YYYY-MM-DD/YYYYMMDDTHHMMSSZ
 ```
@@ -99,6 +107,7 @@ LABSTACK_INCLUDE_HULY=true \
 LABSTACK_INCLUDE_MINIO=true \
 LABSTACK_INCLUDE_HF_UI=true \
 LABSTACK_INCLUDE_OVERLEAF=true \
+LABSTACK_INCLUDE_MLFLOW=true \
 LABSTACK_INCLUDE_OPS_BASELINE=true \
   sudo -E /opt/lab-stack/scripts/96-check-all.sh
 ```

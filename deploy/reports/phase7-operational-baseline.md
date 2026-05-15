@@ -33,6 +33,8 @@ Collected on `2026-05-12` against `/opt/lab-stack`.
 | Restore rehearsal | Passed | `/mnt/backup/lab/archive/phase7/2026-05-12/20260512T054224Z/restore-rehearsal.tsv` | Postgres temp DB, MinIO temp bucket, Huly archive listing, Overleaf `mongorestore --dryRun` |
 | Ops baseline gate | Passed | `99-check-ops-baseline.sh`, 2026-05-12T05:43:43Z | Passed with 12 warnings for strict external blockers/placeholders |
 | Integrated relaxed gate | Passed | `96-check-all.sh`, 2026-05-12T05:54:25Z | Huly, MinIO, HF UI, Overleaf, and Phase 7 ops baseline enabled |
+| Integrated relaxed gate with MLflow | Passed | `96-check-all.sh`, 2026-05-15T05:34:37Z | Huly, MinIO, HF UI, Overleaf, MLflow, and Phase 7 ops baseline enabled |
+| Backup/restore with MLflow | Passed | `/mnt/backup/lab/archive/phase7/2026-05-15/20260515T053501Z` | Adds MLflow Postgres dump and artifact archive evidence |
 | Huly post-backup runtime | Passed | `30-check-huly.sh`, 2026-05-12T05:44:46Z | Huly containers restarted and route checks passed |
 | Overleaf runtime | Passed | `80-check-overleaf.sh`, 2026-05-12T05:44:47Z | Overleaf route and TeX dependency checks still pass |
 

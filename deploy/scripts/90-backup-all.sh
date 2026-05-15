@@ -13,6 +13,7 @@ INCOMING_LABSTACK_BACKUP_EDGE_METADATA="${LABSTACK_BACKUP_EDGE_METADATA:-}"
 INCOMING_LABSTACK_BACKUP_SHARED_MINIO="${LABSTACK_BACKUP_SHARED_MINIO:-}"
 INCOMING_LABSTACK_BACKUP_HULY="${LABSTACK_BACKUP_HULY:-}"
 INCOMING_LABSTACK_BACKUP_OVERLEAF="${LABSTACK_BACKUP_OVERLEAF:-}"
+INCOMING_LABSTACK_BACKUP_MLFLOW="${LABSTACK_BACKUP_MLFLOW:-}"
 INCOMING_LABSTACK_BACKUP_LEGACY_GITEA="${LABSTACK_BACKUP_LEGACY_GITEA:-}"
 INCOMING_LABSTACK_BACKUP_LEGACY_NEXTCLOUD="${LABSTACK_BACKUP_LEGACY_NEXTCLOUD:-}"
 INCOMING_LABSTACK_BACKUP_LEGACY_MINIO="${LABSTACK_BACKUP_LEGACY_MINIO:-}"
@@ -24,6 +25,7 @@ load_envs \
   "$ENV_DIR/30-huly.env" \
   "$ENV_DIR/35-minio-storage.env" \
   "$ENV_DIR/45-hf-ui.env" \
+  "$ENV_DIR/50-mlflow.env" \
   "$ENV_DIR/70-overleaf.env" \
   "$ENV_DIR/90-backup.env"
 
@@ -40,6 +42,7 @@ LABSTACK_BACKUP_EDGE_METADATA="${LABSTACK_BACKUP_EDGE_METADATA:-true}"
 LABSTACK_BACKUP_SHARED_MINIO="${LABSTACK_BACKUP_SHARED_MINIO:-true}"
 LABSTACK_BACKUP_HULY="${LABSTACK_BACKUP_HULY:-true}"
 LABSTACK_BACKUP_OVERLEAF="${LABSTACK_BACKUP_OVERLEAF:-true}"
+LABSTACK_BACKUP_MLFLOW="${LABSTACK_BACKUP_MLFLOW:-false}"
 LABSTACK_BACKUP_LEGACY_GITEA="${LABSTACK_BACKUP_LEGACY_GITEA:-false}"
 LABSTACK_BACKUP_LEGACY_NEXTCLOUD="${LABSTACK_BACKUP_LEGACY_NEXTCLOUD:-false}"
 LABSTACK_BACKUP_LEGACY_MINIO="${LABSTACK_BACKUP_LEGACY_MINIO:-false}"
@@ -51,6 +54,7 @@ LABSTACK_BACKUP_LEGACY_MINIO="${LABSTACK_BACKUP_LEGACY_MINIO:-false}"
 [[ -n "$INCOMING_LABSTACK_BACKUP_SHARED_MINIO" ]] && LABSTACK_BACKUP_SHARED_MINIO="$INCOMING_LABSTACK_BACKUP_SHARED_MINIO"
 [[ -n "$INCOMING_LABSTACK_BACKUP_HULY" ]] && LABSTACK_BACKUP_HULY="$INCOMING_LABSTACK_BACKUP_HULY"
 [[ -n "$INCOMING_LABSTACK_BACKUP_OVERLEAF" ]] && LABSTACK_BACKUP_OVERLEAF="$INCOMING_LABSTACK_BACKUP_OVERLEAF"
+[[ -n "$INCOMING_LABSTACK_BACKUP_MLFLOW" ]] && LABSTACK_BACKUP_MLFLOW="$INCOMING_LABSTACK_BACKUP_MLFLOW"
 [[ -n "$INCOMING_LABSTACK_BACKUP_LEGACY_GITEA" ]] && LABSTACK_BACKUP_LEGACY_GITEA="$INCOMING_LABSTACK_BACKUP_LEGACY_GITEA"
 [[ -n "$INCOMING_LABSTACK_BACKUP_LEGACY_NEXTCLOUD" ]] && LABSTACK_BACKUP_LEGACY_NEXTCLOUD="$INCOMING_LABSTACK_BACKUP_LEGACY_NEXTCLOUD"
 [[ -n "$INCOMING_LABSTACK_BACKUP_LEGACY_MINIO" ]] && LABSTACK_BACKUP_LEGACY_MINIO="$INCOMING_LABSTACK_BACKUP_LEGACY_MINIO"
@@ -63,6 +67,9 @@ MINIO_STORAGE_BUCKET_ARTIFACTS="${MINIO_STORAGE_BUCKET_ARTIFACTS:-lab-artifacts}
 MINIO_STORAGE_BUCKET_PUBLIC="${MINIO_STORAGE_BUCKET_PUBLIC:-lab-public}"
 MINIO_STORAGE_BUCKET_BACKUPS="${MINIO_STORAGE_BUCKET_BACKUPS:-lab-backups}"
 MINIO_STORAGE_BUCKETS="${MINIO_STORAGE_BUCKETS:-${MINIO_STORAGE_BUCKET_MODELS},${MINIO_STORAGE_BUCKET_DATASETS},${MINIO_STORAGE_BUCKET_ARTIFACTS},${MINIO_STORAGE_BUCKET_PUBLIC},${MINIO_STORAGE_BUCKET_BACKUPS}}"
+MLFLOW_DB_NAME="${MLFLOW_DB_NAME:-mlflow}"
+MLFLOW_S3_BUCKET="${MLFLOW_S3_BUCKET:-$MINIO_STORAGE_BUCKET_ARTIFACTS}"
+MLFLOW_S3_ARTIFACT_PREFIX="${MLFLOW_S3_ARTIFACT_PREFIX:-mlflow}"
 
 HULY_COMPOSE_FILE="${HULY_COMPOSE_FILE:-${LAB_STACK_ROOT}/compose/huly/docker-compose.yml}"
 PHASE7_ALLOW_HULY_STOP="${PHASE7_ALLOW_HULY_STOP:-false}"
@@ -379,6 +386,45 @@ backup_overleaf() {
   fi
 }
 
+backup_mlflow() {
+  is_true "$LABSTACK_BACKUP_MLFLOW" || return 0
+  log "backing up MLflow Postgres DB and artifact prefix"
+  require_secret_value MINIO_ROOT_USER
+  require_secret_value MINIO_ROOT_PASSWORD
+  local root="$BACKUP_RUN_ROOT/mlflow"
+  local db_out="$root/${MLFLOW_DB_NAME}.dump"
+  local mirror_root="$BACKUP_RUN_ROOT/minio/mlflow-artifacts"
+  local archive="$root/mlflow-artifacts.tar.gz"
+  local prefix="${MLFLOW_S3_ARTIFACT_PREFIX#/}"
+  prefix="${prefix%/}"
+  [[ -n "$prefix" ]] || die "MLFLOW_S3_ARTIFACT_PREFIX must not be empty"
+
+  run_cmd install -d -m 0750 "$root" "$mirror_root"
+  if is_dry_run; then
+    printf '+ docker exec postgres pg_dump -U %q -Fc %q > %q\n' "${POSTGRES_USER:-postgres}" "$MLFLOW_DB_NAME" "$db_out"
+    printf '+ mc mirror %q %q\n' "$MINIO_ALIAS/$MLFLOW_S3_BUCKET/$prefix" "/backup/mlflow-artifacts/$MLFLOW_S3_BUCKET/$prefix"
+    printf '+ tar -C %q -czf %q mlflow-artifacts\n' "$BACKUP_RUN_ROOT/minio" "$archive"
+    return 0
+  fi
+
+  if docker exec postgres pg_dump -U "${POSTGRES_USER:-postgres}" -Fc "$MLFLOW_DB_NAME" >"$db_out"; then
+    test -s "$db_out"
+    add_manifest mlflow postgres-dump "$db_out" "database=$MLFLOW_DB_NAME"
+  else
+    record_failure "MLflow Postgres dump failed for database $MLFLOW_DB_NAME"
+  fi
+
+  if run_mc mirror --overwrite "$MINIO_ALIAS/$MLFLOW_S3_BUCKET/$prefix" "/backup/mlflow-artifacts/$MLFLOW_S3_BUCKET/$prefix"; then
+    if tar -C "$BACKUP_RUN_ROOT/minio" -czf "$archive" mlflow-artifacts; then
+      add_manifest mlflow artifacts-archive "$archive" "bucket=$MLFLOW_S3_BUCKET prefix=$prefix"
+    else
+      record_failure "MLflow artifact archive failed"
+    fi
+  else
+    record_failure "MLflow artifact mirror failed for $MLFLOW_S3_BUCKET/$prefix"
+  fi
+}
+
 backup_legacy_modules() {
   if is_true "$LABSTACK_BACKUP_LEGACY_MINIO"; then
     BACKUP_ROOT="$BACKUP_RUN_ROOT/legacy" "$SCRIPT_DIR/92-backup-minio.sh"
@@ -399,6 +445,7 @@ backup_edge_metadata
 backup_shared_minio
 backup_huly_cold
 backup_overleaf
+backup_mlflow
 backup_legacy_modules
 
 if ! is_dry_run; then
