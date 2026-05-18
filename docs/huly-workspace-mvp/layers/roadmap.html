@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Roadmap - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>3. 단계별 로드맵</strong>
+            <span>gates, outputs, dependency order</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="../reference/phase0-readiness.html">Phase 0</a>
+            <a href="../reference/backlog.html">Backlog</a>
+            <a href="../reference/validation.html">Validation</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Roadmap</span>
+        </div>
+
+        <section class="hero">
+          <h1>10주 pilot을 기준으로 하되, Huly 검증을 앞당긴다</h1>
+          <p>
+            원래 임시 계획은 인프라부터 순차 진행하는 형태였다. 이번에는 Huly가
+            실제 요구를 만족하는지 빨리 판단하기 위해 Edge/Auth 직후 Huly pilot을 먼저
+            통과시키고, 그 뒤 storage, HF-like UI, Overleaf, 운영 자동화를 붙인다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Phase overview</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Phase</th>
+                  <th>목표</th>
+                  <th>주요 산출물</th>
+                  <th>Gate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>0. External readiness</td>
+                  <td>학교 도메인, SSL, 방화벽, SMTP, 디스크 준비</td>
+                  <td><a href="../reference/phase0-readiness.html">준비 체크리스트</a>와 <a href="../reference/phase0-templates.html">신청/검증 템플릿</a></td>
+                  <td>Phase 0 exit report에서 blocker가 없음</td>
+                </tr>
+                <tr>
+                  <td>1. Host skeleton</td>
+                  <td>새 runtime root와 Docker/network/env skeleton을 repo + dry-run으로만 확정</td>
+                  <td>`/opt/lab-stack`, `labstack_public`, `labstack_backend`, `labstack_data`, compose/env examples, secret policy</td>
+                  <td>dry-run evidence, root path 확인, no secret in git</td>
+                </tr>
+                <tr>
+                  <td>2. Edge/Auth</td>
+                  <td>staging-first로 Nginx TLS와 Authentik 기준선 완성</td>
+                  <td><a href="../../../deploy/runbooks/phase2-edge-auth.md">Phase 2 runbook</a>, <a href="../../../deploy/reports/phase2-edge-auth-staging.md">staging report</a>, groups, 2FA, invitation flow</td>
+                  <td>HTTPS auth host, 2FA, invitation-only 가입, email notification, OIDC clients 검증</td>
+                </tr>
+                <tr>
+                  <td>3. Huly pilot</td>
+                  <td>Notion 대체 가능성을 빠르게 판단</td>
+                  <td>Huly compose/env/Nginx, workspace seed, GitHub App, Google Calendar, migration sample, pilot report</td>
+                  <td>OIDC login, no direct host ports, Gantt, GitHub sync, document import, chat/task/calendar smoke</td>
+                </tr>
+                <tr>
+                  <td>4. MinIO storage</td>
+                  <td>모델/데이터셋 저장소와 권한 정책 확정</td>
+                  <td>MinIO compose, buckets, policies, S3 endpoint, backup target</td>
+                  <td>`mc`, boto3, OIDC console, bucket policy 검증</td>
+                </tr>
+                <tr>
+                  <td>5. HF-like UI MVP</td>
+                  <td>연구실 모델/데이터셋 catalog 제공</td>
+                  <td>Next.js frontend, FastAPI backend, metadata DB, download flow</td>
+                  <td>login-list-detail-download flow</td>
+                </tr>
+                <tr>
+                  <td>6. Overleaf CE</td>
+                  <td>논문 협업 환경 구성</td>
+                  <td>Overleaf Toolkit, templates, admin/member accounts</td>
+                  <td>2명 동시 편집, PDF compile, template compile</td>
+                </tr>
+                <tr>
+                  <td>7. Portal, backup, monitoring</td>
+                  <td>운영 가능한 pilot으로 마감</td>
+                  <td>portal, backup scripts, Uptime Kuma, security summary, restore drill</td>
+                  <td>backup/restore/alarm/onboarding gate</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Calendar target</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>주차</th>
+                  <th>집중 작업</th>
+                  <th>완료 기준</th>
+                  <th>주요 의사결정</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Week 0</td>
+                  <td>학교 신청, 서버 접근, HDD/backup disk 확인</td>
+                  <td><a href="../reference/phase0-readiness.html">Phase 0 readiness</a>가 pass 또는 documented pending</td>
+                  <td>실제 도메인 확정</td>
+                </tr>
+                <tr>
+                  <td>Week 1</td>
+                  <td>Phase 1 Host Skeleton repo 정리와 dry-run</td>
+                  <td>`/opt/lab-stack` layout와 `labstack_public/backend/data` 네트워크 dry-run evidence</td>
+                  <td>Plane/Gitea/Nextcloud/MLflow를 active order에서 제외</td>
+                </tr>
+                <tr>
+                  <td>Week 1-2</td>
+                  <td>Phase 2 Edge/Auth staging run</td>
+                  <td>auth host HTTPS + admin 2FA + SMTP test + invitation-only enrollment</td>
+                  <td>Huly OIDC 또는 forward-auth fallback 채택 기준</td>
+                </tr>
+                <tr>
+                  <td>Week 2</td>
+                  <td>Huly install, workspace seed, OIDC/forward-auth, GitHub App</td>
+                  <td>연구실 sample workspace가 실사용 가능</td>
+                  <td>Huly가 Plane/Nextcloud 없이 충분한지 판단 1차</td>
+                </tr>
+                <tr>
+                  <td>Week 3</td>
+                  <td>Huly Gantt/GitHub/import pilot, Notion export sample</td>
+                  <td>Gantt와 GitHub sync 결과 문서화</td>
+                  <td>Plane 보완 필요 여부</td>
+                </tr>
+                <tr>
+                  <td>Week 4</td>
+                  <td>MinIO buckets, policies, console OIDC, backup target</td>
+                  <td>모델/데이터셋 upload/download smoke</td>
+                  <td>bucket naming and retention policy</td>
+                </tr>
+                <tr>
+                  <td>Week 5-6</td>
+                  <td>HF-like UI MVP</td>
+                  <td>모델/데이터셋 list/detail/download 배포</td>
+                  <td>HF API compatibility를 v1로 미룰지 확정</td>
+                </tr>
+                <tr>
+                  <td>Week 7</td>
+                  <td>HF-like UI v1 upload and permission increment</td>
+                  <td>multipart/presigned upload path prototype</td>
+                  <td>업로드 UI의 scope 확정</td>
+                </tr>
+                <tr>
+                  <td>Week 8</td>
+                  <td>Overleaf CE</td>
+                  <td>PDF compile, 2인 동시 편집, template smoke</td>
+                  <td>CE 별도 계정 유지 여부</td>
+                </tr>
+                <tr>
+                  <td>Week 9</td>
+                  <td>Portal, backup, monitoring, security summary</td>
+                  <td>daily backup, restore drill, uptime alert</td>
+                  <td>정식 pilot open 날짜</td>
+                </tr>
+                <tr>
+                  <td>Week 10</td>
+                  <td>멤버 온보딩, Notion 핵심 페이지 migration</td>
+                  <td>초대, 첫 로그인, Huly 사용 guide 게시</td>
+                  <td>기존 도구 병행 종료 범위</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Dependency order</h2>
+          <pre><code>external readiness
+  -> host skeleton repo + dry-run only
+     - root: /opt/lab-stack
+     - networks: labstack_public, labstack_backend, labstack_data
+     - inactive in Phase 1: Plane, Gitea, Nextcloud, MLflow
+  -> school TLS and Nginx
+  -> Authentik identity baseline
+     - staging report: deploy/reports/phase2-edge-auth-staging.md
+     - historical only: edge-nginx.md, authentik.md
+    -> Huly pilot
+      -> Huly GitHub, Google Calendar, and migration smoke
+    -> MinIO OIDC console
+      -> HF-like UI MVP
+    -> Overleaf account policy
+  -> portal, backup, monitoring
+  -> onboarding and production pilot</code></pre>
+        </section>
+
+        <section class="section">
+          <h2>Phase 1 and 2 boundaries</h2>
+          <ul>
+            <li>Phase 1 produces repo documentation, placeholder env examples, compose layout notes, and dry-run evidence only.</li>
+            <li>No live Huly, Authentik, MinIO, Overleaf, or HF-like UI service is started as a Phase 1 completion requirement.</li>
+            <li>Phase 2 may start Nginx and Authentik on staging only after `/opt/lab-stack`, `labstack_*`, TLS, SMTP, and secret preflight pass.</li>
+            <li>Phase 2 does not start Huly, MinIO app flows, HF UI, Overleaf, Plane, Gitea, Nextcloud, or MLflow.</li>
+            <li>No real secret, TLS private key, token, generated client secret, or service account credential is written to git.</li>
+            <li>Legacy Plane, Gitea, Nextcloud, and MLflow files are not deleted here, but they are excluded from the active Phase 1 order.</li>
+          </ul>
+        </section>
+
+        <section class="section">
+          <h2>Phase exit policy</h2>
+          <div class="grid three">
+            <article class="panel">
+              <h3>Pass</h3>
+              <p>
+                Gate checklist가 통과하고, runbook에 정상/중단/복구 절차가 남아 있으며,
+                다음 phase가 사용할 endpoint와 credential handoff가 정리되어 있다.
+              </p>
+            </article>
+            <article class="panel">
+              <h3>Conditional pass</h3>
+              <p>
+                핵심 flow는 통과했지만 문서화된 workaround가 있다. Huly OIDC 미지원 시
+                forward-auth로 pilot을 열고, 정식 SSO는 decision log에 남긴다.
+              </p>
+            </article>
+            <article class="panel">
+              <h3>Stop</h3>
+              <p>
+                보안 gate, 데이터 손실 위험, 인증 우회, 백업 불가가 발견되면 다음 phase로
+                넘어가지 않는다.
+              </p>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Next: <a href="../reference/phase0-readiness.html">Phase 0 readiness</a>,
+        then <a href="../reference/backlog.html">implementation backlog</a>.
+      </footer>
+    </div>
+  </body>
+</html>

@@ -13,3 +13,19 @@ entries:
         return {
             "groups": [group.name for group in user.ak_groups.all()],
         }
+  - model: authentik_providers_oauth2.scopemapping
+    identifiers:
+      name: lab-minio-policy
+    attrs:
+      name: lab-minio-policy
+      scope_name: policy
+      description: Map Authentik lab groups to MinIO policy names.
+      expression: |
+        groups = {group.name for group in user.ak_groups.all()}
+        if "lab-admin" in groups:
+            policy = "consoleAdmin"
+        elif {"lab-member", "lab-collab"}.intersection(groups):
+            policy = "lab-storage-member-rw"
+        else:
+            policy = ""
+        return {"policy": policy}

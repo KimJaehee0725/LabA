@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Validation - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>11. 검증 기준</strong>
+            <span>phase gates and smoke evidence</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="../layers/roadmap.html">Roadmap</a>
+            <a href="backlog.html">Backlog</a>
+            <a href="decisions-risks.html">Risks</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Reference</span>
+          <span>/</span>
+          <span>Validation</span>
+        </div>
+
+        <section class="hero">
+          <h1>각 phase는 gate를 통과해야 다음으로 넘어간다</h1>
+          <p>
+            검증은 명령 출력, 스크린샷, smoke report, runbook 업데이트 중 하나 이상의
+            evidence를 남긴다. 실패한 항목은 workaround와 재시도 조건을 함께 기록한다.
+          </p>
+        </section>
+
+        <section class="section" id="edge-gate">
+          <h2>Edge Gate</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Check</th>
+                  <th>Command or action</th>
+                  <th>Pass condition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>DNS</td>
+                  <td>`dig auth.lab.example.ac.kr +short`</td>
+                  <td>서버 public IP 반환</td>
+                </tr>
+                <tr>
+                  <td>HTTP redirect</td>
+                  <td>`curl -I http://auth.lab.example.ac.kr`</td>
+                  <td>301 또는 308 to HTTPS</td>
+                </tr>
+                <tr>
+                  <td>TLS chain</td>
+                  <td>`openssl s_client -connect auth.lab.example.ac.kr:443 -servername auth.lab.example.ac.kr`</td>
+                  <td>학교 인증서 chain valid</td>
+                </tr>
+                <tr>
+                  <td>Nginx config</td>
+                  <td>`nginx -t` or container equivalent</td>
+                  <td>syntax ok and test successful</td>
+                </tr>
+                <tr>
+                  <td>Public ports</td>
+                  <td>`ss -lntp` and external port scan</td>
+                  <td>22, 80, 443 외 서비스 port public 노출 없음</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="auth-gate">
+          <h2>Auth Gate</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Check</th>
+                  <th>Action</th>
+                  <th>Pass condition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Admin setup</td>
+                  <td>initial setup URL에서 admin 생성</td>
+                  <td>admin login 후 dashboard 접근</td>
+                </tr>
+                <tr>
+                  <td>2FA</td>
+                  <td>새 사용자로 로그인</td>
+                  <td>TOTP 등록 없이는 완료 불가</td>
+                </tr>
+                <tr>
+                  <td>Invitation</td>
+                  <td>초대 링크 없이 enrollment 접근, 초대 링크로 enrollment 접근</td>
+                  <td>전자는 차단, 후자는 가입 가능</td>
+                </tr>
+                <tr>
+                  <td>Email</td>
+                  <td>test mail, 가입 알림 trigger</td>
+                  <td>운영자 mailbox에 수신</td>
+                </tr>
+                <tr>
+                  <td>Group claim</td>
+                  <td>OIDC test client로 token claim 확인</td>
+                  <td>`lab-admins`, `lab-members`, `lab-guests` claim 확인</td>
+                </tr>
+                <tr>
+                  <td>Secret handling</td>
+                  <td>`rg -i "client_secret|private key|password|token" deploy docs`</td>
+                  <td>tracked 파일에는 실제 값이 없고 placeholders만 존재</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="huly-gate">
+          <h2>Huly Gate</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Check</th>
+                  <th>Action</th>
+                  <th>Pass condition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Automated preflight</td>
+                  <td>`23-check-phase3-huly-preflight.sh`</td>
+                  <td>env, compose, OIDC callback, Nginx route, required integration values 통과</td>
+                </tr>
+                <tr>
+                  <td>Runtime smoke</td>
+                  <td>`30-check-huly.sh`</td>
+                  <td>Huly containers healthy, no direct host ports, edge route and OIDC discovery reachable</td>
+                </tr>
+                <tr>
+                  <td>Login protection</td>
+                  <td>private browser에서 Huly URL 접근</td>
+                  <td>OIDC 또는 forward-auth login이 요구됨</td>
+                </tr>
+                <tr>
+                  <td>Workspace seed</td>
+                  <td>channels, projects, sample docs 생성</td>
+                  <td>pilot users가 같은 workspace에서 확인</td>
+                </tr>
+                <tr>
+                  <td>Docs/wiki</td>
+                  <td>Notion export sample import 또는 manual copy</td>
+                  <td>heading, link, code block, image가 사용 가능</td>
+                </tr>
+                <tr>
+                  <td>Task flow</td>
+                  <td>issue 생성, assignee, due date, status 변경</td>
+                  <td>calendar 또는 project view에 반영</td>
+                </tr>
+                <tr>
+                  <td>Gantt/timeline</td>
+                  <td>start/end date가 있는 issue 여러 개 생성</td>
+                  <td>timeline/Gantt가 self-hosted에서 렌더링</td>
+                </tr>
+                <tr>
+                  <td>GitHub sync</td>
+                  <td>Huly issue 생성, GitHub issue update, PR merge event</td>
+                  <td>양방향 상태 변화가 기록됨</td>
+                </tr>
+                <tr>
+                  <td>Google Calendar</td>
+                  <td>OAuth 연결 후 event create/update</td>
+                  <td>Huly calendar와 Google Calendar 사이 동기화 evidence가 있음</td>
+                </tr>
+                <tr>
+                  <td>Pilot usage</td>
+                  <td>2명 이상이 1주일 사용</td>
+                  <td>막힌 점과 채택/보완 decision이 남음</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="storage-gate">
+          <h2>Storage Gate</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Check</th>
+                  <th>Action</th>
+                  <th>Pass condition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Console SSO</td>
+                  <td>`22-bootstrap-authentik-oidc.sh`, private browser에서 `https://files.lab.example.ac.kr` 접근</td>
+                  <td>`policy` claim으로 Authentik login이 보이고 `lab-guest`는 app 접근 차단</td>
+                </tr>
+                <tr>
+                  <td>S3 API</td>
+                  <td>`33-bootstrap-minio-storage.sh`, `34-check-minio-storage.sh`</td>
+                  <td>bucket 생성, versioning, upload/stat/download, public download 성공</td>
+                </tr>
+                <tr>
+                  <td>Policy</td>
+                  <td>`lab-public` anonymous download와 private bucket anonymous curl 비교</td>
+                  <td>public object는 200, private object는 401 또는 403</td>
+                </tr>
+                <tr>
+                  <td>Persistence</td>
+                  <td>object upload 후 container restart</td>
+                  <td>`/mnt/hdd/minio` object 유지</td>
+                </tr>
+                <tr>
+                  <td>Backup mirror</td>
+                  <td>`35-check-minio-backup-smoke.sh`</td>
+                  <td>checksum 일치</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="hf-gate">
+          <h2>HF Gate</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Check</th>
+                  <th>Action</th>
+                  <th>Pass condition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Health</td>
+                  <td>`44-check-hf-ui.sh`, `curl https://hf.lab.example.ac.kr/api/health`</td>
+                  <td>200 and version payload</td>
+                </tr>
+                <tr>
+                  <td>Login</td>
+                  <td>member account로 UI 접근</td>
+                  <td>Authentik OIDC session 생성; staging smoke는 explicit bypass token 사용</td>
+                </tr>
+                <tr>
+                  <td>List/detail</td>
+                  <td>`43-bootstrap-hf-ui-storage.sh`로 sample model and dataset metadata/object 생성</td>
+                  <td>list와 detail page에 표시</td>
+                </tr>
+                <tr>
+                  <td>README render</td>
+                  <td>Markdown with code block and LaTeX sample</td>
+                  <td>깨지지 않고 렌더링</td>
+                </tr>
+                <tr>
+                  <td>File tree</td>
+                  <td>Phase 4 MinIO prefix scan</td>
+                  <td>파일명, size, modified time 표시</td>
+                </tr>
+                <tr>
+                  <td>Download</td>
+                  <td>presigned URL 발급 후 파일 다운로드</td>
+                  <td>권한 있는 사용자만 성공, URL 만료 동작</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="overleaf-gate">
+          <h2>Overleaf Gate</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Check</th>
+                  <th>Action</th>
+                  <th>Pass condition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Access</td>
+                  <td>Overleaf URL HTTPS 접속</td>
+                  <td>학교 인증서와 login page 정상</td>
+                </tr>
+                <tr>
+                  <td>Registration</td>
+                  <td>public signup 시도</td>
+                  <td>가입 차단</td>
+                </tr>
+                <tr>
+                  <td>Compile</td>
+                  <td>basic LaTeX project compile</td>
+                  <td>PDF 생성</td>
+                </tr>
+                <tr>
+                  <td>Collaboration</td>
+                  <td>2개 계정 동시 편집</td>
+                  <td>실시간 변경 반영</td>
+                </tr>
+                <tr>
+                  <td>Templates</td>
+                  <td>NeurIPS/ICML/ICLR/ACL/AAAI sample compile</td>
+                  <td>각 template PDF 생성</td>
+                </tr>
+                <tr>
+                  <td>Backup</td>
+                  <td>sample project backup and restore</td>
+                  <td>복구된 project가 compile됨</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="ops-gate">
+          <h2>Ops Gate</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Check</th>
+                  <th>Action</th>
+                  <th>Pass condition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Backup</td>
+                  <td>daily backup run</td>
+                  <td>all service artifacts present under backup root</td>
+                </tr>
+                <tr>
+                  <td>Restore</td>
+                  <td>월 1회 기준 restore drill</td>
+                  <td>sample service/data restored and verified</td>
+                </tr>
+                <tr>
+                  <td>Uptime alert</td>
+                  <td>test endpoint intentionally down</td>
+                  <td>운영자 이메일 또는 Slack 알림 수신</td>
+                </tr>
+                <tr>
+                  <td>Certificate alert</td>
+                  <td>expiry checker dry-run</td>
+                  <td>30/15/7 day warning path 검증</td>
+                </tr>
+                <tr>
+                  <td>Security summary</td>
+                  <td>daily summary script run</td>
+                  <td>fail2ban, login failure, nginx error summary 수신</td>
+                </tr>
+                <tr>
+                  <td>Onboarding</td>
+                  <td>신규 pilot member 1명 초대</td>
+                  <td>guide만 보고 2FA, Huly, HF UI 접근 성공</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Related: <a href="backlog.html">implementation backlog</a>.
+      </footer>
+    </div>
+  </body>
+</html>

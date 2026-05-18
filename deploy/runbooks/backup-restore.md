@@ -1,19 +1,46 @@
 # Backup And Restore Runbook
 
-## Dry Run
+Status: historical v0.x backup notes plus active Phase 7 entrypoints.
+
+Use `phase7-operational-baseline.md` for the current Huly workspace MVP active
+stack. The older service-specific commands below remain reference material for
+archived Plane/Gitea/Nextcloud/MLflow work unless their opt-in flags are set.
+
+## Active Stack Dry Run
 
 ```bash
-/srv/lab-platform/scripts/90-backup-all.sh --dry-run
+DRY_RUN=true sudo -E /opt/lab-stack/scripts/90-backup-all.sh --dry-run
 ```
 
-## Backup Scope
+## Active Stack Backup Scope
 
-- Postgres: `authentik`, `plane`, `gitea`, `mlflow`, `nextcloud`
-- MinIO: `plane-uploads`, `gitea-lfs`, `mlflow-artifacts`
-- Gitea dump
-- Nextcloud data/config/apps under maintenance mode
-- Overleaf Mongo and project files
+- Postgres: active core/Auth databases.
+- Redis: active core Redis RDB.
+- Authentik: media/certs/templates archive.
+- Shared MinIO/HF storage: Phase 4/5 buckets.
+- Huly: cold data archive under a maintenance stop.
+- Overleaf: Mongo archive, Redis archive, project files.
+- MLflow: Postgres dump and `lab-artifacts/mlflow` artifact archive when
+  `LABSTACK_BACKUP_MLFLOW=true`.
+- Edge metadata: Nginx config archive plus redacted env/cert metadata.
 
-## Restore Drill
+## Active Restore Drill
 
-Before relying on backups, restore at least one Postgres dump into a temporary DB, mirror one MinIO bucket into a temporary bucket, and list archive contents for Gitea, Nextcloud, and Overleaf.
+Before relying on backups, run:
+
+```bash
+sudo -E /opt/lab-stack/scripts/89-restore-rehearsal.sh \
+  --backup-root /mnt/backup/lab/archive/phase7/YYYY-MM-DD/YYYYMMDDTHHMMSSZ
+```
+
+The rehearsal restores one Postgres dump into a temporary DB, mirrors shared
+MinIO backup data into a temporary bucket, lists the Huly cold archive, and runs
+Overleaf Mongo `mongorestore --dryRun`. When `LABSTACK_BACKUP_MLFLOW=true`, it
+also restores the MLflow dump into a temporary DB and lists the MLflow artifact
+archive.
+
+## Historical Restore Drill
+
+For archived modules, restore at least one Postgres dump into a temporary DB,
+mirror one MinIO bucket into a temporary bucket, and list archive contents for
+Gitea and Nextcloud before reactivating those services.

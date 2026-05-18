@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Huly Workstream - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>6. Huly Workstream</strong>
+            <span>main collaboration hub and Notion replacement pilot</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="edge-auth.html">Edge/Auth</a>
+            <a href="storage-hf.html">Storage/HF</a>
+            <a href="../reference/decisions-risks.html">Risks</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Workstreams</span>
+          <span>/</span>
+          <span>Huly</span>
+        </div>
+
+        <section class="hero">
+          <h1>Huly가 연구실의 1차 업무 허브가 될 수 있는지 먼저 검증한다</h1>
+          <p>
+            Huly pilot은 전체 전환의 핵심 판단 지점이다. 위키, 채팅, 이슈, 캘린더,
+            Gantt, GitHub 연동, Notion import sample이 통과하면 Plane/Nextcloud를
+            기본 서비스로 재도입하지 않고 Huly 중심으로 간다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Phase 3 deployment artifacts</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>Runtime</h3>
+              <ul>
+                <li>`deploy/compose/huly/docker-compose.yml`: Huly v0.7 self-host services without upstream nested Nginx.</li>
+                <li>`deploy/env/30-huly.env.example`: Huly server-only settings and integration placeholders.</li>
+                <li>`deploy/nginx/conf.d/20-huly.conf`: edge routes for `/_accounts`, `/_transactor`, `/_collaborator`, `/_github`, `/_calendar`, and `/files`.</li>
+                <li>`deploy/runbooks/phase3-huly.md`: server execution, fallback, rollback, and full-pass criteria.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Validation</h3>
+              <ul>
+                <li>`23-check-phase3-huly-preflight.sh`: env, OIDC callback, compose, and integration readiness.</li>
+                <li>`30-check-huly.sh`: container health, no direct host ports, edge reachability, OIDC discovery.</li>
+                <li>`31-bootstrap-huly-workspace.sh`: deterministic manual seed checklist.</li>
+                <li>`32-check-huly-pilot.sh`: report gate for full-pass or documented conditional-pass.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Workspace seed</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>Channels</h3>
+              <ul>
+                <li>`#general`: 전체 공지와 운영 안내.</li>
+                <li>`#research`: 연구 토론과 실험 공유.</li>
+                <li>`#paper`: 논문 작업, 리뷰, 마감.</li>
+                <li>`#infra`: 서버와 도구 운영.</li>
+                <li>`#random`: 비공식 대화.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Projects</h3>
+              <ul>
+                <li>`Experiments`: 실험 계획, 결과, 재현성 이슈.</li>
+                <li>`Papers`: 논문별 milestone, reviewer response, template task.</li>
+                <li>`Infrastructure`: self-hosted stack 운영과 incident task.</li>
+                <li>`Datasets`: dataset 준비, 권한, 업로드, QA.</li>
+                <li>`Onboarding`: 멤버와 게스트 초대 체크리스트.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Pilot content</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>콘텐츠</th>
+                  <th>목적</th>
+                  <th>Seed example</th>
+                  <th>성공 기준</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Lab handbook</td>
+                  <td>Notion wiki 대체 품질 확인</td>
+                  <td>onboarding, server access, coding norms</td>
+                  <td>링크/heading/첨부 구조가 깨지지 않음</td>
+                </tr>
+                <tr>
+                  <td>Meeting notes</td>
+                  <td>반복 회의 기록과 action item 연결</td>
+                  <td>weekly lab meeting, paper reading</td>
+                  <td>note에서 task 생성과 담당자 연결 가능</td>
+                </tr>
+                <tr>
+                  <td>Experiment task</td>
+                  <td>연구 task lifecycle 확인</td>
+                  <td>dataset prep, train, eval, report</td>
+                  <td>status, assignee, due date, calendar 노출</td>
+                </tr>
+                <tr>
+                  <td>Paper milestone</td>
+                  <td>논문 마감 관리</td>
+                  <td>abstract, experiments, draft, rebuttal</td>
+                  <td>Gantt 또는 timeline으로 dependency 확인</td>
+                </tr>
+                <tr>
+                  <td>GitHub issue sync</td>
+                  <td>코드 작업과 Huly issue의 양방향 동기화</td>
+                  <td>repo issue, PR close, label/status update</td>
+                  <td>Huly and GitHub state가 한 번씩 왕복 동기화</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>GitHub App setup</h2>
+          <ol>
+            <li>GitHub organization 또는 target account에 Huly용 GitHub App을 만든다.</li>
+            <li>Webhook URL은 실제 Huly 배포 버전에 맞춰 고정한다.</li>
+            <li>권한은 Metadata read, Issues read/write, Pull requests read/write, Contents read로 시작한다.</li>
+            <li>App ID, private key, webhook secret은 server-only env에 저장한다.</li>
+            <li>연결 repo를 하나만 선택해 issue create/update/close와 PR merge event를 테스트한다.</li>
+            <li>성공 후 연구실 주요 repo를 단계적으로 추가한다.</li>
+          </ol>
+        </section>
+
+        <section class="section">
+          <h2>Calendar setup</h2>
+          <ul>
+            <li>Google OAuth web application redirect URI는 `https://huly.lab.example.ac.kr/_calendar/signin/code`이다.</li>
+            <li>Calendar service는 Huly `calendar` profile과 `huly-mongodb`를 함께 사용한다.</li>
+            <li>credential JSON은 `/opt/lab-stack/env/30-huly.env`의 `HULY_GOOGLE_CALENDAR_CREDENTIALS`에만 저장한다.</li>
+            <li>event create/update sync가 확인되어야 Phase 3 full-pass로 본다.</li>
+          </ul>
+        </section>
+
+        <section class="section">
+          <h2>Gantt and fallback decision</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>Pass criteria</h3>
+              <ul>
+                <li>issue에 start/end date 또는 equivalent field를 줄 수 있다.</li>
+                <li>timeline/Gantt view가 self-hosted에서 표시된다.</li>
+                <li>dependency 또는 milestone grouping이 논문/실험 관리에 충분하다.</li>
+                <li>브라우저 reload 후에도 view state가 유지된다.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Fallback</h3>
+              <ul>
+                <li>Gantt가 self-hosted에서 막히면 Plane 보완 배포를 별도 decision으로 연다.</li>
+                <li>Huly는 docs/chat/GitHub hub로 유지할 수 있는지 판단한다.</li>
+                <li>Plane 재도입 시 task canonical 중복을 피하도록 Huly issue scope를 줄인다.</li>
+                <li>Grist는 이 단계에서 바로 재도입하지 않는다.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Notion migration sample</h2>
+          <ol>
+            <li>기존 Notion에서 핵심 페이지 5개만 Markdown and CSV로 export한다.</li>
+            <li>개인정보나 secret이 없는지 export zip을 확인한다.</li>
+            <li>Huly import 기능 또는 수동 copy로 Lab handbook 하위에 넣는다.</li>
+            <li>표, 링크, 이미지, task checkbox, code block 품질을 기록한다.</li>
+            <li>마이그레이션 비용이 크면 핵심 페이지만 정리하고 나머지는 archive-readonly로 남긴다.</li>
+          </ol>
+        </section>
+
+        <section class="section">
+          <h2>Huly exit gate</h2>
+          <div class="note">
+            Huly pilot은 기능별 체크만으로 끝내지 않는다. 실제 연구실 멤버 2명 이상이
+            1주일 동안 회의 note, task update, GitHub issue, file attachment를 사용하고,
+            막힌 지점을 decision log에 남긴 뒤 다음 phase로 넘어간다.
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Related: <a href="../reference/validation.html#huly-gate">Huly validation gate</a>.
+      </footer>
+    </div>
+  </body>
+</html>

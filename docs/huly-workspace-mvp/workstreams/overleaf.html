@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Overleaf Workstream - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>8. Overleaf Workstream</strong>
+            <span>LaTeX collaboration with Overleaf CE</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="storage-hf.html">Storage/HF</a>
+            <a href="../layers/operations.html">Operations</a>
+            <a href="../reference/validation.html">Validation</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Workstreams</span>
+          <span>/</span>
+          <span>Overleaf</span>
+        </div>
+
+        <section class="hero">
+          <h1>Overleaf CE는 논문 협업 전용 서비스로 작게 시작한다</h1>
+          <p>
+            Overleaf CE는 Huly가 대체하기 어려운 LaTeX 협업 편집과 PDF 컴파일을 맡는다.
+            MVP에서는 OIDC/LDAP SSO를 필수화하지 않고, 동일 이메일 기반 별도 계정을
+            관리자가 발급하는 방식으로 시작한다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Initial scope</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>Included</h3>
+              <ul>
+                <li>Overleaf Toolkit 기반 배포.</li>
+                <li>외부 공개는 Nginx HTTPS 뒤로 제한.</li>
+                <li>public registration disabled.</li>
+                <li>admin이 사용자 계정을 직접 생성.</li>
+                <li>TeX Live full 또는 필요한 package set 설치.</li>
+                <li>주요 학회 템플릿 preload.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Deferred</h3>
+              <ul>
+                <li>Authentik LDAP outpost integration.</li>
+                <li>Overleaf CE SSO custom patch.</li>
+                <li>Git bridge automation.</li>
+                <li>template marketplace 형태의 UI.</li>
+                <li>multi-instance HA.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Configuration decisions</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th>값</th>
+                  <th>이유</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Public URL</td>
+                  <td>`https://overleaf.lab.example.ac.kr`</td>
+                  <td>서비스별 서브도메인 일관성</td>
+                </tr>
+                <tr>
+                  <td>Listen address</td>
+                  <td>`127.0.0.1:8090`</td>
+                  <td>Nginx 외 직접 public 노출 방지</td>
+                </tr>
+                <tr>
+                  <td>Registration</td>
+                  <td>disabled</td>
+                  <td>외부 공개 환경에서 계정 남발 방지</td>
+                </tr>
+                <tr>
+                  <td>Account model</td>
+                  <td>admin-created local accounts</td>
+                  <td>CE SSO 부담을 MVP에서 제거</td>
+                </tr>
+                <tr>
+                  <td>Templates</td>
+                  <td>NeurIPS, ICML, ICLR, ACL/EMNLP, AAAI</td>
+                  <td>연구실 논문 workflow에 즉시 필요</td>
+                </tr>
+                <tr>
+                  <td>Backup</td>
+                  <td>Toolkit backup + Mongo/project file dump</td>
+                  <td>논문 프로젝트 복구 가능성 확보</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Implementation order</h2>
+          <ol>
+            <li>`/opt/lab-stack/overleaf`에 toolkit을 배치한다.</li>
+            <li>`OVERLEAF_LISTEN_IP=127.0.0.1`, `OVERLEAF_PORT=8090`, `OVERLEAF_SITE_URL`을 설정한다.</li>
+            <li>public registration을 끄고 SMTP 발송을 검증한다.</li>
+            <li>Nginx server block과 WebSocket proxy timeout을 적용한다.</li>
+            <li>admin 계정과 pilot member 계정 2개를 만든다.</li>
+            <li>TeX Live package set을 설치하고 템플릿을 preload한다.</li>
+            <li>2명 동시 편집, PDF compile, template compile, backup dry-run을 검증한다.</li>
+          </ol>
+        </section>
+
+        <section class="section">
+          <h2>Template checklist</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Template</th>
+                  <th>필수 확인</th>
+                  <th>완료 기준</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>NeurIPS</td>
+                  <td>style file, bibliography, figures</td>
+                  <td>sample PDF compile</td>
+                </tr>
+                <tr>
+                  <td>ICML</td>
+                  <td>natbib, algorithm package</td>
+                  <td>sample PDF compile</td>
+                </tr>
+                <tr>
+                  <td>ICLR</td>
+                  <td>review/rebuttal variants</td>
+                  <td>sample PDF compile</td>
+                </tr>
+                <tr>
+                  <td>ACL/EMNLP</td>
+                  <td>unicode, citation, appendix</td>
+                  <td>sample PDF compile</td>
+                </tr>
+                <tr>
+                  <td>AAAI</td>
+                  <td>font and conference style constraints</td>
+                  <td>sample PDF compile</td>
+                </tr>
+                <tr>
+                  <td>Korean sample</td>
+                  <td>kotex or equivalent package</td>
+                  <td>한글 문장 포함 PDF compile</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>SSO decision</h2>
+          <div class="note">
+            초기에는 별도 계정으로 시작한다. Authentik LDAP outpost와 Overleaf LDAP 연동은
+            운영 burden이 크므로, pilot 사용자가 실제로 별도 로그인을 문제로 보고할 때
+            v1 decision으로 올린다.
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Related: <a href="../layers/operations.html">operations model</a>.
+      </footer>
+    </div>
+  </body>
+</html>

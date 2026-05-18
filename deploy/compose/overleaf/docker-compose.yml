@@ -4,43 +4,60 @@ services:
   overleaf:
     build:
       context: .
+      args:
+        OVERLEAF_IMAGE: ${OVERLEAF_IMAGE}
     image: ${OVERLEAF_CUSTOM_IMAGE}
     container_name: overleaf
     restart: unless-stopped
     environment:
       TZ: ${TZ}
-      SHARELATEX_APP_NAME: ${OVERLEAF_APP_NAME}
-      SHARELATEX_MONGO_URL: mongodb://mongo:27017/${OVERLEAF_MONGO_DB}
-      SHARELATEX_REDIS_HOST: overleaf-redis
-      SHARELATEX_REDIS_PORT: 6379
-      SHARELATEX_SITE_URL: ${OVERLEAF_SITE_URL}
-      SHARELATEX_NAV_TITLE: ${OVERLEAF_NAV_TITLE}
-      SHARELATEX_SESSION_SECRET: ${OVERLEAF_SESSION_SECRET}
-      SHARELATEX_EMAIL_SMTP_HOST: ${OVERLEAF_SMTP_HOST}
-      SHARELATEX_EMAIL_SMTP_PORT: ${OVERLEAF_SMTP_PORT}
-      SHARELATEX_EMAIL_SMTP_USER: ${OVERLEAF_SMTP_USER}
-      SHARELATEX_EMAIL_SMTP_PASS: ${OVERLEAF_SMTP_PASSWORD}
-      SHARELATEX_EMAIL_FROM_ADDRESS: ${OVERLEAF_SMTP_FROM}
+      OVERLEAF_APP_NAME: ${OVERLEAF_APP_NAME}
+      OVERLEAF_ADMIN_EMAIL: ${OVERLEAF_ADMIN_EMAIL}
+      OVERLEAF_SITE_URL: ${OVERLEAF_SITE_URL}
+      OVERLEAF_NAV_TITLE: ${OVERLEAF_NAV_TITLE}
+      OVERLEAF_SESSION_SECRET: ${OVERLEAF_SESSION_SECRET}
+      OVERLEAF_MONGO_URL: mongodb://overleaf-mongo:27017/${OVERLEAF_MONGO_DB}?replicaSet=overleaf-rs
+      MONGO_URL: mongodb://overleaf-mongo:27017/${OVERLEAF_MONGO_DB}?replicaSet=overleaf-rs
+      OVERLEAF_REDIS_HOST: overleaf-redis
+      REDIS_HOST: overleaf-redis
+      OVERLEAF_REDIS_PORT: 6379
+      REDIS_PORT: 6379
+      OVERLEAF_REDIS_PASS: ${OVERLEAF_REDIS_PASSWORD}
+      REDIS_PASSWORD: ${OVERLEAF_REDIS_PASSWORD}
+      OVERLEAF_EMAIL_FROM_ADDRESS: ${OVERLEAF_SMTP_FROM}
+      OVERLEAF_EMAIL_SMTP_HOST: ${OVERLEAF_SMTP_HOST}
+      OVERLEAF_EMAIL_SMTP_PORT: ${OVERLEAF_SMTP_PORT}
+      OVERLEAF_EMAIL_SMTP_SECURE: ${OVERLEAF_SMTP_SECURE}
+      OVERLEAF_EMAIL_SMTP_USER: ${OVERLEAF_SMTP_USER}
+      OVERLEAF_EMAIL_SMTP_PASS: ${OVERLEAF_SMTP_PASSWORD}
+      OVERLEAF_EMAIL_SMTP_TLS_REJECT_UNAUTH: ${OVERLEAF_SMTP_TLS_REJECT_UNAUTH}
+      OVERLEAF_RESTRICT_INVITES_TO_EXISTING_ACCOUNTS: ${OVERLEAF_RESTRICT_INVITES_TO_EXISTING_ACCOUNTS}
+      OVERLEAF_TRUSTED_PROXY_IPS: ${OVERLEAF_TRUSTED_PROXY_IPS}
       ENABLED_LINKED_FILE_TYPES: project_file,project_output_file
       ENABLE_CONVERSIONS: "true"
     volumes:
-      - ${LAB_PLATFORM_ROOT}/data/overleaf/overleaf:/var/lib/overleaf
+      - ${LAB_STACK_ROOT}/data/overleaf/overleaf:/var/lib/overleaf
     networks:
-      - lab_backend
-      - lab_data
+      - labstack_backend
+      - labstack_data
     depends_on:
-      - mongo
+      - overleaf-mongo
       - overleaf-redis
 
-  mongo:
+  overleaf-mongo:
     image: ${OVERLEAF_MONGO_IMAGE}
     container_name: overleaf-mongo
     restart: unless-stopped
     command: ["mongod", "--replSet", "overleaf-rs", "--bind_ip_all"]
     volumes:
-      - ${LAB_PLATFORM_ROOT}/data/overleaf/mongo:/data/db
+      - ${LAB_STACK_ROOT}/data/overleaf/mongo:/data/db
     networks:
-      - lab_data
+      - labstack_data
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' | grep -q 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
   overleaf-redis:
     image: ${OVERLEAF_REDIS_IMAGE}
@@ -50,12 +67,19 @@ services:
     environment:
       OVERLEAF_REDIS_PASSWORD: ${OVERLEAF_REDIS_PASSWORD}
     volumes:
-      - ${LAB_PLATFORM_ROOT}/data/overleaf/redis:/data
+      - ${LAB_STACK_ROOT}/data/overleaf/redis:/data
     networks:
-      - lab_data
+      - labstack_data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${OVERLEAF_REDIS_PASSWORD}\" --no-auth-warning ping | grep -q PONG"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
 networks:
-  lab_backend:
+  labstack_backend:
     external: true
-  lab_data:
+    name: ${LABSTACK_BACKEND_NETWORK}
+  labstack_data:
     external: true
+    name: ${LABSTACK_DATA_NETWORK}

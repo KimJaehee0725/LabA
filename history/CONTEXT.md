@@ -1,6 +1,6 @@
 # Project Context
 
-Last updated: 2026-05-08
+Last updated: 2026-05-15
 
 ## Research Goal
 
@@ -15,7 +15,7 @@ Last updated: 2026-05-08
 - v0 blueprint lives in `docs/v0/`.
 - v0.1 detailed planning lives in `docs/v0.1/`.
 - Planned services: Authentik, Plane, Gitea, MLflow, Nextcloud, Collabora, Overleaf CE, MinIO, Postgres, Redis, Nginx.
-- Default deployment path remains `/srv/lab-platform`.
+- Active deployment path is `/opt/lab-stack` for the Huly workspace MVP phases.
 
 ## Current Decisions
 
@@ -26,6 +26,23 @@ Last updated: 2026-05-08
 - Use Nextcloud `user_oidc` rather than `oidc_login`.
 - Keep Overleaf CE on manual accounts for v0.3; LDAP/SSO is later.
 - Keep Nextcloud local disk storage for v0.2/v0.3 unless the user changes the storage decision.
+- Promote the shared core `minio` container as the Phase 4 storage layer; keep Huly's internal `huly-minio` dedicated to Huly.
+- Map MinIO Console OIDC `policy` claims from Authentik groups: `lab-admin` -> `consoleAdmin`, `lab-member`/`lab-collab` -> `lab-storage-member-rw`, and no `lab-guest` Console access.
+- Phase 5 adds a small HF-like catalog UI at `https://hf.lab.example.ac.kr`
+  backed by shared Phase 4 MinIO buckets and a YAML metadata catalog.
+- Phase 5.3 adds single-file direct upload for catalog model/dataset prefixes
+  using `POST /api/files/presign?action=upload`, presigned S3 PUT URLs, default
+  overwrite blocking, and MinIO CORS for `HF_UI_PUBLIC_URL`.
+- Phase 6 Overleaf work is isolated on branch/worktree `huly/overleaf-mvp`
+  at `/workspace/LargeProject/LabA-overleaf`; it is a direct Compose module
+  with manual accounts, dedicated Mongo/Redis, shared Nginx routing, and no
+  Authentik SSO in this phase.
+- Phase 7 internal operational baseline is implemented on the Overleaf branch:
+  active-stack backups, isolated restore rehearsal, ops baseline checks, and
+  evidence report live under the deploy scripts/runbooks/reports.
+- Phase 8 MLflow Tracking MVP is implemented on branch `huly/phase8-mlflow-mvp`:
+  it runs on shared Postgres and shared MinIO `lab-artifacts/mlflow`, with the
+  public route kept as an Authentik-gated disabled Nginx template.
 
 ## Active Ideas
 
@@ -33,7 +50,19 @@ Last updated: 2026-05-08
 - v0.3 smoke testing should follow `docs/v0.1/11-v0.3-smoke-test-plan.md`.
 - Use service-specific MinIO access keys/policies instead of root credentials.
 - Keep deployment files separate from real secrets.
-- Use split env files under `/srv/lab-platform/env/` instead of one oversized `.env`.
+- Use split env files under `/opt/lab-stack/env/` instead of one oversized `.env`.
+- Keep Phase 5 staging automation behind explicit `HF_UI_ALLOW_STAGING_BYPASS`;
+  disable it before strict/browser OIDC validation.
+- Keep HF UI upload v1 limited to single-file direct PUT; multipart, folder, and
+  resumable uploads are later phases.
+- Keep Overleaf Phase 6 conditional-pass separate from Phase 2-5 full-pass:
+  `LABSTACK_INCLUDE_OVERLEAF=true` opt-in is required for integrated checks.
+- PR #2 for `huly/overleaf-mvp` stays draft while full-pass browser evidence and
+  credential rotation/waiver are incomplete.
+- Phase 8 MLflow uses `LABSTACK_INCLUDE_MLFLOW=true` and
+  `LABSTACK_BACKUP_MLFLOW=true` opt-ins. Internal checks pass with
+  `PHASE8_REQUIRE_AUTH_GATE=false`; strict public UI checks require Authentik
+  outpost/forward-auth evidence.
 - Commit at module checkpoints and use feature branches/worktrees when v0.2 work becomes parallel or risky.
 
 ## Open Questions And Risks
@@ -41,7 +70,29 @@ Last updated: 2026-05-08
 - Actual domain and TLS issuance method are still placeholders.
 - MLflow programmatic API authentication for training nodes is unresolved.
 - Backup offsite location and retention policy are unresolved.
-- MinIO OIDC policy mapping is unresolved.
+- Phase 4 MinIO full pass remains conditional until real DNS/TLS and browser OIDC role evidence are available.
+- Phase 5 HF-like UI full pass remains conditional until real DNS/TLS and
+  browser OIDC evidence for `lab-member` and `lab-guest` are available.
+- Phase 5.3 upload staging smoke passed on `/opt/lab-stack` with
+  `STAGING_IP=127.0.0.1`: presigned PUT, CORS preflight, file-list refresh,
+  uploaded JSONL preview, and duplicate HTTP 409 were confirmed.
+- Phase 6 Overleaf automated staging validation passed on `/opt/lab-stack` and
+  was revalidated on 2026-05-11 with relaxed staging flags; admin activation,
+  SMTP delivery, browser compile/collaboration smoke, real DNS/TLS, and backup
+  restore evidence remain pending.
+- Phase 7 internal operational baseline passed on 2026-05-12 with backup root
+  `/mnt/backup/lab/archive/phase7/2026-05-12/20260512T054224Z`; strict
+  full-pass remains blocked by external DNS/TLS/SMTP, browser evidence,
+  credential policy, and browser/external evidence. An unrelated
+  `/workspace/LLM-API-Watcher` process was moved from port 3000 to 3010, after
+  which relaxed integrated `96-check-all.sh` with Phase 7 opt-in passed.
+- Phase 8 MLflow internal runtime validation passed on 2026-05-15. The relaxed
+  integrated `96-check-all.sh` with MLflow opt-in passed, and backup/restore
+  rehearsal with MLflow evidence passed under
+  `/mnt/backup/lab/archive/phase7/2026-05-15/20260515T053501Z`.
+- Exposed GitHub token and sudo password rotation are intentionally deferred by
+  current operator policy, which blocks strict full-pass/PR-ready promotion until
+  that policy changes or a scoped waiver is recorded.
 - Authentik provider secrets must not be recorded in docs/history/git.
 
 ## Next Steps

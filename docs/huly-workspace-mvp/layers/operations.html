@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Operations - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>4. 운영 모델</strong>
+            <span>backup, monitoring, onboarding, maintenance</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="roadmap.html">Roadmap</a>
+            <a href="../reference/validation.html">Validation</a>
+            <a href="../reference/decisions-risks.html">Risks</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Operations</span>
+        </div>
+
+        <section class="hero">
+          <h1>운영 자동화는 pilot 완료 조건이다</h1>
+          <p>
+            Huly 전환은 기능 배포만으로 끝나지 않는다. 매일 백업, 월 1회 복구 테스트,
+            인증서 만료 알림, uptime 알림, 보안 로그 요약, 멤버 온보딩 문서가 있어야
+            연구실 서비스로 운영할 수 있다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Backup plan</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>대상</th>
+                  <th>방식</th>
+                  <th>보관</th>
+                  <th>복구 검증</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Authentik DB</td>
+                  <td>`pg_dump` gzip</td>
+                  <td>daily 30일, weekly 12주</td>
+                  <td>별도 test DB에 restore</td>
+                </tr>
+                <tr>
+                  <td>Huly data</td>
+                  <td>deployed version의 공식 store 기준 dump 또는 snapshot</td>
+                  <td>daily 30일, weekly 12주</td>
+                  <td>test workspace boot</td>
+                </tr>
+                <tr>
+                  <td>MinIO data</td>
+                  <td>`mc mirror` or filesystem sync</td>
+                  <td>backup disk + optional cold storage</td>
+                  <td>sample object checksum</td>
+                </tr>
+                <tr>
+                  <td>HF metadata DB</td>
+                  <td>`pg_dump` gzip</td>
+                  <td>daily 30일</td>
+                  <td>list/detail endpoint test</td>
+                </tr>
+                <tr>
+                  <td>Overleaf projects</td>
+                  <td>Toolkit backup, Mongo dump, project tar</td>
+                  <td>daily 30일</td>
+                  <td>sample project compile</td>
+                </tr>
+                <tr>
+                  <td>Nginx and cert metadata</td>
+                  <td>tar, encrypted private key backup</td>
+                  <td>weekly 12주</td>
+                  <td>`nginx -t` in staging path</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Monitoring plan</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>Uptime checks</h3>
+              <ul>
+                <li>`auth` live endpoint</li>
+                <li>`huly` application health endpoint or login page availability</li>
+                <li>`s3` MinIO live endpoint</li>
+                <li>`hf` backend `/api/health`</li>
+                <li>`overleaf` status page or login page</li>
+                <li>portal root</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Host checks</h3>
+              <ul>
+                <li>primary HDD capacity warning at 80% and critical at 90%</li>
+                <li>backup disk capacity warning at 80%</li>
+                <li>Docker container restart count</li>
+                <li>Nginx 4xx/5xx ratio</li>
+                <li>certificate expiry warning at 30, 15, and 7 days</li>
+                <li>backup job success and latest restore rehearsal date</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Routine checklist</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>주기</th>
+                  <th>작업</th>
+                  <th>Evidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Daily</td>
+                  <td>백업 성공 알림 또는 실패 알림 확인, 보안 요약 메일 검토</td>
+                  <td>mail log, backup log</td>
+                </tr>
+                <tr>
+                  <td>Weekly</td>
+                  <td>서비스 uptime, disk usage, Docker restart count 확인</td>
+                  <td>Uptime Kuma, host report</td>
+                </tr>
+                <tr>
+                  <td>Monthly</td>
+                  <td>백업 복구 테스트, service patch review, 비활성 계정 점검</td>
+                  <td>restore report, update notes</td>
+                </tr>
+                <tr>
+                  <td>Quarterly</td>
+                  <td>권한 재검토, public bucket audit, secret rotation 후보 검토</td>
+                  <td>access review note</td>
+                </tr>
+                <tr>
+                  <td>Annual</td>
+                  <td>학교 SSL 갱신, major upgrade plan, disaster recovery rehearsal</td>
+                  <td>certificate record, DR report</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Onboarding model</h2>
+          <div class="grid three">
+            <article class="panel">
+              <h3>Admin flow</h3>
+              <ol>
+                <li>Authentik invitation 생성.</li>
+                <li>`lab-members` 또는 `lab-guests` 그룹 할당.</li>
+                <li>Huly workspace invite 확인.</li>
+                <li>필요 시 Overleaf 계정 별도 생성.</li>
+                <li>HF-like UI 접근 권한 smoke.</li>
+              </ol>
+            </article>
+            <article class="panel">
+              <h3>Member guide</h3>
+              <ul>
+                <li>첫 로그인과 2FA 등록.</li>
+                <li>Huly 문서, 채팅, 이슈 사용 기준.</li>
+                <li>모델/데이터셋 업로드 위치와 공개 범위.</li>
+                <li>Overleaf 계정 사용법.</li>
+                <li>민감 데이터 공유 금지와 private 기본 정책.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Migration guide</h3>
+              <ul>
+                <li>Notion export: Markdown and CSV.</li>
+                <li>핵심 페이지 우선 import.</li>
+                <li>링크와 첨부 파일 수동 검토.</li>
+                <li>기존 Slack 병행 기간과 종료 조건 기록.</li>
+                <li>Huly 문서 구조 owner 지정.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Related: <a href="../reference/validation.html#ops-gate">ops validation gate</a>.
+      </footer>
+    </div>
+  </body>
+</html>

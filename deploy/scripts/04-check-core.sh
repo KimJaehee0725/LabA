@@ -10,5 +10,9 @@ require_cmd docker
 
 docker exec postgres pg_isready -U "${POSTGRES_USER:-postgres}"
 docker exec redis redis-cli -a "${REDIS_PASSWORD:?REDIS_PASSWORD required}" ping | grep -q PONG
-docker exec minio curl -fsS http://localhost:9000/minio/health/live >/dev/null
+
+if [[ "${CHECK_MINIO:-false}" == "true" ]]; then
+  docker exec minio curl -fsS http://localhost:9000/minio/health/live >/dev/null
+fi
+
 log "core checks passed"

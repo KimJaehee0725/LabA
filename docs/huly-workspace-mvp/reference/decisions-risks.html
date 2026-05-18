@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Decisions and Risks - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>10. 결정과 리스크</strong>
+            <span>accepted decisions, open decisions, mitigation plan</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="backlog.html">Backlog</a>
+            <a href="validation.html">Validation</a>
+            <a href="../layers/operations.html">Operations</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Reference</span>
+          <span>/</span>
+          <span>Decisions/Risks</span>
+        </div>
+
+        <section class="hero">
+          <h1>결정은 작게 확정하고, 불확실성은 gate에서 닫는다</h1>
+          <p>
+            Huly 전환은 핵심 도구가 실제로 요구 기능을 만족하는지 확인해야 한다.
+            따라서 Huly OIDC, Gantt, GitHub sync, Notion migration 품질은 초기에
+            검증하고, 실패 시 fallback을 별도 decision으로 남긴다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Accepted decisions</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>결정</th>
+                  <th>근거</th>
+                  <th>영향</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ADR-001</td>
+                  <td>Huly를 1차 collaboration hub로 둔다.</td>
+                  <td>Notion 대체 요구가 문서, 이슈, 채팅, 캘린더, Gantt를 한 surface에 요구함</td>
+                  <td>Plane/Nextcloud는 기본 배포에서 제외</td>
+                </tr>
+                <tr>
+                  <td>ADR-002</td>
+                  <td>Gitea를 쓰지 않고 GitHub App 연동을 기준으로 한다.</td>
+                  <td>사용자가 GitHub/Slack 연동을 요구했고, 기존 계획에서 Gitea는 제외 결정됨</td>
+                  <td>코드 canonical source는 GitHub</td>
+                </tr>
+                <tr>
+                  <td>ADR-003</td>
+                  <td>새 runtime root는 `/opt/lab-stack`로 둔다.</td>
+                  <td>`/srv/lab-platform`은 v0.3/v0.4 실험 흔적과 분리해야 함</td>
+                  <td>배포 스크립트와 runbook path를 새로 정리</td>
+                </tr>
+                <tr>
+                  <td>ADR-004</td>
+                  <td>초대 링크 가입과 2FA를 기본 정책으로 한다.</td>
+                  <td>외부 공개 서비스이고 게스트 가입 악용을 막아야 함</td>
+                  <td>self-signup은 off, admin notification 필요</td>
+                </tr>
+                <tr>
+                  <td>ADR-005</td>
+                  <td>Overleaf CE는 MVP에서 별도 계정으로 시작한다.</td>
+                  <td>CE SSO integration cost가 높고 논문 협업 검증이 우선임</td>
+                  <td>운영자가 계정을 발급하되, 동일 email 사용</td>
+                </tr>
+                <tr>
+                  <td>ADR-006</td>
+                  <td>HF-like UI MVP는 조회/다운로드 중심으로 시작한다.</td>
+                  <td>대형 업로드와 HF API 호환은 구현 리스크가 큼</td>
+                  <td>v1에서 multipart upload, v2에서 API compatibility 검토</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Open decisions</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>결정해야 할 것</th>
+                  <th>닫는 시점</th>
+                  <th>판단 기준</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>OD-001</td>
+                  <td>Huly OIDC를 직접 쓸지, Authentik forward-auth로 보호할지</td>
+                  <td>HULY-03</td>
+                  <td>사용 중인 Huly self-host 버전의 OIDC 안정성</td>
+                </tr>
+                <tr>
+                  <td>OD-002</td>
+                  <td>Huly Gantt가 Plane 없이 충분한지</td>
+                  <td>HULY-05</td>
+                  <td>논문/실험 milestone pilot에서 실제 사용 가능 여부</td>
+                </tr>
+                <tr>
+                  <td>OD-003</td>
+                  <td>Grist를 structured DB 보완재로 재도입할지</td>
+                  <td>HF MVP 이후</td>
+                  <td>실험 registry, review queue, resource DB가 Huly/HF metadata로 부족한지</td>
+                </tr>
+                <tr>
+                  <td>OD-004</td>
+                  <td>HF-like UI upload를 v1에 포함할 범위</td>
+                  <td>HF-03 이후</td>
+                  <td>연구자가 CLI/SDK upload로 충분한지, browser upload 요구가 큰지</td>
+                </tr>
+                <tr>
+                  <td>OD-005</td>
+                  <td>Slack 병행 운영 종료 조건</td>
+                  <td>Week 10</td>
+                  <td>Huly 채팅과 알림이 실제 멤버 workflow에 들어왔는지</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Risk register</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>리스크</th>
+                  <th>영향</th>
+                  <th>대응</th>
+                  <th>Owner gate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Huly self-host에서 Gantt가 동작하지 않음</td>
+                  <td>논문/실험 일정 관리 핵심 기능 부족</td>
+                  <td>Plane 보완 배포를 별도 decision으로 검토</td>
+                  <td>Huly Gate</td>
+                </tr>
+                <tr>
+                  <td>Huly OIDC가 버전별로 불안정</td>
+                  <td>SSO UX 저하 또는 인증 우회 위험</td>
+                  <td>Authentik forward-auth fallback 준비</td>
+                  <td>Auth/Huly Gate</td>
+                </tr>
+                <tr>
+                  <td>Notion import 품질이 낮음</td>
+                  <td>마이그레이션 비용 증가</td>
+                  <td>핵심 페이지 수동 정리, 나머지 archive-readonly</td>
+                  <td>Huly Gate</td>
+                </tr>
+                <tr>
+                  <td>대형 모델 업로드가 proxy timeout 또는 buffering에 막힘</td>
+                  <td>HF-like UI 사용성 저하</td>
+                  <td>presigned upload, proxy_request_buffering off, CLI path 제공</td>
+                  <td>HF Gate</td>
+                </tr>
+                <tr>
+                  <td>MinIO HDD 장애</td>
+                  <td>모델/데이터셋 손실</td>
+                  <td>backup disk mirror, checksum test, optional cold storage</td>
+                  <td>Ops Gate</td>
+                </tr>
+                <tr>
+                  <td>Authentik 장애</td>
+                  <td>모든 서비스 로그인 불가</td>
+                  <td>emergency local admin, Authentik DB backup, restore rehearsal</td>
+                  <td>Ops Gate</td>
+                </tr>
+                <tr>
+                  <td>학교 인증서 만료 누락</td>
+                  <td>전체 HTTPS 장애</td>
+                  <td>30/15/7일 만료 알림과 renewal runbook</td>
+                  <td>Ops Gate</td>
+                </tr>
+                <tr>
+                  <td>게스트 초대 악용</td>
+                  <td>스팸, 데이터 노출</td>
+                  <td>self-signup off, guest group 제한, admin notification</td>
+                  <td>Auth Gate</td>
+                </tr>
+                <tr>
+                  <td>백업이 복구되지 않음</td>
+                  <td>장애 시 복구 불가</td>
+                  <td>월 1회 restore drill을 완료 조건으로 둠</td>
+                  <td>Ops Gate</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Related: <a href="validation.html">validation gates</a>.
+      </footer>
+    </div>
+  </body>
+</html>

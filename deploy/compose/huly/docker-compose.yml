@@ -1,0 +1,377 @@
+name: lab_huly
+
+x-huly-app-env: &huly_app_env
+  TZ: ${TZ}
+  SERVER_SECRET: ${HULY_SERVER_SECRET}
+  STORAGE_CONFIG: minio|huly-minio?accessKey=${HULY_MINIO_ROOT_USER}&secretKey=${HULY_MINIO_ROOT_PASSWORD}
+
+x-huly-data-env: &huly_data_env
+  TZ: ${TZ}
+
+services:
+  huly-cockroach:
+    image: ${HULY_COCKROACH_IMAGE}
+    container_name: huly-cockroach
+    restart: unless-stopped
+    command: start-single-node --accept-sql-without-tls
+    environment:
+      <<: *huly_data_env
+      COCKROACH_DATABASE: ${HULY_COCKROACH_DATABASE}
+      COCKROACH_USER: ${HULY_COCKROACH_USER}
+      COCKROACH_PASSWORD: ${HULY_COCKROACH_PASSWORD}
+    volumes:
+      - ${LAB_STACK_ROOT}/data/huly/cockroach:/cockroach/cockroach-data
+      - ${LAB_STACK_ROOT}/data/huly/cockroach-certs:/cockroach/certs
+    networks:
+      - labstack_data
+    healthcheck:
+      test: ["CMD-SHELL", "PGPASSWORD=\"$${COCKROACH_PASSWORD}\" cockroach sql --url \"postgresql://$${COCKROACH_USER}@localhost:26257/$${COCKROACH_DATABASE}?sslmode=disable\" --execute='select 1' >/dev/null"]
+      interval: 20s
+      timeout: 10s
+      retries: 12
+
+  huly-redpanda:
+    image: ${HULY_REDPANDA_IMAGE}
+    container_name: huly-redpanda
+    restart: unless-stopped
+    command:
+      - redpanda
+      - start
+      - --kafka-addr
+      - internal://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - internal://huly-redpanda:9092
+      - --pandaproxy-addr
+      - internal://0.0.0.0:8082
+      - --advertise-pandaproxy-addr
+      - internal://huly-redpanda:8082
+      - --schema-registry-addr
+      - internal://0.0.0.0:8081
+      - --rpc-addr
+      - huly-redpanda:33145
+      - --advertise-rpc-addr
+      - huly-redpanda:33145
+      - --mode
+      - dev-container
+      - --smp
+      - "1"
+      - --default-log-level=info
+    environment:
+      REDPANDA_SUPERUSER_USERNAME: ${HULY_REDPANDA_ADMIN_USER}
+      REDPANDA_SUPERUSER_PASSWORD: ${HULY_REDPANDA_ADMIN_PASSWORD}
+    volumes:
+      - ${LAB_STACK_ROOT}/data/huly/redpanda:/var/lib/redpanda/data
+    networks:
+      - labstack_data
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "info"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+
+  huly-minio:
+    image: ${HULY_MINIO_IMAGE}
+    container_name: huly-minio
+    restart: unless-stopped
+    command: server /data --address ":9000" --console-address ":9001"
+    environment:
+      <<: *huly_data_env
+      MINIO_ROOT_USER: ${HULY_MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${HULY_MINIO_ROOT_PASSWORD}
+    volumes:
+      - ${LAB_STACK_ROOT}/data/huly/files:/data
+    networks:
+      - labstack_data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  huly-elastic:
+    image: ${HULY_ELASTIC_IMAGE}
+    container_name: huly-elastic
+    restart: unless-stopped
+    command: >
+      /bin/sh -c "./bin/elasticsearch-plugin list | grep -q ingest-attachment ||
+      yes | ./bin/elasticsearch-plugin install --silent ingest-attachment;
+      /usr/local/bin/docker-entrypoint.sh eswrapper"
+    environment:
+      <<: *huly_data_env
+      ELASTICSEARCH_PORT_NUMBER: "9200"
+      BITNAMI_DEBUG: "true"
+      discovery.type: single-node
+      ES_JAVA_OPTS: ${HULY_ELASTIC_JAVA_OPTS}
+      http.cors.enabled: "true"
+      http.cors.allow-origin: https://${HULY_DOMAIN}
+    volumes:
+      - ${LAB_STACK_ROOT}/data/huly/elastic:/usr/share/elasticsearch/data
+    networks:
+      - labstack_data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 12
+
+  huly-mongodb:
+    image: ${HULY_MONGO_IMAGE}
+    container_name: huly-mongodb
+    restart: unless-stopped
+    profiles: ["calendar"]
+    volumes:
+      - ${LAB_STACK_ROOT}/data/huly/mongodb:/data/db
+    networks:
+      - labstack_data
+
+  huly-rekoni:
+    image: hardcoreeng/rekoni-service:${HULY_VERSION}
+    container_name: huly-rekoni
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      SECRET: ${HULY_SERVER_SECRET}
+    networks:
+      - labstack_data
+
+  huly-transactor:
+    image: hardcoreeng/transactor:${HULY_VERSION}
+    container_name: huly-transactor
+    restart: unless-stopped
+    depends_on:
+      huly-cockroach:
+        condition: service_healthy
+      huly-redpanda:
+        condition: service_healthy
+      huly-elastic:
+        condition: service_healthy
+      huly-minio:
+        condition: service_healthy
+    environment:
+      <<: *huly_app_env
+      SERVER_PORT: "3333"
+      DB_URL: postgres://${HULY_COCKROACH_USER}:${HULY_COCKROACH_PASSWORD}@huly-cockroach:26257/${HULY_COCKROACH_DATABASE}
+      FRONT_URL: https://${HULY_DOMAIN}
+      ACCOUNTS_URL: http://huly-account:3000
+      FULLTEXT_URL: http://huly-fulltext:4700
+      STATS_URL: http://huly-stats:4900
+      LAST_NAME_FIRST: ${HULY_LAST_NAME_FIRST}
+      QUEUE_CONFIG: huly-redpanda:9092
+      MAIL_URL: ${HULY_MAIL_URL:-}
+    networks:
+      - labstack_backend
+      - labstack_data
+
+  huly-collaborator:
+    image: hardcoreeng/collaborator:${HULY_VERSION}
+    container_name: huly-collaborator
+    restart: unless-stopped
+    depends_on:
+      huly-minio:
+        condition: service_healthy
+    environment:
+      <<: *huly_app_env
+      COLLABORATOR_PORT: "3078"
+      SECRET: ${HULY_SERVER_SECRET}
+      ACCOUNTS_URL: http://huly-account:3000
+      STATS_URL: http://huly-stats:4900
+    networks:
+      - labstack_backend
+      - labstack_data
+
+  huly-account:
+    image: hardcoreeng/account:${HULY_VERSION}
+    container_name: huly-account
+    restart: unless-stopped
+    depends_on:
+      huly-cockroach:
+        condition: service_healthy
+      huly-redpanda:
+        condition: service_healthy
+    environment:
+      <<: *huly_app_env
+      SERVER_PORT: "3000"
+      DB_URL: postgres://${HULY_COCKROACH_USER}:${HULY_COCKROACH_PASSWORD}@huly-cockroach:26257/${HULY_COCKROACH_DATABASE}
+      TRANSACTOR_URL: ws://huly-transactor:3333;wss://${HULY_DOMAIN}/_transactor
+      FRONT_URL: https://${HULY_DOMAIN}
+      STATS_URL: https://${HULY_DOMAIN}/_stats
+      MODEL_ENABLED: "*"
+      ACCOUNTS_URL: https://${HULY_DOMAIN}/_accounts
+      ACCOUNT_PORT: "3000"
+      QUEUE_CONFIG: huly-redpanda:9092
+      OPENID_CLIENT_ID: ${HULY_OIDC_CLIENT_ID}
+      OPENID_CLIENT_SECRET: ${HULY_OIDC_CLIENT_SECRET}
+      OPENID_ISSUER: https://${AUTH_DOMAIN}/application/o/huly/
+      DISABLE_SIGNUP: ${HULY_DISABLE_SIGNUP}
+      NODE_TLS_REJECT_UNAUTHORIZED: ${HULY_OIDC_TLS_REJECT_UNAUTHORIZED}
+      MAIL_URL: ${HULY_MAIL_URL:-}
+    extra_hosts:
+      - "${AUTH_DOMAIN}:host-gateway"
+    networks:
+      - labstack_backend
+      - labstack_data
+
+  huly-workspace:
+    image: hardcoreeng/workspace:${HULY_VERSION}
+    container_name: huly-workspace
+    restart: unless-stopped
+    depends_on:
+      huly-cockroach:
+        condition: service_healthy
+      huly-redpanda:
+        condition: service_healthy
+    environment:
+      <<: *huly_app_env
+      DB_URL: postgres://${HULY_COCKROACH_USER}:${HULY_COCKROACH_PASSWORD}@huly-cockroach:26257/${HULY_COCKROACH_DATABASE}
+      TRANSACTOR_URL: ws://huly-transactor:3333;wss://${HULY_DOMAIN}/_transactor
+      MODEL_ENABLED: "*"
+      ACCOUNTS_URL: http://huly-account:3000
+      STATS_URL: http://huly-stats:4900
+      QUEUE_CONFIG: huly-redpanda:9092
+      ACCOUNTS_DB_URL: postgres://${HULY_COCKROACH_USER}:${HULY_COCKROACH_PASSWORD}@huly-cockroach:26257/${HULY_COCKROACH_DATABASE}
+    networks:
+      - labstack_data
+
+  huly-front:
+    image: hardcoreeng/front:${HULY_VERSION}
+    container_name: huly-front
+    restart: unless-stopped
+    depends_on:
+      - huly-account
+      - huly-transactor
+      - huly-collaborator
+      - huly-fulltext
+    environment:
+      <<: *huly_app_env
+      SERVER_PORT: "8080"
+      LOVE_ENDPOINT: https://${HULY_DOMAIN}/_love
+      ACCOUNTS_URL: https://${HULY_DOMAIN}/_accounts
+      ACCOUNTS_URL_INTERNAL: http://huly-account:3000
+      REKONI_URL: https://${HULY_DOMAIN}/_rekoni
+      CALENDAR_URL: https://${HULY_DOMAIN}/_calendar
+      GMAIL_URL: https://${HULY_DOMAIN}/_gmail
+      TELEGRAM_URL: https://${HULY_DOMAIN}/_telegram
+      STATS_URL: https://${HULY_DOMAIN}/_stats
+      UPLOAD_URL: /files
+      ELASTIC_URL: http://huly-elastic:9200
+      COLLABORATOR_URL: wss://${HULY_DOMAIN}/_collaborator
+      TITLE: ${HULY_TITLE}
+      DEFAULT_LANGUAGE: ${HULY_DEFAULT_LANGUAGE}
+      LAST_NAME_FIRST: ${HULY_LAST_NAME_FIRST}
+      DESKTOP_UPDATES_CHANNEL: ${HULY_DESKTOP_CHANNEL}
+      DISABLED_FEATURES: ${HULY_DISABLED_FEATURES}
+      DISABLE_SIGNUP: ${HULY_DISABLE_SIGNUP}
+      GITHUB_URL: https://${HULY_DOMAIN}/_github
+      GITHUB_APP: ${HULY_GITHUB_APP_SLUG}
+      GITHUB_CLIENTID: ${HULY_GITHUB_CLIENT_ID}
+    networks:
+      - labstack_backend
+      - labstack_data
+
+  huly-fulltext:
+    image: hardcoreeng/fulltext:${HULY_VERSION}
+    container_name: huly-fulltext
+    restart: unless-stopped
+    depends_on:
+      huly-cockroach:
+        condition: service_healthy
+      huly-elastic:
+        condition: service_healthy
+      huly-redpanda:
+        condition: service_healthy
+    environment:
+      <<: *huly_app_env
+      DB_URL: postgres://${HULY_COCKROACH_USER}:${HULY_COCKROACH_PASSWORD}@huly-cockroach:26257/${HULY_COCKROACH_DATABASE}
+      FULLTEXT_DB_URL: http://huly-elastic:9200
+      ELASTIC_INDEX_NAME: huly_storage_index
+      REKONI_URL: http://huly-rekoni:4004
+      ACCOUNTS_URL: http://huly-account:3000
+      STATS_URL: http://huly-stats:4900
+      QUEUE_CONFIG: huly-redpanda:9092
+    networks:
+      - labstack_data
+
+  huly-stats:
+    image: hardcoreeng/stats:${HULY_VERSION}
+    container_name: huly-stats
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PORT: "4900"
+      SERVER_SECRET: ${HULY_SERVER_SECRET}
+    networks:
+      - labstack_backend
+      - labstack_data
+
+  huly-kvs:
+    image: hardcoreeng/hulykvs:${HULY_VERSION}
+    container_name: huly-kvs
+    restart: unless-stopped
+    depends_on:
+      huly-cockroach:
+        condition: service_healthy
+    environment:
+      TZ: ${TZ}
+      HULY_DB_CONNECTION: postgres://${HULY_COCKROACH_USER}:${HULY_COCKROACH_PASSWORD}@huly-cockroach:26257/${HULY_COCKROACH_DATABASE}
+      HULY_TOKEN_SECRET: ${HULY_SERVER_SECRET}
+    networks:
+      - labstack_data
+
+  huly-github:
+    image: hardcoreeng/github:${HULY_VERSION}
+    container_name: huly-github
+    restart: unless-stopped
+    profiles: ["github"]
+    depends_on:
+      - huly-account
+      - huly-collaborator
+    environment:
+      <<: *huly_app_env
+      PORT: "3500"
+      APP_ID: ${HULY_GITHUB_APP_ID}
+      CLIENT_ID: ${HULY_GITHUB_CLIENT_ID}
+      CLIENT_SECRET: ${HULY_GITHUB_CLIENT_SECRET}
+      PRIVATE_KEY: ${HULY_GITHUB_PRIVATE_KEY}
+      COLLABORATOR_URL: wss://${HULY_DOMAIN}/_collaborator
+      WEBHOOK_SECRET: ${HULY_GITHUB_WEBHOOK_SECRET}
+      FRONT_URL: https://${HULY_DOMAIN}
+      BOT_NAME: ${HULY_GITHUB_APP_SLUG}[bot]
+      ACCOUNTS_URL: http://huly-account:3000
+      STATS_URL: http://huly-stats:4900
+      QUEUE_CONFIG: huly-redpanda:9092
+      SERVICE_ID: github-service
+    networks:
+      - labstack_backend
+      - labstack_data
+
+  huly-calendar:
+    image: hardcoreeng/calendar:${HULY_VERSION}
+    container_name: huly-calendar
+    restart: unless-stopped
+    profiles: ["calendar"]
+    depends_on:
+      - huly-account
+      - huly-kvs
+      - huly-mongodb
+    environment:
+      TZ: ${TZ}
+      PORT: "8095"
+      MONGO_URI: mongodb://huly-mongodb:27017
+      MONGO_DB: "%calendar-service"
+      Credentials: ${HULY_GOOGLE_CALENDAR_CREDENTIALS}
+      WATCH_URL: https://${HULY_DOMAIN}/_calendar/push
+      ACCOUNTS_URL: http://huly-account:3000
+      STATS_URL: http://huly-stats:4900
+      SECRET: ${HULY_SERVER_SECRET}
+      KVS_URL: http://huly-kvs:8094
+    networks:
+      - labstack_backend
+      - labstack_data
+
+networks:
+  labstack_backend:
+    external: true
+    name: ${LABSTACK_BACKEND_NETWORK}
+  labstack_data:
+    external: true
+    name: ${LABSTACK_DATA_NETWORK}

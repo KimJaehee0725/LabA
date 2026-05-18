@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Architecture - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>2. 목표 아키텍처</strong>
+            <span>domain, service, data, trust boundary</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="context.html">Context</a>
+            <a href="roadmap.html">Roadmap</a>
+            <a href="../reference/validation.html">Validation</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Architecture</span>
+        </div>
+
+        <section class="hero">
+          <h1>Huly를 중심으로 두고 주변 서비스를 얇게 붙인다</h1>
+          <p>
+            Huly가 연구실 collaboration surface를 맡고, Authentik은 identity,
+            MinIO는 object storage, HF-like UI는 모델/데이터셋 catalog,
+            Overleaf CE는 논문 편집을 맡는다. Nginx는 외부 공개면과 TLS 종단을 단일화한다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Logical topology</h2>
+          <pre><code>School DNS + firewall
+  -> Nginx reverse proxy with school SSL
+      -> Authentik SSO/OIDC
+      -> Huly workspace
+      -> MinIO Console and S3 API
+      -> HF-like UI frontend/backend
+      -> Overleaf CE
+      -> Portal and optional status dashboard
+
+Persistent data
+  -> /opt/lab-stack service configs and app volumes
+  -> /mnt/hdd/minio for object data
+  -> /mnt/backup/lab for daily and weekly backups</code></pre>
+        </section>
+
+        <section class="section">
+          <h2>Domain map</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Host</th>
+                  <th>Service</th>
+                  <th>Internal target</th>
+                  <th>Auth mode</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>`lab.example.ac.kr`</td>
+                  <td>Portal</td>
+                  <td>static files or HF UI home</td>
+                  <td>public landing, links only</td>
+                  <td>실제 학교 도메인으로 치환</td>
+                </tr>
+                <tr>
+                  <td>`auth.lab.example.ac.kr`</td>
+                  <td>Authentik</td>
+                  <td>`127.0.0.1:9000`</td>
+                  <td>local Authentik session</td>
+                  <td>2FA, invitation, notification</td>
+                </tr>
+                <tr>
+                  <td>`huly.lab.example.ac.kr`</td>
+                  <td>Huly</td>
+                  <td>`huly-front:8080` plus path routes to Huly backend services</td>
+                  <td>app-native OIDC first, explicit forward-auth fallback only if blocked</td>
+                  <td>`/_transactor` and `/_collaborator` require WebSocket proxying</td>
+                </tr>
+                <tr>
+                  <td>`files.lab.example.ac.kr`</td>
+                  <td>MinIO Console</td>
+                  <td>`127.0.0.1:9001`</td>
+                  <td>Authentik OIDC</td>
+                  <td>관리/탐색 UI</td>
+                </tr>
+                <tr>
+                  <td>`s3.lab.example.ac.kr`</td>
+                  <td>MinIO API</td>
+                  <td>`127.0.0.1:9000`</td>
+                  <td>S3 credentials and policies</td>
+                  <td>large upload, SDK endpoint</td>
+                </tr>
+                <tr>
+                  <td>`hf.lab.example.ac.kr`</td>
+                  <td>HF-like UI</td>
+                  <td>`127.0.0.1:3000` + `127.0.0.1:8000`</td>
+                  <td>Authentik OIDC</td>
+                  <td>model/dataset catalog</td>
+                </tr>
+                <tr>
+                  <td>`overleaf.lab.example.ac.kr`</td>
+                  <td>Overleaf CE</td>
+                  <td>`127.0.0.1:8090`</td>
+                  <td>separate account for MVP</td>
+                  <td>CE SSO는 후순위</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Repo and server layout</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3>Repo target</h3>
+              <pre><code>deploy/
+  compose/
+    edge/
+    authentik/
+    huly/
+    minio/
+    hf-ui/
+    overleaf/
+    ops/
+  env/
+  nginx/
+  scripts/
+  runbooks/
+docs/
+  huly-workspace-mvp/</code></pre>
+              <p>
+                기존 repo의 module-scoped 패턴은 유지하되, 실제 구현은 Huly 중심 module부터
+                새로 정리한다.
+              </p>
+            </article>
+            <article class="panel">
+              <h3>Server target</h3>
+              <pre><code>/opt/lab-stack/
+  certs/
+  nginx/
+  authentik/
+  huly/
+  minio/
+  hf-ui/
+  overleaf/
+  portal/
+  backups/
+  logs/
+
+/mnt/hdd/minio/
+/mnt/backup/lab/</code></pre>
+              <p>
+                `/srv/lab-platform`은 이전 실험 root로 남기지 않는다. 새 배포는
+                `/opt/lab-stack`에 독립적으로 구성한다.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Trust boundaries</h2>
+          <div class="grid three">
+            <article class="panel">
+              <h3>Public edge</h3>
+              <ul>
+                <li>TCP 80 and 443 only.</li>
+                <li>HTTP to HTTPS redirect.</li>
+                <li>School wildcard certificate.</li>
+                <li>Rate limits for auth and API paths.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Authenticated apps</h3>
+              <ul>
+                <li>Authentik groups: `lab-admins`, `lab-members`, `lab-guests`.</li>
+                <li>2FA required for every account.</li>
+                <li>Invitation-only enrollment.</li>
+                <li>Emergency local admin per service.</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>Storage</h3>
+              <ul>
+                <li>Private by default.</li>
+                <li>Public bucket is explicit and read-only.</li>
+                <li>Large model upload bypasses app memory through streaming or presigned URLs.</li>
+                <li>Backups are separate from primary HDD.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Data ownership</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Canonical owner</th>
+                  <th>Backup method</th>
+                  <th>Restore priority</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Users, groups, OIDC clients</td>
+                  <td>Authentik PostgreSQL</td>
+                  <td>`pg_dump` + config export</td>
+                  <td>P0</td>
+                </tr>
+                <tr>
+                  <td>Wiki, chat, issues, workspace files</td>
+                  <td>Huly backing stores</td>
+                  <td>official dump path for Mongo/Postgres/MinIO/Elastic depending on deployed version</td>
+                  <td>P0</td>
+                </tr>
+                <tr>
+                  <td>Model weights and datasets</td>
+                  <td>MinIO buckets</td>
+                  <td>`mc mirror` or filesystem sync from `/mnt/hdd/minio`</td>
+                  <td>P0</td>
+                </tr>
+                <tr>
+                  <td>Model/dataset metadata</td>
+                  <td>HF-like UI PostgreSQL</td>
+                  <td>`pg_dump`</td>
+                  <td>P1</td>
+                </tr>
+                <tr>
+                  <td>LaTeX projects</td>
+                  <td>Overleaf volumes and MongoDB</td>
+                  <td>toolkit backup + tar</td>
+                  <td>P1</td>
+                </tr>
+                <tr>
+                  <td>Nginx, cert metadata, runbooks</td>
+                  <td>Repo + server config</td>
+                  <td>tar, repo history, encrypted key backup</td>
+                  <td>P1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Related: <a href="../workstreams/edge-auth.html">Edge/Auth</a>,
+        <a href="../workstreams/huly.html">Huly workstream</a>,
+        <a href="../workstreams/storage-hf.html">Storage/HF workstream</a>.
+      </footer>
+    </div>
+  </body>
+</html>

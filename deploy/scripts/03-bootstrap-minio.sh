@@ -47,7 +47,7 @@ ensure_policy() {
   fi
 }
 
-for bucket in "${MINIO_BUCKET_PLANE:-plane-uploads}" "${MINIO_BUCKET_GITEA_LFS:-gitea-lfs}" "${MINIO_BUCKET_MLFLOW:-mlflow-artifacts}" "${MINIO_BUCKET_BACKUPS:-backups}"; do
+for bucket in "${MINIO_BUCKET_PLANE:-plane-uploads}" "${MINIO_BUCKET_GITEA_LFS:-gitea-lfs}" "${MINIO_BUCKET_MLFLOW:-lab-artifacts}" "${MINIO_BUCKET_BACKUPS:-backups}"; do
   run_mc mb --ignore-existing "$MINIO_ALIAS/$bucket"
 done
 

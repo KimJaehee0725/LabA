@@ -1,39 +1,39 @@
 version: 1
 metadata:
-  name: lab-application-skeletons
+  name: lab-huly-mvp-application-skeletons
 entries:
   - model: authentik_core.application
     identifiers:
-      slug: gitea
+      slug: huly
     attrs:
-      name: Gitea
-      slug: gitea
-      meta_launch_url: https://hub.lab.snu.ac.kr
-  - model: authentik_core.application
-    identifiers:
-      slug: plane
-    attrs:
-      name: Plane
-      slug: plane
-      meta_launch_url: https://lab.snu.ac.kr
-  - model: authentik_core.application
-    identifiers:
-      slug: nextcloud
-    attrs:
-      name: Nextcloud
-      slug: nextcloud
-      meta_launch_url: https://files.lab.snu.ac.kr
+      name: Huly
+      slug: huly
+      meta_launch_url: https://huly.lab.example.ac.kr
   - model: authentik_core.application
     identifiers:
       slug: minio
     attrs:
       name: MinIO Console
       slug: minio
-      meta_launch_url: https://storage.lab.snu.ac.kr
+      meta_launch_url: https://files.lab.example.ac.kr
   - model: authentik_core.application
     identifiers:
-      slug: mlflow
+      slug: hf-ui
     attrs:
-      name: MLflow
-      slug: mlflow
-      meta_launch_url: https://mlflow.lab.snu.ac.kr
+      name: HF UI
+      slug: hf-ui
+      meta_launch_url: https://hf.lab.example.ac.kr
+  - model: authentik_core.application
+    identifiers:
+      slug: portal
+    attrs:
+      name: Lab Portal
+      slug: portal
+      meta_launch_url: https://lab.example.ac.kr
+  - model: authentik_core.application
+    identifiers:
+      slug: status
+    attrs:
+      name: Lab Status
+      slug: status
+      meta_launch_url: https://lab.example.ac.kr/status

@@ -1,9 +1,13 @@
-ARG OVERLEAF_IMAGE=sharelatex/sharelatex:5.0.8
+ARG OVERLEAF_IMAGE=sharelatex/sharelatex:5.5.8
 FROM ${OVERLEAF_IMAGE}
 
 USER root
 
-RUN tlmgr update --self || true; \
-    tlmgr install latexmk biber biblatex chemfig pgfplots tikz-cd kotex-utf kotex-utils kotex-plain hcr-lvt unfonts-core || true
+ARG TEXLIVE_EXTRA_PACKAGES="latexmk biber biblatex chemfig pgfplots tikz-cd fontspec kotex-utf kotex-utils kotex-plain xetexko luatexko unfonts-core"
+ARG TEXLIVE_REPOSITORY="https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2025/tlnet-final"
 
-USER sharelatex
+RUN if command -v tlmgr >/dev/null 2>&1; then \
+      tlmgr option repository "${TEXLIVE_REPOSITORY}"; \
+      tlmgr update --self; \
+      tlmgr install ${TEXLIVE_EXTRA_PACKAGES}; \
+    fi

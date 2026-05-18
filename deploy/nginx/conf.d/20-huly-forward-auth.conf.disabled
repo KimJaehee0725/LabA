@@ -1,15 +1,19 @@
+# Disabled fallback route for Huly when app-native OIDC is blocked.
+# Do not enable this file together with 20-huly.conf.
+
 server {
     listen 443 ssl;
-    server_name mlflow.lab.snu.ac.kr;
+    server_name huly.lab.example.ac.kr;
 
     include /etc/nginx/snippets/ssl-params.conf;
     include /etc/nginx/snippets/security-headers.conf;
-    include /etc/nginx/snippets/upload-large.conf;
 
-    client_max_body_size 50G;
+    client_max_body_size 1G;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
 
     location /outpost.goauthentik.io {
-        set $authentik_outpost http://authentik-outpost-mlflow:9000;
+        set $authentik_outpost http://authentik-server:9000;
         include /etc/nginx/snippets/proxy-params.conf;
         proxy_pass $authentik_outpost;
     }
@@ -25,8 +29,9 @@ server {
         auth_request_set $auth_cookie $upstream_http_set_cookie;
         error_page 401 = @goauthentik_proxy_signin;
 
-        set $mlflow_upstream http://mlflow:5000;
+        set $huly_front http://huly-front:8080;
         include /etc/nginx/snippets/proxy-params.conf;
-        proxy_pass $mlflow_upstream;
+        include /etc/nginx/snippets/websocket.conf;
+        proxy_pass $huly_front;
     }
 }

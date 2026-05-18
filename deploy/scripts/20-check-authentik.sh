@@ -7,18 +7,29 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 load_envs "$ENV_DIR/00-global.env" "$ENV_DIR/10-core.env" "$ENV_DIR/20-authentik.env"
 
-AUTH_URL="${AUTH_URL:-https://auth.lab.snu.ac.kr}"
-COMPOSE_FILE="${LAB_PLATFORM_ROOT}/compose/authentik/docker-compose.yml"
+ROOT_DOMAIN="${ROOT_DOMAIN:-lab.example.ac.kr}"
+AUTH_DOMAIN="${AUTH_DOMAIN:-auth.${ROOT_DOMAIN}}"
+AUTH_URL="${AUTH_URL:-https://${AUTH_DOMAIN}}"
+AUTH_URL="${AUTH_URL%/}"
+COMPOSE_FILE="${COMPOSE_FILE:-${LAB_STACK_ROOT}/compose/authentik/docker-compose.yml}"
 GROUP_CHECK_RETRIES="${AUTHENTIK_GROUP_CHECK_RETRIES:-40}"
 GROUP_CHECK_SLEEP="${AUTHENTIK_GROUP_CHECK_SLEEP:-3}"
-curl_args=(-ksSfL)
+curl_resolve_args=()
 if [[ "${CURL_RESOLVE:-}" != "" ]]; then
-  curl_args+=(--resolve "$CURL_RESOLVE")
+  IFS=',' read -r -a curl_resolve_values <<<"$CURL_RESOLVE"
+  for curl_resolve in "${curl_resolve_values[@]}"; do
+    curl_resolve="${curl_resolve//[[:space:]]/}"
+    [[ -n "$curl_resolve" ]] || continue
+    curl_resolve_args+=(--resolve "$curl_resolve")
+  done
+elif [[ "${STAGING_IP:-}" != "" ]]; then
+  curl_resolve_args+=(--resolve "${AUTH_DOMAIN}:443:${STAGING_IP}")
 fi
-curl_probe_args=(-ksS)
-if [[ "${CURL_RESOLVE:-}" != "" ]]; then
-  curl_probe_args+=(--resolve "$CURL_RESOLVE")
-fi
+curl_args=(-ksSfL "${curl_resolve_args[@]}")
+curl_probe_args=(-ksS "${curl_resolve_args[@]}")
+
+require_cmd curl
+require_cmd docker
 
 docker compose \
   --env-file "$ENV_DIR/00-global.env" \

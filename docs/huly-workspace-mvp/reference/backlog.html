@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backlog - Huly Workspace MVP</title>
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <div class="site">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <strong>9. 구현 Backlog</strong>
+            <span>epics, tickets, acceptance criteria</span>
+          </div>
+          <nav class="topnav" aria-label="Primary navigation">
+            <a href="../index.html">Home</a>
+            <a href="../layers/roadmap.html">Roadmap</a>
+            <a href="phase0-readiness.html">Phase 0</a>
+            <a href="decisions-risks.html">Decisions/Risks</a>
+            <a href="validation.html">Validation</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <div class="breadcrumbs">
+          <a href="../index.html">Home</a>
+          <span>/</span>
+          <span>Reference</span>
+          <span>/</span>
+          <span>Backlog</span>
+        </div>
+
+        <section class="hero">
+          <h1>구현은 gate별로 작게 끊는다</h1>
+          <p>
+            각 ticket은 repo 산출물, server 산출물, 검증 명령 또는 수동 검증 evidence를
+            남겨야 닫는다. secret, 실제 인증서 private key, token, client secret은
+            어떤 ticket에서도 commit 대상이 아니다.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>Phase 0 quick links</h2>
+          <div class="grid two">
+            <article class="panel">
+              <h3><a href="phase0-readiness.html">Readiness checklist</a></h3>
+              <p>
+                학교 도메인, DNS, SSL, 방화벽, SMTP, 서버 접근, 디스크, 보안,
+                운영 연락망을 Phase 1 전에 확인한다.
+              </p>
+            </article>
+            <article class="panel">
+              <h3><a href="phase0-templates.html">Request and evidence templates</a></h3>
+              <p>
+                공개 가능한 신청/검증 양식만 repo에 두고 실제 값은 private readiness record에 남긴다.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Backlog table</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Epic</th>
+                  <th>작업</th>
+                  <th>Acceptance criteria</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>EXT-01</td>
+                  <td>External readiness</td>
+                  <td><a href="phase0-readiness.html#external-readiness">학교 도메인, wildcard SSL, firewall 80/443, SMTP 신청 상태</a>를 추적한다.</td>
+                  <td>실제 값은 private record에 있고 repo에는 placeholder와 상태만 남음</td>
+                </tr>
+                <tr>
+                  <td>HOST-01</td>
+                  <td>Host skeleton</td>
+                  <td><a href="phase0-readiness.html#server-readiness">`/opt/lab-stack` 디렉토리, 권한, Docker compose plugin, fail2ban, ufw 기준</a>을 repo + dry-run 범위로 문서화한다.</td>
+                  <td>dry-run evidence, directory plan, SSH key-only 정책 확인; live service start 없음</td>
+                </tr>
+                <tr>
+                  <td>HOST-02</td>
+                  <td>Host skeleton</td>
+                  <td>Repo의 Huly branch deployment layout을 정리한다.</td>
+                  <td>`deploy/compose`, `deploy/env`, `deploy/nginx`, `deploy/scripts`, `deploy/runbooks` 경로가 새 scope와 맞음</td>
+                </tr>
+                <tr>
+                  <td>HOST-03</td>
+                  <td>Host skeleton</td>
+                  <td>활성 Docker network 이름을 `labstack_public`, `labstack_backend`, `labstack_data`로 고정하고 dry-run 명령/evidence를 남긴다.</td>
+                  <td>Phase 1 문서와 env notes가 세 네트워크만 active로 표시함</td>
+                </tr>
+                <tr>
+                  <td>HOST-04</td>
+                  <td>Host skeleton</td>
+                  <td>Plane, Gitea, Nextcloud, MLflow를 active Phase 1 order에서 제외하고 historical reference로 표시한다.</td>
+                  <td>Phase 1 backlog와 roadmap에 legacy services가 실행 대상이 아님이 명시됨</td>
+                </tr>
+                <tr>
+                  <td>EDGE-01</td>
+                  <td>Edge/Auth</td>
+                  <td><a href="../../../deploy/runbooks/phase2-edge-auth.md">Phase 2 staging-first runbook</a> 기준으로 Nginx school SSL, redirect, security headers, Authentik host를 올린다.</td>
+                  <td>`nginx -t`, HTTP to HTTPS redirect, public ports 80/443 only, staging report 기록</td>
+                </tr>
+                <tr>
+                  <td>AUTH-01</td>
+                  <td>Edge/Auth</td>
+                  <td>Authentik compose와 server-only env를 staging에서 검증한다.</td>
+                  <td>admin initial setup, admin 2FA, SMTP test, root config endpoint 통과</td>
+                </tr>
+                <tr>
+                  <td>AUTH-02</td>
+                  <td>Edge/Auth</td>
+                  <td>groups, 2FA, invitation-only enrollment, 가입 알림을 구성하고 report에 evidence를 남긴다.</td>
+                  <td>초대 없는 가입 차단, 초대 가입 성공, 관리자 메일 수신</td>
+                </tr>
+                <tr>
+                  <td>AUTH-03</td>
+                  <td>Edge/Auth</td>
+                  <td>Huly, MinIO, HF UI OIDC clients와 forward-auth fallback 기준을 준비한다.</td>
+                  <td>client metadata 문서화, secrets는 server env only</td>
+                </tr>
+                <tr>
+                  <td>HULY-01</td>
+                  <td>Huly</td>
+                  <td>Huly self-host 설치 방식과 compose/runtime layout을 확정한다.</td>
+                  <td>`30-huly.env`, Huly compose, Nginx route, Phase 3 preflight가 렌더링됨</td>
+                </tr>
+                <tr>
+                  <td>HULY-02</td>
+                  <td>Huly</td>
+                  <td>workspace, channels, projects, pilot content를 seed한다.</td>
+                  <td>pilot user 2명으로 문서/채팅/task/calendar flow 성공</td>
+                </tr>
+                <tr>
+                  <td>HULY-03</td>
+                  <td>Huly</td>
+                  <td>OIDC 또는 forward-auth를 적용한다.</td>
+                  <td>`/_accounts/auth/openid/callback` OIDC login이 우선 통과하고, fallback은 명시적으로만 사용</td>
+                </tr>
+                <tr>
+                  <td>HULY-04</td>
+                  <td>Huly</td>
+                  <td>GitHub App과 repo sync를 검증한다.</td>
+                  <td>Huly issue 생성이 GitHub에 반영되고 GitHub 변경이 Huly에 반영</td>
+                </tr>
+                <tr>
+                  <td>HULY-05</td>
+                  <td>Huly</td>
+                  <td>Gantt/timeline 동작과 Notion migration sample을 검증한다.</td>
+                  <td>결과가 decision log에 남고 fallback 필요 여부가 결정됨</td>
+                </tr>
+                <tr>
+                  <td>HULY-06</td>
+                  <td>Huly</td>
+                  <td>Google Calendar 연동을 Phase 3 full-pass 범위로 검증한다.</td>
+                  <td>`/_calendar/signin/code` OAuth와 event create/update sync evidence가 report에 남음</td>
+                </tr>
+                <tr>
+                  <td>MINIO-01</td>
+                  <td>Storage/HF</td>
+                  <td>MinIO console/API split, buckets, policies, OIDC console을 구성한다.</td>
+                  <td>`mc` upload/download, console SSO, versioning 확인</td>
+                </tr>
+                <tr>
+                  <td>HF-01</td>
+                  <td>Storage/HF</td>
+                  <td>HF-like UI scaffold를 만든다: Next.js frontend, FastAPI backend, PostgreSQL metadata.</td>
+                  <td>health endpoint, OIDC login, DB migration 통과</td>
+                </tr>
+                <tr>
+                  <td>HF-02</td>
+                  <td>Storage/HF</td>
+                  <td>model/dataset list, detail, README render, file tree를 구현한다.</td>
+                  <td>sample object prefix가 화면에 표시됨</td>
+                </tr>
+                <tr>
+                  <td>HF-03</td>
+                  <td>Storage/HF</td>
+                  <td>presigned download와 visibility check를 구현한다.</td>
+                  <td>권한 없는 사용자는 private 파일 URL 발급 불가</td>
+                </tr>
+                <tr>
+                  <td>OVL-01</td>
+                  <td>Overleaf</td>
+                  <td>Overleaf Toolkit 배포와 Nginx route를 구성한다.</td>
+                  <td>login page HTTPS 접속, public registration off</td>
+                </tr>
+                <tr>
+                  <td>OVL-02</td>
+                  <td>Overleaf</td>
+                  <td>admin/member 계정과 학회 템플릿을 준비한다.</td>
+                  <td>2인 동시 편집, PDF compile, template compile 성공</td>
+                </tr>
+                <tr>
+                  <td>OPS-01</td>
+                  <td>Operations</td>
+                  <td>backup scripts와 restore rehearsal runbook을 만든다.</td>
+                  <td>daily backup 1회, restore drill 1회 기록</td>
+                </tr>
+                <tr>
+                  <td>OPS-02</td>
+                  <td>Operations</td>
+                  <td>Uptime Kuma, disk alerts, cert expiry, security summary를 구성한다.</td>
+                  <td>의도적 장애에서 알림 수신</td>
+                </tr>
+                <tr>
+                  <td>OPS-03</td>
+                  <td>Operations</td>
+                  <td>Portal과 onboarding guide를 만든다.</td>
+                  <td>신규 멤버 1명이 guide만 보고 첫 로그인과 Huly 접근 성공</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Ticket Definition of Done</h2>
+          <ul>
+            <li>변경 파일이 scope에 맞고 unrelated v0.3/v0.4 방향을 되살리지 않는다.</li>
+            <li>real secret, private key, token, generated client secret이 repo에 없다.</li>
+            <li>Phase 1 Host Skeleton ticket은 repo + dry-run evidence만 요구하며 runtime smoke는 이후 phase에서 수행한다.</li>
+            <li>Phase 2 Edge/Auth ticket은 `/opt/lab-stack`, `labstack_*`, public ports 80/443, invitation-only Authentik을 staging에서 검증한다.</li>
+            <li>Phase 3 Huly ticket은 core smoke와 GitHub/Calendar external credential smoke를 분리해 pass 또는 conditional-pass를 명확히 기록한다.</li>
+            <li>정적 검증 또는 해당 phase에 맞는 runtime smoke evidence가 있다.</li>
+            <li>운영자가 재현할 명령과 rollback/stop 절차가 runbook 또는 ticket에 있다.</li>
+            <li>다음 ticket이 의존하는 endpoint, domain, env key가 명확하다.</li>
+          </ul>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Related: <a href="validation.html">validation gates</a>.
+      </footer>
+    </div>
+  </body>
+</html>

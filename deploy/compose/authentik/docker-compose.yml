@@ -28,15 +28,15 @@ services:
       AUTHENTIK_EMAIL__USE_TLS: ${AUTHENTIK_EMAIL__USE_TLS}
       AUTHENTIK_EMAIL__FROM: ${AUTHENTIK_EMAIL__FROM}
     volumes:
-      - ${LAB_PLATFORM_ROOT}/data/authentik/media:/media
-      - ${LAB_PLATFORM_ROOT}/data/authentik/custom-templates:/templates
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/10-groups.yaml:/blueprints/10-groups.yaml:ro
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/20-oauth-scopes.yaml:/blueprints/20-oauth-scopes.yaml:ro
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/30-applications.yaml:/blueprints/30-applications.yaml:ro
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/40-policies.yaml:/blueprints/40-policies.yaml:ro
+      - ${LAB_STACK_ROOT}/data/authentik/media:/media
+      - ${LAB_STACK_ROOT}/data/authentik/custom-templates:/templates
+      - ${LAB_STACK_ROOT}/authentik/blueprints/10-groups.yaml:/blueprints/10-groups.yaml:ro
+      - ${LAB_STACK_ROOT}/authentik/blueprints/20-oauth-scopes.yaml:/blueprints/20-oauth-scopes.yaml:ro
+      - ${LAB_STACK_ROOT}/authentik/blueprints/30-applications.yaml:/blueprints/30-applications.yaml:ro
+      - ${LAB_STACK_ROOT}/authentik/blueprints/40-policies.yaml:/blueprints/40-policies.yaml:ro
     networks:
-      - lab_backend
-      - lab_data
+      - labstack_backend
+      - labstack_data
 
   authentik-worker:
     image: ${AUTHENTIK_IMAGE}
@@ -62,18 +62,20 @@ services:
       AUTHENTIK_EMAIL__USE_TLS: ${AUTHENTIK_EMAIL__USE_TLS}
       AUTHENTIK_EMAIL__FROM: ${AUTHENTIK_EMAIL__FROM}
     volumes:
-      - ${LAB_PLATFORM_ROOT}/data/authentik/media:/media
-      - ${LAB_PLATFORM_ROOT}/data/authentik/certs:/certs
-      - ${LAB_PLATFORM_ROOT}/data/authentik/custom-templates:/templates
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/10-groups.yaml:/blueprints/10-groups.yaml:ro
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/20-oauth-scopes.yaml:/blueprints/20-oauth-scopes.yaml:ro
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/30-applications.yaml:/blueprints/30-applications.yaml:ro
-      - ${LAB_PLATFORM_ROOT}/authentik/blueprints/40-policies.yaml:/blueprints/40-policies.yaml:ro
+      - ${LAB_STACK_ROOT}/data/authentik/media:/media
+      - ${LAB_STACK_ROOT}/data/authentik/certs:/certs
+      - ${LAB_STACK_ROOT}/data/authentik/custom-templates:/templates
+      - ${LAB_STACK_ROOT}/authentik/blueprints/10-groups.yaml:/blueprints/10-groups.yaml:ro
+      - ${LAB_STACK_ROOT}/authentik/blueprints/20-oauth-scopes.yaml:/blueprints/20-oauth-scopes.yaml:ro
+      - ${LAB_STACK_ROOT}/authentik/blueprints/30-applications.yaml:/blueprints/30-applications.yaml:ro
+      - ${LAB_STACK_ROOT}/authentik/blueprints/40-policies.yaml:/blueprints/40-policies.yaml:ro
     networks:
-      - lab_data
+      - labstack_data
 
 networks:
-  lab_backend:
+  labstack_backend:
     external: true
-  lab_data:
+    name: ${LABSTACK_BACKEND_NETWORK}
+  labstack_data:
     external: true
+    name: ${LABSTACK_DATA_NETWORK}

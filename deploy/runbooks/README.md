@@ -1,28 +1,81 @@
 # Runbook Index
 
-Run modules in this order:
+## Active Huly Workspace MVP Runbooks
 
-1. `v0.2-runtime-gate-1.md`
-2. `core.md`
-3. `edge-nginx.md`
-4. `authentik.md`
-5. `gitea.md`
-6. `plane.md`
-7. `mlflow.md`
-8. `nextcloud-collabora.md`
-9. `overleaf.md`
-10. `backup-restore.md`
-11. `v0.3-smoke.md`
-12. `demo-data.md`
+Run the active Huly workspace MVP phases in this order:
 
-Common preflight:
+1. `phase1-host-skeleton.md`
+2. `phase2-edge-auth.md`
+3. `phase3-huly.md`
+4. `phase4-minio-storage.md`
+5. `phase5-hf-ui.md`
+6. `overleaf.md` when Phase 6 Overleaf is enabled
+7. `phase7-operational-baseline.md` for internal backup, restore, and ops gate
+8. `mlflow.md` when Phase 8 MLflow tracking is enabled
+9. `full-pass-readiness.md` and the supporting full-pass checklists
+
+Common Phase 1 dry-run:
 
 ```bash
-cd /srv/lab-platform
-sudo ./scripts/00-create-directories.sh
-sudo ./scripts/01-create-networks.sh
+DRY_RUN=true LAB_STACK_ROOT=/opt/lab-stack deploy/scripts/00-create-directories.sh
+DRY_RUN=true deploy/scripts/01-create-networks.sh
+DRY_RUN=true deploy/scripts/09-check-host-readiness.sh
 ```
 
-After `v0.2-runtime-gate-1.md` passes, keep core, edge, and Authentik running. App waves build on those services.
+Phase 1 does not start live services and does not create real secrets.
 
-Rollback rule: stop the affected module first, keep database/object storage intact, preserve logs, and do not rotate or overwrite secrets during incident triage.
+Phase 2 is staging-first and may start only the minimal Edge/Auth surface after
+the root, network, domain, certificate, SMTP, and secret preflight passes. Record
+staging evidence in `../reports/phase2-edge-auth-staging.md`.
+
+Phase 3 starts Huly after Phase 2 OIDC metadata exists. For staging without real
+external credentials, run the Phase 3 preflight with explicit relaxed flags and
+record the result in `../reports/phase3-huly-pilot.md`.
+
+Phase 4 starts the shared core MinIO profile, bootstraps lab storage buckets and
+policies, checks public/private S3 behavior, and records backup smoke evidence in
+`../reports/phase4-minio-storage.md`.
+
+Phase 5 starts the HF-like UI MVP on top of the Phase 4 buckets, validates a
+model/dataset catalog, file tree, and download flow, and records evidence in
+`../reports/phase5-hf-ui.md`.
+
+Phase 6 starts Overleaf CE as a separate manual-account paper collaboration
+module, validates Mongo replica set, Redis auth, LaTeX/Korean package presence,
+public edge routing, and records evidence in `../reports/phase6-overleaf.md`.
+
+Phase 7 records the internal operational baseline that can be completed before
+external full-pass inputs are available: active backups, isolated restore
+rehearsal, disk/cert/permission checks, active service exposure checks, and
+repo-facing secret scan hygiene. Record evidence in
+`../reports/phase7-operational-baseline.md`.
+
+Phase 8 starts MLflow Tracking as an internal active-stack service on shared
+Postgres and shared MinIO `lab-artifacts/mlflow`. The public MLflow route
+remains disabled unless Authentik gate evidence is available. Record evidence in
+`../reports/phase8-mlflow.md`.
+
+After Phase 2-5 staging conditional-pass, use the full-pass readiness runbooks
+before promoting the environment:
+
+- `full-pass-readiness.md`
+- `full-pass-security-edge-auth.md`
+- `full-pass-huly-ops.md`
+- `full-pass-storage-hf.md`
+
+## Historical v0.x Runbooks
+
+The following runbooks document the archived Plane/Gitea/Nextcloud direction and remain reference material only unless a later decision explicitly reactivates them:
+
+- `v0.2-runtime-gate-1.md`
+- `core.md`
+- `edge-nginx.md` - historical v0.x Nginx reference, not the active Phase 2 procedure
+- `authentik.md` - historical v0.x Authentik reference, not the active Phase 2 procedure
+- `gitea.md`
+- `plane.md`
+- `nextcloud-collabora.md`
+- `backup-restore.md`
+- `v0.3-smoke.md`
+- `demo-data.md`
+
+Rollback rule for any later live phase: stop the affected module first, preserve data and logs, and do not rotate or overwrite secrets during incident triage.
