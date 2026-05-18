@@ -1,12 +1,13 @@
 # Full-Pass Readiness Overview
 
 Status: Phase 2-6 conditional smoke/staging pass; Phase 7 internal operational
-baseline pass; Phase 8 MLflow internal MVP pending runtime evidence;
-operational full-pass pending.
+baseline pass; Phase 8 MLflow internal staging validation pass; operational
+full-pass pending.
 
 This overview coordinates the evidence required before the Huly workspace MVP is
 promoted from staging conditional-pass to operational full-pass. Use it after
-the Phase 2-6 staging reports pass and before marking the draft PR ready.
+the Phase 2-8 staging/internal reports pass and before marking the draft PR
+ready.
 
 ## Read First
 
